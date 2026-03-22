@@ -1,0 +1,24 @@
+{
+  "name": "@chante/cli",
+  "version": "0.0.1",
+  "type": "module",
+  "license": "MIT",
+  "author": "Gerson Gallo",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ggallovalle/chante.git"
+  },
+  "bin": {
+    "chante": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "engines": {
+    "bun": ">=1.2.14",
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@chante/root",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "packages/*"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "author": "Gerson Gallo",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ggallovalle/chante.git"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "bun": ">=1.2.14",
+    "node": ">=18"
+  },
+  "packageManager": "bun@1.3.8"
+}
