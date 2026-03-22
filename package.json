@@ -2,9 +2,19 @@
   "name": "@chante/root",
   "private": true,
   "version": "0.0.1",
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "catalogs": {
+      "effect": {
+        "effect": "^4.0.0-beta.36",
+        "@effect/platform-bun": "^4.0.0-beta.36",
+        "@effect/platform-node": "^4.0.0-beta.36",
+        "@effect/language-service": "^0.81.0"
+      }
+    }
+  },
   "type": "module",
   "license": "MIT",
   "author": "Gerson Gallo",
@@ -14,7 +24,8 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "@effect/language-service": "catalog:effect"
   },
   "engines": {
     "bun": ">=1.2.14",
