@@ -1,0 +1,30 @@
+settings {
+  paths {
+    // NOTE inferred
+    home "/home/$USER"
+    // dotfiles "$DOTFILES" or "$HOME/dotfiles"
+    // config "$XDG_CONFIG_HOME"
+  }
+}
+
+packages {
+  package "zsh" {
+    // NOTE: inferred
+    // root zsh
+    // config zsh/config/* XDG_CONFIG_HOME/*
+    // home zsh/home/* HOME/*
+  }
+  package "bash"
+  package "zsh"
+  package "fish"
+  package "fish"
+}
+
+bundles {
+  bundle "shells" {
+    require "bash"
+    require "zsh"
+    require "fish"
+  }
+}
+

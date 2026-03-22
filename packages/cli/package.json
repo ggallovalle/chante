@@ -15,8 +15,9 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "effect": "catalog:effect",
-    "@effect/platform-node": "catalog:effect"
+    "@bgotink/kdl": "^0.4.0",
+    "@effect/platform-node": "catalog:effect",
+    "effect": "catalog:effect"
   },
   "devDependencies": {
     "@types/bun": "latest"
