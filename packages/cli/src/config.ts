@@ -1,6 +1,6 @@
 import { parse, getLocation, type StoredLocation, type Primitive } from "@bgotink/kdl"
 import { Effect, Schema, Predicate, FileSystem, Path } from "effect"
-import { invalid, type ParseContext, type MissingRequirePayload, type MissingBundlesPayload, type MissingPackagesPayload } from "./errors.js"
+import { invalid, type ParseContext, type KdlIssue } from "./config-issue.js"
 
 const getLocationStrict = (element: Parameters<typeof getLocation>[0]): StoredLocation => {
   const location = getLocation(element)
@@ -58,10 +58,13 @@ export const parseFromFile = Effect.fn("parseFromFile")(function*(path: string) 
 export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
   const doc = parse(opts.content, { storeLocations: true })
   const docLocation = getLocationStrict(doc)
+  const kdlIssues: KdlIssue[] = []
+  const fail = () => invalid(kdlIssues, opts)
+  const failWith = (...issues: KdlIssue[]) => invalid(issues, opts)
   const packages = doc.findNodeByName("packages")
+
   if (Predicate.isUndefined(packages)) {
-    const kdlIssues: MissingPackagesPayload[] = [{ _type: "MissingPackagesNode", location: docLocation }]
-    return yield* invalid(kdlIssues, opts)
+    return yield* failWith({ _type: "MissingPackagesNode", location: docLocation })
   }
 
   const configPkgs = []
@@ -79,12 +82,10 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
 
   const bundles = doc.findNodeByName("bundles")
   if (Predicate.isUndefined(bundles)) {
-    const kdlIssues: MissingBundlesPayload[] = [{ _type: "MissingBundlesNode", location: docLocation }]
-    return yield* invalid(kdlIssues, opts)
+    return yield* failWith({ _type: "MissingBundlesNode", location: docLocation })
   }
 
   const configBundles = []
-  const missingRequires: Array<MissingRequirePayload> = []
   for (const bundle of bundles.findNodesByName("bundle")) {
     const bundleName = bundle.getArgument(0)
     const configRequires = []
@@ -95,7 +96,7 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
       if (Predicate.isString(requireName)) {
         if (!packageNames.has(requireName)) {
           const location = getLocationStrict(dep)
-          missingRequires.push({
+          kdlIssues.push({
             _type: "MissingRequire",
             bundle: getStringStrict(bundleName),
             require: requireName,
@@ -111,8 +112,8 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
     })
   }
 
-  if (missingRequires.length > 0) {
-    return yield* invalid(missingRequires, opts)
+  if (kdlIssues.length > 0) {
+    return yield* fail()
   }
 
   return yield* ChanteConfig.decodeUnknown({ packages: configPkgs, bundles: configBundles })

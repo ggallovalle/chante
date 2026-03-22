@@ -3,7 +3,7 @@ import { Command } from "effect/unstable/cli"
 import { NodeServices, NodeRuntime } from "@effect/platform-node"
 
 import { parseFromFile, ChanteConfig } from "./config.js"
-import { renderSchemaError } from "./errors.js"
+import { renderSchemaError } from "./config-issue.js"
 
 const HOME = Config.string("HOME")
 const XDG_CONFIG_HOME = Config.string("XDG_CONFIG_HOME")

@@ -1,27 +1,27 @@
 import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
 import type { StoredLocation } from "@bgotink/kdl"
 
-export type MissingRequirePayload = {
+export type MissingRequireIssue = {
   _type: "MissingRequire"
   bundle: string | undefined
   require: string
   location: StoredLocation
 }
 
-export type MissingPackagesPayload = {
+export type MissingPackagesIssue = {
   _type: "MissingPackagesNode"
   location: StoredLocation
 }
 
-export type MissingBundlesPayload = {
+export type MissingBundlesIssue = {
   _type: "MissingBundlesNode"
   location: StoredLocation
 }
 
-export type KdlValueIssue =
-  | MissingRequirePayload
-  | MissingPackagesPayload
-  | MissingBundlesPayload
+export type KdlIssue =
+  | MissingRequireIssue
+  | MissingPackagesIssue
+  | MissingBundlesIssue
 
 export type ParseContext = {
   path: string
@@ -32,8 +32,8 @@ export type ParseContext = {
 const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1()
 
 type RendererMap = {
-  [K in KdlValueIssue["_type"]]: (
-    payload: Extract<KdlValueIssue, { _type: K }>,
+  [K in KdlIssue["_type"]]: (
+    payload: Extract<KdlIssue, { _type: K }>,
     shared: ParseContext
   ) => Effect.Effect<void>
 }
@@ -93,7 +93,7 @@ const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, hea
 
 export const renderSchemaError = (error: Schema.SchemaError) => {
   if (error.issue._tag === "InvalidValue") {
-    const kdlIssues = error.issue.annotations?.kdlIssues as KdlValueIssue[] | undefined
+    const kdlIssues = error.issue.annotations?.kdlIssues as KdlIssue[] | undefined
     const parseFromOptions = error.issue.annotations?.parseFromOptions as ParseContext | undefined
 
     if (kdlIssues && kdlIssues.length > 0 && parseFromOptions) {
@@ -108,7 +108,7 @@ export const renderSchemaError = (error: Schema.SchemaError) => {
 }
 
 export const invalid = (
-  issues: ReadonlyArray<KdlValueIssue>,
+  issues: ReadonlyArray<KdlIssue>,
   ctx: ParseContext
 ) =>
   Effect.fail(
