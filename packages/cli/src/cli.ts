@@ -1,10 +1,10 @@
-import { Console, Effect, Config, FileSystem, Path, SchemaIssue } from "effect"
+import { Console, Effect, Config, FileSystem, Path } from "effect"
 import { Command } from "effect/unstable/cli"
 import { NodeServices, NodeRuntime } from "@effect/platform-node"
 
 import { parseFromFile, ChanteConfig } from "./config.js"
+import { renderSchemaError } from "./errors.js"
 
-const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1()
 const HOME = Config.string("HOME")
 const XDG_CONFIG_HOME = Config.string("XDG_CONFIG_HOME")
 const DOTFILES = Config.string("DOTFILES")
@@ -56,8 +56,7 @@ const program = root.pipe(
     version: "0.0.1"
   }),
   Effect.catchTag("SchemaError", (schemaError) => {
-    return Console.error(standardSchemaFormatter(schemaError.issue))
-    // return Console.dir(schemaError.issue, { depth: null})
+    return renderSchemaError(schemaError)
   })
 )
 
