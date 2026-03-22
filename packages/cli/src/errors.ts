@@ -1,4 +1,4 @@
-import { Console, Effect, Schema, SchemaIssue } from "effect"
+import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
 import type { StoredLocation } from "@bgotink/kdl"
 
 export type MissingRequirePayload = {
@@ -8,11 +8,25 @@ export type MissingRequirePayload = {
   location: StoredLocation
 }
 
-export type KdlValueIssue = MissingRequirePayload
+export type MissingPackagesPayload = {
+  _type: "MissingPackagesNode"
+  location: StoredLocation
+}
 
-export type CustomIssuesAnnotation = {
+export type MissingBundlesPayload = {
+  _type: "MissingBundlesNode"
+  location: StoredLocation
+}
+
+export type KdlValueIssue =
+  | MissingRequirePayload
+  | MissingPackagesPayload
+  | MissingBundlesPayload
+
+export type ParseContext = {
   path: string
   content: string
+  fileName: string
 }
 
 const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1()
@@ -20,16 +34,31 @@ const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1()
 type RendererMap = {
   [K in KdlValueIssue["_type"]]: (
     payload: Extract<KdlValueIssue, { _type: K }>,
-    shared: CustomIssuesAnnotation
+    shared: ParseContext
   ) => Effect.Effect<void>
 }
 
 const rendererMap: RendererMap = {
+  MissingPackagesNode: (_payload, shared) => Effect.gen(function*() {
+    const header = "config missing required 'packages' block"
+    const location = _payload.location
+    yield* renderSimpleSnippet(shared, location, header)
+  }),
+  MissingBundlesNode: (_payload, shared) => Effect.gen(function*() {
+    const header = "config missing required 'bundles' block"
+    const location = _payload.location
+    yield* renderSimpleSnippet(shared, location, header)
+  }),
   MissingRequire: (payload, shared) => Effect.gen(function*() {
     const headerBundle = payload.bundle ?? "<unknown bundle>"
     const header = `bundle \"${headerBundle}\" requires unknown package \"${payload.require}\"`
     const location = payload.location
+    yield* renderSimpleSnippet(shared, location, header)
+  })
+}
 
+const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, header: string) =>
+  Effect.gen(function*() {
     const lines = shared.content.split(/\r?\n/)
     const startLine = location.start.line
     const endLine = location.end.line
@@ -48,7 +77,6 @@ const rendererMap: RendererMap = {
       const lineText = lines[lineNo - 1] ?? ""
       const gutter = String(lineNo).padStart(lineNoWidth, " ")
       const isIssueLine = lineNo === startLine
-      const marker = isIssueLine ? ">" : " "
       if (isIssueLine) {
         yield* Console.error(`> ${gutter} | ${lineText}`)
         const underlineStart = Math.max(0, startColumn - 1)
@@ -59,19 +87,16 @@ const rendererMap: RendererMap = {
       } else {
         yield* Console.info(`  ${gutter} | ${lineText}`)
       }
-      if (lineNo === startLine) {
-      }
     }
     return yield* Console.error(" |")
   })
-}
 
 export const renderSchemaError = (error: Schema.SchemaError) => {
   if (error.issue._tag === "InvalidValue") {
     const kdlIssues = error.issue.annotations?.kdlIssues as KdlValueIssue[] | undefined
-    const parseFromOptions = error.issue.annotations?.parseFromOptions as any
+    const parseFromOptions = error.issue.annotations?.parseFromOptions as ParseContext | undefined
 
-    if (kdlIssues && kdlIssues.length > 0) {
+    if (kdlIssues && kdlIssues.length > 0 && parseFromOptions) {
       return Effect.forEach(
         kdlIssues,
         (payload) => rendererMap[payload._type](payload as any, parseFromOptions),
@@ -81,3 +106,16 @@ export const renderSchemaError = (error: Schema.SchemaError) => {
   }
   return Console.error(standardSchemaFormatter(error.issue))
 }
+
+export const invalid = (
+  issues: ReadonlyArray<KdlValueIssue>,
+  ctx: ParseContext
+) =>
+  Effect.fail(
+    new Schema.SchemaError(
+      new SchemaIssue.InvalidValue(Option.none(), {
+        kdlIssues: issues,
+        parseFromOptions: ctx
+      })
+    )
+  )

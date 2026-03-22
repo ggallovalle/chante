@@ -1,12 +1,6 @@
 import { parse, getLocation, type StoredLocation, type Primitive } from "@bgotink/kdl"
-import { Effect, Schema, SchemaIssue, Predicate, FileSystem, Path, Option } from "effect"
-import type { MissingRequirePayload } from "./errors.js"
-
-export type ParseFromOptions = {
-  fileName: string;
-  content: string;
-  path: string;
-}
+import { Effect, Schema, Predicate, FileSystem, Path } from "effect"
+import { invalid, type ParseContext, type MissingRequirePayload, type MissingBundlesPayload, type MissingPackagesPayload } from "./errors.js"
 
 const getLocationStrict = (element: Parameters<typeof getLocation>[0]): StoredLocation => {
   const location = getLocation(element)
@@ -56,17 +50,18 @@ export const parseFromFile = Effect.fn("parseFromFile")(function*(path: string) 
   const fileName = pathModule.basename(path)
   return yield* parseFrom({
     content,
-    fileName,
-    path
+    path,
+    fileName
   })
 })
 
-export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseFromOptions) {
+export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
   const doc = parse(opts.content, { storeLocations: true })
   const docLocation = getLocationStrict(doc)
   const packages = doc.findNodeByName("packages")
   if (Predicate.isUndefined(packages)) {
-    return yield* Effect.fail(new Schema.SchemaError(new SchemaIssue.MissingKey({ messageMissingKey: "'packages' is required", kdlLocation: docLocation })))
+    const kdlIssues: MissingPackagesPayload[] = [{ _type: "MissingPackagesNode", location: docLocation }]
+    return yield* invalid(kdlIssues, opts)
   }
 
   const configPkgs = []
@@ -84,7 +79,8 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseFromOptions
 
   const bundles = doc.findNodeByName("bundles")
   if (Predicate.isUndefined(bundles)) {
-    return yield* Effect.fail(new Schema.SchemaError(new SchemaIssue.MissingKey({ messageMissingKey: "'bundles' is required", kdlLocation: docLocation })))
+    const kdlIssues: MissingBundlesPayload[] = [{ _type: "MissingBundlesNode", location: docLocation }]
+    return yield* invalid(kdlIssues, opts)
   }
 
   const configBundles = []
@@ -116,14 +112,7 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseFromOptions
   }
 
   if (missingRequires.length > 0) {
-    return yield* Effect.fail(
-      new Schema.SchemaError(
-        new SchemaIssue.InvalidValue(Option.some(missingRequires), {
-          kdlIssues: missingRequires,
-          parseFromOptions: opts
-        })
-      )
-    )
+    return yield* invalid(missingRequires, opts)
   }
 
   return yield* ChanteConfig.decodeUnknown({ packages: configPkgs, bundles: configBundles })
