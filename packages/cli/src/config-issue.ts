@@ -1,5 +1,6 @@
 import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
 import type { StoredLocation, Node } from "@bgotink/kdl"
+import { Output, IOutput } from "./output.js"
 
 export type MissingRequireIssue = {
   _type: "MissingRequire"
@@ -62,50 +63,47 @@ const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1()
 type RendererMap = {
   [K in KdlIssue["_type"]]: (
     payload: Extract<KdlIssue, { _type: K }>,
-    shared: ParseContext
+    shared: ParseContext,
+    output: IOutput
   ) => Effect.Effect<void>
 }
 
-const ERR = "[X]"
-const HINT = "[?]"
-
 const rendererMap: RendererMap = {
-  RequiredChild: (_payload, shared) => Effect.gen(function*() {
-    const header = `${ERR} config missing required '${_payload.child}' block`
-    yield* renderSimpleSnippet(shared, _payload.location, header)
-    yield* Console.info(`${HINT} add a '${_payload.child}' block to the root config`)
+  RequiredChild: (_payload, shared, output) => Effect.gen(function*() {
+    yield* output.errorMsg(`config missing required '${_payload.child}' block`)
+    yield* renderSimpleSnippet(shared, _payload.location, output)
+    yield* output.hintMsg(`add a '${_payload.child}' block to the root config`)
   }),
-  RequiredArgumentIssue: (_payload, shared) => Effect.gen(function*() {
-    const header = `${ERR} node '${_payload.node.name.name}' missing required argument index '${_payload.index}'`
-    yield* renderSimpleSnippet(shared, _payload.location, header)
-    yield* Console.info(`${HINT} provide argument #${_payload.index + 1}`)
+  RequiredArgumentIssue: (payload, shared, output) => Effect.gen(function*() {
+    yield* output.errorMsg(`node '${payload.node.name.name}' missing required argument index '${payload.index}'`)
+    yield* renderSimpleSnippet(shared, payload.location, output)
+    yield* output.hintMsg(`provide argument #${payload.index + 1}`)
   }),
-  MissingRequire: (payload, shared) => Effect.gen(function*() {
+  MissingRequire: (payload, shared, output) => Effect.gen(function*() {
     const headerBundle = payload.bundle ?? "<unknown bundle>"
-    const header = `${ERR} bundle \"${headerBundle}\" requires unknown package \"${payload.require}\"`
-    yield* renderSimpleSnippet(shared, payload.location, header)
-    yield* Console.info(`${HINT} add package \"${payload.require}\" to packages { ... }`)
+    yield* output.errorMsg(`bundle \"${headerBundle}\" requires unknown package \"${payload.require}\"`)
+    yield* renderSimpleSnippet(shared, payload.location, output)
+    yield* output.hintMsg(`add package \"${payload.require}\" to packages { ... }`)
   }),
-  MissingPath: (payload, shared) => Effect.gen(function*() {
-    const header = `${ERR} path for '${payload.label}' does not exist: ${payload.path}`
-    yield* renderSimpleSnippet(shared, payload.location, header)
-    yield* Console.info(`${HINT} create the path or update settings.paths.${payload.label}`)
+  MissingPath: (payload, shared, output) => Effect.gen(function*() {
+    yield* output.errorMsg(`path for '${payload.label}' does not exist: ${payload.path}`)
+    yield* renderSimpleSnippet(shared, payload.location, output)
+    yield* output.hintMsg(`create the path or update settings.paths.${payload.label}`)
   }),
-  ExpectedOneOf: (payload, shared) => Effect.gen(function*() {
-    const header = `${ERR} unsupported operation '${payload.actual}'`
-    yield* renderSimpleSnippet(shared, payload.location, header)
-    yield* Console.info(`${HINT} expected one of: ${payload.expected.join(", ")}`)
+  ExpectedOneOf: (payload, shared, output) => Effect.gen(function*() {
+    yield* output.errorMsg(`unsupported operation '${payload.actual}'`)
+    yield* renderSimpleSnippet(shared, payload.location, output)
+    yield* output.hintMsg(`expected one of: ${payload.expected.join(", ")}`)
   }),
-  DuplicateName: (payload, shared) => Effect.gen(function*() {
-    const header = `${ERR} duplicate ${payload.entity} \"${payload.name}\"`
-    yield* renderMultiLabelSnippet(shared, {
-      header,
-      labels: [
+  DuplicateName: (payload, shared, output) => Effect.gen(function*() {
+    yield* output.errorMsg(`duplicate ${payload.entity} \"${payload.name}\"`)
+    yield* renderMultiLabelSnippet(shared,
+      [
         { location: payload.duplicate, message: "duplicate defined here", marker: "^" },
         { location: payload.first, message: "first defined here", marker: "~" }
-      ]
-    })
-    yield* Console.info(`${HINT} rename or remove one of the '${payload.name}' ${payload.entity}s`)
+      ],
+    )
+    yield* output.hintMsg(`rename or remove one of the '${payload.name}' ${payload.entity}s`)
   })
 }
 
@@ -115,30 +113,20 @@ type LabelledLocation = {
   marker: string
 }
 
-type MultiLabelSnippet = {
-  header: string
-  labels: ReadonlyArray<LabelledLocation>
-}
-
-const renderMultiLabelSnippet = (shared: ParseContext, snippet: MultiLabelSnippet) =>
+const renderMultiLabelSnippet = (shared: ParseContext, labels: LabelledLocation[]) =>
   Effect.gen(function*() {
-    if (snippet.labels.length === 0) {
-      return yield* Console.info(snippet.header)
-    }
-
     const lines = shared.content.split(/\r?\n/)
-    const minLine = Math.min(...snippet.labels.map((l) => l.location.start.line))
-    const maxLine = Math.max(...snippet.labels.map((l) => l.location.end.line))
+    const minLine = Math.min(...labels.map((l) => l.location.start.line))
+    const maxLine = Math.max(...labels.map((l) => l.location.end.line))
     const contextStart = Math.max(1, minLine - 2)
     const contextEnd = Math.min(lines.length, maxLine + 2)
     const lineNoWidth = String(contextEnd).length
 
-    yield* Console.info(snippet.header)
-    yield* Console.info(`--> ${shared.path}:${minLine}:${snippet.labels[0]!.location.start.column}`)
+    yield* Console.info(`--> ${shared.path}:${minLine}:${labels[0]!.location.start.column}`)
     yield* Console.error(" |")
 
     const labelsByLine = new Map<number, LabelledLocation[]>()
-    for (const label of snippet.labels) {
+    for (const label of labels) {
       const line = label.location.start.line
       const arr = labelsByLine.get(line) ?? []
       arr.push(label)
@@ -167,7 +155,7 @@ const renderMultiLabelSnippet = (shared: ParseContext, snippet: MultiLabelSnippe
     return yield* Console.error(" |")
   })
 
-const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, header: string) =>
+const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, output: IOutput) =>
   Effect.gen(function*() {
     const lines = shared.content.split(/\r?\n/)
     const startLine = location.start.line
@@ -179,8 +167,7 @@ const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, hea
     const contextEnd = Math.min(lines.length, endLine + 2)
     const lineNoWidth = String(contextEnd).length
 
-    yield* Console.info(header)
-    yield* Console.info(`--> ${shared.path}:${startLine}:${startColumn}`)
+    yield* output.logMsg(`--> ${shared.path}:${startLine}:${startColumn}`)
     yield* Console.error(" |")
 
     for (let lineNo = contextStart; lineNo <= contextEnd; lineNo++) {
@@ -201,28 +188,27 @@ const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, hea
     return yield* Console.error(" |")
   })
 
-export const renderSchemaError = (error: Schema.SchemaError) => {
+export const renderSchemaError = Effect.fnUntraced(function*(error: Schema.SchemaError) {
+  const output = yield* Output
   if (error.issue._tag === "InvalidValue") {
     const kdlIssues = error.issue.annotations?.kdlIssues as KdlIssue[] | undefined
     const parseFromOptions = error.issue.annotations?.parseFromOptions as ParseContext | undefined
 
     if (kdlIssues && kdlIssues.length > 0 && parseFromOptions) {
-      return Effect.forEach(
+      return yield* Effect.forEach(
         kdlIssues,
-        (payload) => rendererMap[payload._type](payload as any, parseFromOptions),
+        (payload) => rendererMap[payload._type](payload as any, parseFromOptions, output),
         { discard: true }
       )
     }
   }
-  return renderSchemaIssue(error.issue)
-}
 
-export const renderSchemaIssue = Effect.fnUntraced(function*(issue: SchemaIssue.Issue) {
-  const failure = standardSchemaFormatter(issue)
+  const failure = standardSchemaFormatter(error.issue)
   for (const issue of failure.issues) {
-    yield* Console.error(`${ERR} ${issue.path?.join(".")}: ${issue.message}`)
+    yield* output.errorKeyValue(issue.path?.join(".") ?? "<unknown>", issue.message)
   }
 })
+
 
 export const invalid = (
   issues: ReadonlyArray<KdlIssue>,
