@@ -1,21 +1,14 @@
 settings {
-  // NOTE inferred
   // user "$USER"
   paths {
-  // home "$HOME"
-  // dotfiles "$DOTFILES" or "$HOME/dotfiles"
-  // config "$XDG_CONFIG_HOME"
-
+    // home "$HOME"
+    // dotfiles "$DOTFILES" or "$HOME/dotfiles"
+    // config "$XDG_CONFIG_HOME"
   }
 }
 
 packages {
-  package "zsh" {
-    // NOTE: inferred
-    // root zsh
-    // config zsh/config/* XDG_CONFIG_HOME/*
-    // home zsh/home/* HOME/*
-  }
+  package "zsh"
   package "bash"
   package "fish"
   // package "fish"
@@ -25,6 +18,17 @@ bundles {
   bundle "shells" {
     require "bash"
     require "zsh"
+
+    config {
+      cp "zsh/config/zsh" "zsh"
+      // cp "zsh/config/zsh"
+      // yasuo "zsh/config/zsh"
+    }
+
+    home {
+      template "zsh/home/dot_zshenv" ".zshenv"
+      ln "zsh/home/dot_zshrc" ".zshrc"
+    }
   }
 }
 

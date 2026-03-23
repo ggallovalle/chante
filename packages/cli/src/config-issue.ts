@@ -28,6 +28,13 @@ export type MissingPathIssue = {
   location: StoredLocation
 }
 
+export type ExpectedOneOfIssue = {
+  _type: "ExpectedOneOf"
+  actual: string
+  expected: ReadonlyArray<string>
+  location: StoredLocation
+}
+
 export type DuplicateNameIssue = {
   _type: "DuplicateName"
   entity: string
@@ -41,6 +48,7 @@ export type KdlIssue =
   | RequiredChildIssue
   | RequiredArgumentIssue
   | MissingPathIssue
+  | ExpectedOneOfIssue
   | DuplicateNameIssue
 
 export type ParseContext = {
@@ -58,29 +66,38 @@ type RendererMap = {
   ) => Effect.Effect<void>
 }
 
+const ERR = "[X]"
+const HINT = "[?]"
+
 const rendererMap: RendererMap = {
   RequiredChild: (_payload, shared) => Effect.gen(function*() {
-    const header = `config missing required '${_payload.child}' block`
-    const location = _payload.location
-    yield* renderSimpleSnippet(shared, location, header)
+    const header = `${ERR} config missing required '${_payload.child}' block`
+    yield* renderSimpleSnippet(shared, _payload.location, header)
+    yield* Console.info(`${HINT} add a '${_payload.child}' block to the root config`)
   }),
   RequiredArgumentIssue: (_payload, shared) => Effect.gen(function*() {
-    const header = `node '${_payload.node.name.name}' missing required argument index '${_payload.index}'`
-    const location = _payload.location
-    yield* renderSimpleSnippet(shared, location, header)
+    const header = `${ERR} node '${_payload.node.name.name}' missing required argument index '${_payload.index}'`
+    yield* renderSimpleSnippet(shared, _payload.location, header)
+    yield* Console.info(`${HINT} provide argument #${_payload.index + 1}`)
   }),
   MissingRequire: (payload, shared) => Effect.gen(function*() {
     const headerBundle = payload.bundle ?? "<unknown bundle>"
-    const header = `bundle \"${headerBundle}\" requires unknown package \"${payload.require}\"`
-    const location = payload.location
-    yield* renderSimpleSnippet(shared, location, header)
+    const header = `${ERR} bundle \"${headerBundle}\" requires unknown package \"${payload.require}\"`
+    yield* renderSimpleSnippet(shared, payload.location, header)
+    yield* Console.info(`${HINT} add package \"${payload.require}\" to packages { ... }`)
   }),
   MissingPath: (payload, shared) => Effect.gen(function*() {
-    const header = `path for '${payload.label}' does not exist: ${payload.path}`
+    const header = `${ERR} path for '${payload.label}' does not exist: ${payload.path}`
     yield* renderSimpleSnippet(shared, payload.location, header)
+    yield* Console.info(`${HINT} create the path or update settings.paths.${payload.label}`)
+  }),
+  ExpectedOneOf: (payload, shared) => Effect.gen(function*() {
+    const header = `${ERR} unsupported operation '${payload.actual}'`
+    yield* renderSimpleSnippet(shared, payload.location, header)
+    yield* Console.info(`${HINT} expected one of: ${payload.expected.join(", ")}`)
   }),
   DuplicateName: (payload, shared) => Effect.gen(function*() {
-    const header = `duplicate ${payload.entity} \"${payload.name}\"`
+    const header = `${ERR} duplicate ${payload.entity} \"${payload.name}\"`
     yield* renderMultiLabelSnippet(shared, {
       header,
       labels: [
@@ -88,6 +105,7 @@ const rendererMap: RendererMap = {
         { location: payload.first, message: "first defined here", marker: "~" }
       ]
     })
+    yield* Console.info(`${HINT} rename or remove one of the '${payload.name}' ${payload.entity}s`)
   })
 }
 

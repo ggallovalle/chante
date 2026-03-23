@@ -10,6 +10,15 @@ const getLocationStrict = (element: Parameters<typeof getLocation>[0]): StoredLo
   return location as unknown as any
 }
 
+export class StoredLocationSchema extends Schema.Opaque<StoredLocationSchema>()(
+
+  Schema.Struct({
+    start: Schema.Struct({ line: Schema.Number, column: Schema.Number }),
+    end: Schema.Struct({ line: Schema.Number, column: Schema.Number })
+  })
+) {
+}
+
 export class ChantePackage extends Schema.Opaque<ChantePackage>()(
 
   Schema.Struct({
@@ -23,7 +32,14 @@ export class ChanteBundle extends Schema.Opaque<ChanteBundle>()(
 
   Schema.Struct({
     name: Schema.String,
-    requires: Schema.Array(Schema.String)
+    requires: Schema.Array(Schema.String),
+    files: Schema.Array(Schema.Struct({
+      relativeTo: Schema.Literals(["home", "config"]),
+      op: Schema.Literals(["cp", "ln", "template"]),
+      source: Schema.String,
+      target: Schema.String,
+      location: StoredLocationSchema
+    }))
   })
 ) {
 }
@@ -147,6 +163,46 @@ const getSettings = Effect.fn("getSettings")(function*(root: Document, failWith:
   })
 })
 
+type FailWith = (...issues: KdlIssue[]) => Effect.Effect<never, Schema.SchemaError, never>
+type BundleFile = {
+  relativeTo: "home" | "config"
+  op: "cp" | "ln" | "template"
+  source: string
+  target: string
+  location: StoredLocation
+}
+
+const parseFileOps =
+  Effect.fn("parseFileOps")(function*(
+    block: Document | null | undefined,
+    relativeTo: BundleFile["relativeTo"],
+    files: Array<BundleFile>,
+    failWith: FailWith
+  ) {
+    if (Predicate.isUndefined(block) || block === null) {
+      return
+    }
+    const knownOps: Array<BundleFile["op"]> = ["cp", "ln", "template"]
+    const children = block.nodes ?? []
+    for (const child of children) {
+      const op = child.getName()
+      if (knownOps.includes(op as BundleFile["op"])) {
+        const source = yield* argumentString(child, 0, failWith)
+        const target = yield* argumentString(child, 1, failWith)
+        files.push({
+          relativeTo,
+          op: op as BundleFile["op"],
+          source,
+          target,
+          location: getLocationStrict(child)
+        })
+      } else {
+        const location = getLocationStrict(child)
+        return yield* failWith({ _type: "ExpectedOneOf", actual: op, expected: knownOps, location })
+      }
+    }
+  })
+
 export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
   const doc = parse(opts.content, { storeLocations: true })
   const kdlIssues: KdlIssue[] = []
@@ -201,6 +257,7 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
       bundleNames.set(bundleName, bundleLoc)
     }
     const configRequires = []
+    const files: Array<BundleFile> = []
 
     for (const dep of bundle.findNodesByName("require")) {
       const depName = yield* argumentString(dep, 0, failWith)
@@ -215,9 +272,16 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
       }
       configRequires.push(depName)
     }
+
+    const configBlock = bundle.children?.findNodeByName("config")
+    const homeBlock = bundle.children?.findNodeByName("home")
+    yield* parseFileOps(configBlock?.children, "config", files, failWith)
+    yield* parseFileOps(homeBlock?.children, "home", files, failWith)
+
     configBundles.push({
       name: bundleName,
-      requires: configRequires
+      requires: configRequires,
+      files
     })
   }
 
@@ -227,8 +291,6 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
 
   return yield* ChanteConfig.decodeUnknown({ settings, packages: configPkgs, bundles: configBundles })
 })
-
-type FailWith = (...issues: KdlIssue[]) => Effect.Effect<never, Schema.SchemaError, never>
 
 export function argumentString(root: Node, index: number, failWith: FailWith): Effect.Effect<string, Schema.SchemaError, never> {
   const entry = root.getArgumentEntry(index)
