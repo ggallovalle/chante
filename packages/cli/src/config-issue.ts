@@ -1,5 +1,6 @@
-import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
+import { codeToANSI } from '@shikijs/cli'
 import type { StoredLocation, Node } from "@bgotink/kdl"
+import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
 import { Output, IOutput } from "./output.js"
 
 export type MissingRequireIssue = {
@@ -91,7 +92,7 @@ const rendererMap: RendererMap = {
     yield* output.hintMsg(`create the path or update settings.paths.${payload.label}`)
   }),
   ExpectedOneOf: (payload, shared, output) => Effect.gen(function*() {
-    yield* output.errorMsg(`unsupported operation '${payload.actual}'`)
+    yield* output.errorMsg(`unsupported node '${payload.actual}'`)
     yield* renderSimpleSnippet(shared, payload.location, output)
     yield* output.hintMsg(`expected one of: ${payload.expected.join(", ")}`)
   }),
@@ -113,9 +114,12 @@ type LabelledLocation = {
   marker: string
 }
 
+const kdlSyntaxHighlight = (content: string) => Effect.promise(() => codeToANSI(content, "kdl", "github-dark"))
+
 const renderMultiLabelSnippet = (shared: ParseContext, labels: LabelledLocation[]) =>
   Effect.gen(function*() {
-    const lines = shared.content.split(/\r?\n/)
+    const pretty = yield* kdlSyntaxHighlight(shared.content)
+    const lines = pretty.split(/\r?\n/)
     const minLine = Math.min(...labels.map((l) => l.location.start.line))
     const maxLine = Math.max(...labels.map((l) => l.location.end.line))
     const contextStart = Math.max(1, minLine - 2)
@@ -157,7 +161,8 @@ const renderMultiLabelSnippet = (shared: ParseContext, labels: LabelledLocation[
 
 const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, output: IOutput) =>
   Effect.gen(function*() {
-    const lines = shared.content.split(/\r?\n/)
+    const pretty = yield* kdlSyntaxHighlight(shared.content)
+    const lines = pretty.split(/\r?\n/)
     const startLine = location.start.line
     const endLine = location.end.line
     const startColumn = location.start.column
