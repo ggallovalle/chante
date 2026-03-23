@@ -1,5 +1,5 @@
-import { Console, Effect, Config, FileSystem, Path } from "effect"
-import { Command } from "effect/unstable/cli"
+import { Console, Effect, Config, FileSystem, Path, Option } from "effect"
+import { Command, Flag } from "effect/unstable/cli"
 import { NodeServices, NodeRuntime } from "@effect/platform-node"
 
 import { parseFromFile, ChanteConfig } from "./config.js"
@@ -13,22 +13,33 @@ const root = Command.make("chante").pipe(
   Command.withDescription("A dotfiles manager")
 )
 
+const configFlag = Flag.file("config", { mustExist: true }).pipe(
+  Flag.withAlias("c"),
+  Flag.optional,
+)
 
-const doctor = Command.make("doctor", {}, Effect.fn("doctor")(function*() {
+const doctor = Command.make("doctor", { config: configFlag }, Effect.fn("doctor")(function*(cli) {
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
   const home = yield* HOME
   const xdg_config_home = yield* XDG_CONFIG_HOME
   const dotfiles = yield* DOTFILES
-  const dotfiles_config = path.join(dotfiles, "chante.config.kdl")
-  const config = yield* parseFromFile(dotfiles_config)
+  const defaultConfig = path.join(dotfiles, "chante.config.kdl")
+
+  if (Option.isNone(cli.config) && !(yield* fs.exists(defaultConfig))) {
+    return yield* Console.error(`Config file not found: ${defaultConfig}`)
+  }
+
+  const configPath = Option.getOrElse(cli.config, () => defaultConfig)
+  const config = yield* parseFromFile(configPath)
   yield* Console.log("doctor")
   yield* Console.info("environment")
-  yield* Console.table([
-    { key: "HOME", value: home },
-    { key: "XDG_CONFIG_HOME", value: xdg_config_home },
-    { key: "DOTFILES", value: dotfiles },
-  ])
+  yield* Console.dir({
+    "HOME": home,
+    "XDG_CONFIG_HOME": xdg_config_home,
+    "DOTFILES": dotfiles,
+    "CONFIG": configPath,
+  }, { depth: null })
 
   yield* Console.info("config file")
   const configJson = yield* ChanteConfig.encodeUnknownAsJson(config)
