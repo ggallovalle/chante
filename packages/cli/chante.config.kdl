@@ -15,16 +15,14 @@ packages {
     // home zsh/home/* HOME/*
   }
   package "bash"
-  package "zsh"
   package "fish"
-  package "fish"
+  // package "fish"
 }
 
 bundles {
   bundle "shells" {
     require "bash"
     require "zsh"
-    require "fish"
   }
 }
 

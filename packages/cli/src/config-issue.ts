@@ -1,5 +1,5 @@
 import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
-import type { StoredLocation } from "@bgotink/kdl"
+import type { StoredLocation, Node } from "@bgotink/kdl"
 
 export type MissingRequireIssue = {
   _type: "MissingRequire"
@@ -8,20 +8,32 @@ export type MissingRequireIssue = {
   location: StoredLocation
 }
 
-export type MissingPackagesIssue = {
-  _type: "MissingPackagesNode"
+export type RequiredChildIssue = {
+  _type: "RequiredChild"
+  child: string
   location: StoredLocation
 }
 
-export type MissingBundlesIssue = {
-  _type: "MissingBundlesNode"
+export type RequiredArgumentIssue = {
+  _type: "RequiredArgumentIssue"
+  index: number
+  node: Node
   location: StoredLocation
+}
+
+export type DuplicateNameIssue = {
+  _type: "DuplicateName"
+  entity: string
+  name: string
+  first: StoredLocation
+  duplicate: StoredLocation
 }
 
 export type KdlIssue =
   | MissingRequireIssue
-  | MissingPackagesIssue
-  | MissingBundlesIssue
+  | RequiredChildIssue
+  | RequiredArgumentIssue
+  | DuplicateNameIssue
 
 export type ParseContext = {
   path: string
@@ -39,13 +51,13 @@ type RendererMap = {
 }
 
 const rendererMap: RendererMap = {
-  MissingPackagesNode: (_payload, shared) => Effect.gen(function*() {
-    const header = "config missing required 'packages' block"
+  RequiredChild: (_payload, shared) => Effect.gen(function*() {
+    const header = `config missing required '${_payload.child}' block`
     const location = _payload.location
     yield* renderSimpleSnippet(shared, location, header)
   }),
-  MissingBundlesNode: (_payload, shared) => Effect.gen(function*() {
-    const header = "config missing required 'bundles' block"
+  RequiredArgumentIssue: (_payload, shared) => Effect.gen(function*() {
+    const header = `node '${_payload.node.name.name}' missing required argument index '${_payload.index}'`
     const location = _payload.location
     yield* renderSimpleSnippet(shared, location, header)
   }),
@@ -54,8 +66,76 @@ const rendererMap: RendererMap = {
     const header = `bundle \"${headerBundle}\" requires unknown package \"${payload.require}\"`
     const location = payload.location
     yield* renderSimpleSnippet(shared, location, header)
+  }),
+  DuplicateName: (payload, shared) => Effect.gen(function*() {
+    const header = `duplicate ${payload.entity} \"${payload.name}\"`
+    yield* renderMultiLabelSnippet(shared, {
+      header,
+      labels: [
+        { location: payload.duplicate, message: "duplicate defined here", marker: "^" },
+        { location: payload.first, message: "first defined here", marker: "~" }
+      ]
+    })
   })
 }
+
+type LabelledLocation = {
+  location: StoredLocation
+  message: string
+  marker: string
+}
+
+type MultiLabelSnippet = {
+  header: string
+  labels: ReadonlyArray<LabelledLocation>
+}
+
+const renderMultiLabelSnippet = (shared: ParseContext, snippet: MultiLabelSnippet) =>
+  Effect.gen(function*() {
+    if (snippet.labels.length === 0) {
+      return yield* Console.info(snippet.header)
+    }
+
+    const lines = shared.content.split(/\r?\n/)
+    const minLine = Math.min(...snippet.labels.map((l) => l.location.start.line))
+    const maxLine = Math.max(...snippet.labels.map((l) => l.location.end.line))
+    const contextStart = Math.max(1, minLine - 2)
+    const contextEnd = Math.min(lines.length, maxLine + 2)
+    const lineNoWidth = String(contextEnd).length
+
+    yield* Console.info(snippet.header)
+    yield* Console.info(`--> ${shared.path}:${minLine}:${snippet.labels[0]!.location.start.column}`)
+    yield* Console.error(" |")
+
+    const labelsByLine = new Map<number, LabelledLocation[]>()
+    for (const label of snippet.labels) {
+      const line = label.location.start.line
+      const arr = labelsByLine.get(line) ?? []
+      arr.push(label)
+      labelsByLine.set(line, arr)
+    }
+
+    for (let lineNo = contextStart; lineNo <= contextEnd; lineNo++) {
+      const lineText = lines[lineNo - 1] ?? ""
+      const gutter = String(lineNo).padStart(lineNoWidth, " ")
+      const labels = labelsByLine.get(lineNo)
+      const hasLabels = labels && labels.length > 0
+      const marker = hasLabels ? ">" : " "
+      if (hasLabels) {
+        yield* Console.error(`${marker} ${gutter} | ${lineText}`)
+        for (const label of labels!) {
+          const underlineStart = Math.max(0, label.location.start.column - 1)
+          const underlineEnd = Math.max(underlineStart, label.location.end.column - 1)
+          const underlineLength = Math.max(1, underlineEnd - underlineStart || 1)
+          const caretLine = " ".repeat(underlineStart) + label.marker.repeat(underlineLength)
+          yield* Console.error(`${" ".repeat(1)} ${" ".repeat(lineNoWidth)} | ${caretLine} ${label.message}`)
+        }
+      } else {
+        yield* Console.info(`${marker} ${gutter} | ${lineText}`)
+      }
+    }
+    return yield* Console.error(" |")
+  })
 
 const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, header: string) =>
   Effect.gen(function*() {
