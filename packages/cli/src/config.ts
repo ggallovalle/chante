@@ -1,6 +1,8 @@
+import { Effect, Schema, Predicate, FileSystem, Path, type Config, Option } from "effect"
 import { parse, getLocation, type StoredLocation, type Document, type Node } from "@bgotink/kdl"
-import { Effect, Schema, Predicate, FileSystem, Path, Config } from "effect"
 import { invalid, type ParseContext, type KdlIssue, type DuplicateNameIssue } from "./config-issue.js"
+import * as env from "./env.js"
+import { CliError } from "effect/unstable/cli"
 
 const getLocationStrict = (element: Parameters<typeof getLocation>[0]): StoredLocation => {
   const location = getLocation(element)
@@ -70,6 +72,32 @@ export class ChanteConfig extends Schema.Opaque<ChanteConfig>()(
   static encodeUnknownAsJson = Schema.encodeUnknownEffect(Schema.toCodecJson(ChanteConfig))
 }
 
+export const parseFromCli = Effect.fnUntraced(function*(flag: Option.Option<string>) {
+  const fs = yield* FileSystem.FileSystem
+  const path = yield* Path.Path
+  let configPath = ""
+  const source: "cli" | "env" = Option.isSome(flag) ? "cli" : "env"
+
+  if (Option.isNone(flag)) {
+    const dotfiles = yield* env.DOTFILES
+    const defaultConfig = path.join(dotfiles, "chante.config.kdl")
+    if (!(yield* fs.exists(defaultConfig))) {
+      return yield* new CliError.UserError({ cause: `Inferred config file not found: ${defaultConfig}` })
+    }
+    configPath = defaultConfig
+  } else {
+    configPath = flag.value
+  }
+
+  const config = yield* parseFromFile(configPath)
+
+  return {
+    path: configPath,
+    data: config,
+    source
+  }
+})
+
 export const parseFromFile = Effect.fn("parseFromFile")(function*(path: string) {
   const fs = yield* FileSystem.FileSystem
   const pathModule = yield* Path.Path
@@ -106,32 +134,32 @@ const getSettings = Effect.fn("getSettings")(function*(root: Document, failWith:
   const binNode = pathsNode?.findNodeByName("bin")
   const dotfilesNode = pathsNode?.findNodeByName("dotfiles")
 
-  const user = yield* resolve("user", userNode, Config.string("USER").asEffect())
-  const home = yield* resolve("home", homeNode, Config.string("HOME").asEffect())
+  const user = yield* resolve("user", userNode, env.USER.asEffect())
+  const home = yield* resolve("home", homeNode, env.HOME.asEffect())
   const config = yield* resolve(
     "config",
     configNode,
-    Effect.orElseSucceed(Config.string("XDG_CONFIG_HOME").asEffect(), () => pathM.join(home.value, ".config"))
+    Effect.orElseSucceed(env.XDG_CONFIG_HOME.asEffect(), () => pathM.join(home.value, ".config"))
   )
   const cache = yield* resolve(
     "cache",
     cacheNode,
-    Effect.orElseSucceed(Config.string("XDG_CACHE_HOME").asEffect(), () => pathM.join(home.value, ".cache"))
+    Effect.orElseSucceed(env.XDG_CACHE_HOME.asEffect(), () => pathM.join(home.value, ".cache"))
   )
   const data = yield* resolve(
     "data",
     dataNode,
-    Effect.orElseSucceed(Config.string("XDG_DATA_HOME").asEffect(), () => pathM.join(home.value, ".local", "share"))
+    Effect.orElseSucceed(env.XDG_DATA_HOME.asEffect(), () => pathM.join(home.value, ".local", "share"))
   )
   const bin = yield* resolve(
     "bin",
     binNode,
-    Effect.orElseSucceed(Config.string("XDG_BIN_HOME").asEffect(), () => pathM.join(home.value, ".local", "bin"))
+    Effect.orElseSucceed(env.XDG_BIN_HOME.asEffect(), () => pathM.join(home.value, ".local", "bin"))
   )
   const dotfiles = yield* resolve(
     "dotfiles",
     dotfilesNode,
-    Effect.orElseSucceed(Config.string("DOTFILES").asEffect(), () => pathM.join(home.value, "dotfiles"))
+    Effect.orElseSucceed(env.DOTFILES.asEffect(), () => pathM.join(home.value, "dotfiles"))
   )
 
   const pathChecks = [home, config, cache, data, dotfiles].map((entry) =>

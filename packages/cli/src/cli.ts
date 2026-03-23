@@ -1,13 +1,11 @@
-import { Console, Effect, Config, FileSystem, Path, Option } from "effect"
+import { Console, Effect } from "effect"
 import { Command, Flag } from "effect/unstable/cli"
 import { NodeServices, NodeRuntime } from "@effect/platform-node"
 
-import { parseFromFile, ChanteConfig } from "./config.js"
+import * as env from "./env.js"
+import { parseFromCli, ChanteConfig } from "./config.js"
 import { renderSchemaError } from "./config-issue.js"
 
-const HOME = Config.string("HOME")
-const XDG_CONFIG_HOME = Config.string("XDG_CONFIG_HOME")
-const DOTFILES = Config.string("DOTFILES")
 
 const root = Command.make("chante").pipe(
   Command.withDescription("A dotfiles manager")
@@ -18,31 +16,20 @@ const configFlag = Flag.file("config", { mustExist: true }).pipe(
   Flag.optional,
 )
 
+
 const doctor = Command.make("doctor", { config: configFlag }, Effect.fn("doctor")(function*(cli) {
-  const fs = yield* FileSystem.FileSystem
-  const path = yield* Path.Path
-  const home = yield* HOME
-  const xdg_config_home = yield* XDG_CONFIG_HOME
-  const dotfiles = yield* DOTFILES
-  const defaultConfig = path.join(dotfiles, "chante.config.kdl")
+  const home = yield* env.HOME
+  const config = yield* parseFromCli(cli.config)
 
-  if (Option.isNone(cli.config) && !(yield* fs.exists(defaultConfig))) {
-    return yield* Console.error(`Config file not found: ${defaultConfig}`)
-  }
-
-  const configPath = Option.getOrElse(cli.config, () => defaultConfig)
-  const config = yield* parseFromFile(configPath)
   yield* Console.log("doctor")
   yield* Console.info("environment")
   yield* Console.dir({
     "HOME": home,
-    "XDG_CONFIG_HOME": xdg_config_home,
-    "DOTFILES": dotfiles,
-    "CONFIG": configPath,
+    "CONFIG": config.path,
   }, { depth: null })
 
   yield* Console.info("config file")
-  const configJson = yield* ChanteConfig.encodeUnknownAsJson(config)
+  const configJson = yield* ChanteConfig.encodeUnknownAsJson(config.data)
   yield* Console.dir(configJson, { depth: null })
 })).pipe(
   Command.withDescription("Test if everything is set up correctly")
@@ -68,10 +55,33 @@ const program = root.pipe(
   }),
   Effect.catchTag("SchemaError", (schemaError) => {
     return renderSchemaError(schemaError)
+  }),
+  Effect.catchTag("ConfigError", Effect.fnUntraced(function*(configError) {
+    const ERR = "[X]"
+    const HINT = "[?]"
+    const cause = configError.cause
+    if (cause && cause._tag === "SchemaError") {
+      yield* Console.error(`${ERR} ensure env vars conform to schema`)
+      yield* renderSchemaError(cause)
+      return
+    }
+    const msg = cause?.message ?? configError.message
+    yield* Console.error(`${ERR} ${msg}`)
+    yield* Console.info(`${HINT} ensure required env vars are set`)
+  })),
+  // CLI errors
+  Effect.catchTag("InvalidValue", (invalidValue) => {
+    return Console.error(invalidValue.message)
+  }),
+  Effect.catchTag("UserError", (userError) => {
+    const ERR = "[X]"
+    return Console.error(`${ERR} ${userError.cause}`)
   })
 )
+
 
 program.pipe(
   Effect.provide(NodeServices.layer),
   NodeRuntime.runMain
 )
+

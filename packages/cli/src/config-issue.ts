@@ -214,8 +214,15 @@ export const renderSchemaError = (error: Schema.SchemaError) => {
       )
     }
   }
-  return Console.error(standardSchemaFormatter(error.issue))
+  return renderSchemaIssue(error.issue)
 }
+
+export const renderSchemaIssue = Effect.fnUntraced(function*(issue: SchemaIssue.Issue) {
+  const failure = standardSchemaFormatter(issue)
+  for (const issue of failure.issues) {
+    yield* Console.error(`${ERR} ${issue.path?.join(".")}: ${issue.message}`)
+  }
+})
 
 export const invalid = (
   issues: ReadonlyArray<KdlIssue>,
