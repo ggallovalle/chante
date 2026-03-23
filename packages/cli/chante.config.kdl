@@ -1,9 +1,11 @@
 settings {
+  // NOTE inferred
+  // user "$USER"
   paths {
-    // NOTE inferred
-    home "/home/$USER"
-    // dotfiles "$DOTFILES" or "$HOME/dotfiles"
-    // config "$XDG_CONFIG_HOME"
+  // home "$HOME"
+  // dotfiles "$DOTFILES" or "$HOME/dotfiles"
+  // config "$XDG_CONFIG_HOME"
+
   }
 }
 

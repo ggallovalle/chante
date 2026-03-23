@@ -1,5 +1,5 @@
-import { parse, getLocation, type StoredLocation, type Primitive, type Document, type Node } from "@bgotink/kdl"
-import { Effect, Schema, Predicate, FileSystem, Path } from "effect"
+import { parse, getLocation, type StoredLocation, type Document, type Node } from "@bgotink/kdl"
+import { Effect, Schema, Predicate, FileSystem, Path, Config } from "effect"
 import { invalid, type ParseContext, type KdlIssue, type DuplicateNameIssue } from "./config-issue.js"
 
 const getLocationStrict = (element: Parameters<typeof getLocation>[0]): StoredLocation => {
@@ -28,8 +28,24 @@ export class ChanteBundle extends Schema.Opaque<ChanteBundle>()(
 ) {
 }
 
+export class ChanteSettings extends Schema.Opaque<ChanteSettings>()(
+  Schema.Struct({
+    user: Schema.String,
+    paths: Schema.Struct({
+      home: Schema.String,
+      config: Schema.String,
+      cache: Schema.String,
+      data: Schema.String,
+      bin: Schema.String,
+      dotfiles: Schema.String,
+    })
+  })
+) {
+}
+
 export class ChanteConfig extends Schema.Opaque<ChanteConfig>()(
   Schema.Struct({
+    settings: ChanteSettings,
     packages: Schema.Array(ChantePackage),
     bundles: Schema.Array(ChanteBundle)
   })
@@ -50,11 +66,94 @@ export const parseFromFile = Effect.fn("parseFromFile")(function*(path: string) 
   })
 })
 
+const getSettings = Effect.fn("getSettings")(function*(root: Document, failWith: FailWith) {
+  const pathM = yield* Path.Path
+  const fs = yield* FileSystem.FileSystem
+  const rootLocation = getLocationStrict(root)
+
+  const settingsNode = root.findNodeByName("settings")
+  const settingsLocation = Predicate.isUndefined(settingsNode) ? rootLocation : getLocationStrict(settingsNode)
+  const pathsNode = settingsNode?.findNodeByName("paths")
+
+  const resolve = (label: string, node: Node | undefined, fallback: Effect.Effect<string, Schema.SchemaError | Config.ConfigError, never>) =>
+    Effect.gen(function*() {
+      const value = !Predicate.isUndefined(node) ? yield* argumentString(node, 0, failWith) : yield* fallback
+      const location = !Predicate.isUndefined(node) ? getLocationStrict(node) : settingsLocation
+      return { label, value, location }
+    })
+
+  const userNode = settingsNode?.findNodeByName("user")
+  const homeNode = pathsNode?.findNodeByName("home")
+  const configNode = pathsNode?.findNodeByName("config")
+  const cacheNode = pathsNode?.findNodeByName("cache")
+  const dataNode = pathsNode?.findNodeByName("data")
+  const binNode = pathsNode?.findNodeByName("bin")
+  const dotfilesNode = pathsNode?.findNodeByName("dotfiles")
+
+  const user = yield* resolve("user", userNode, Config.string("USER").asEffect())
+  const home = yield* resolve("home", homeNode, Config.string("HOME").asEffect())
+  const config = yield* resolve(
+    "config",
+    configNode,
+    Effect.orElseSucceed(Config.string("XDG_CONFIG_HOME").asEffect(), () => pathM.join(home.value, ".config"))
+  )
+  const cache = yield* resolve(
+    "cache",
+    cacheNode,
+    Effect.orElseSucceed(Config.string("XDG_CACHE_HOME").asEffect(), () => pathM.join(home.value, ".cache"))
+  )
+  const data = yield* resolve(
+    "data",
+    dataNode,
+    Effect.orElseSucceed(Config.string("XDG_DATA_HOME").asEffect(), () => pathM.join(home.value, ".local", "share"))
+  )
+  const bin = yield* resolve(
+    "bin",
+    binNode,
+    Effect.orElseSucceed(Config.string("XDG_BIN_HOME").asEffect(), () => pathM.join(home.value, ".local", "bin"))
+  )
+  const dotfiles = yield* resolve(
+    "dotfiles",
+    dotfilesNode,
+    Effect.orElseSucceed(Config.string("DOTFILES").asEffect(), () => pathM.join(home.value, "dotfiles"))
+  )
+
+  const pathChecks = [home, config, cache, data, dotfiles].map((entry) =>
+    Effect.map(fs.exists(entry.value), (ok) =>
+      ok
+        ? undefined
+        : { _type: "MissingPath", label: entry.label, path: entry.value, location: entry.location } as KdlIssue
+    )
+  )
+
+  const missingPaths = (yield* Effect.all(pathChecks, { concurrency: "unbounded" })).filter(
+    (issue): issue is KdlIssue => issue !== undefined
+  )
+
+  if (missingPaths.length > 0) {
+    return yield* failWith(...missingPaths)
+  }
+
+  return ChanteSettings.makeUnsafe({
+    user: user.value,
+    paths: {
+      home: home.value,
+      config: config.value,
+      cache: cache.value,
+      data: data.value,
+      bin: bin.value,
+      dotfiles: dotfiles.value
+    }
+  })
+})
+
 export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
   const doc = parse(opts.content, { storeLocations: true })
   const kdlIssues: KdlIssue[] = []
   const failWith: FailWith = (...issues) => invalid(issues, opts)
 
+
+  const settings = yield* getSettings(doc, failWith)
   const packages = yield* childRequired(doc, "packages", failWith)
 
   const configPkgs = []
@@ -126,7 +225,7 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
     return yield* invalid(kdlIssues, opts)
   }
 
-  return yield* ChanteConfig.decodeUnknown({ packages: configPkgs, bundles: configBundles })
+  return yield* ChanteConfig.decodeUnknown({ settings, packages: configPkgs, bundles: configBundles })
 })
 
 type FailWith = (...issues: KdlIssue[]) => Effect.Effect<never, Schema.SchemaError, never>

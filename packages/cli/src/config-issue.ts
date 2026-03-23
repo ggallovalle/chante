@@ -21,6 +21,13 @@ export type RequiredArgumentIssue = {
   location: StoredLocation
 }
 
+export type MissingPathIssue = {
+  _type: "MissingPath"
+  label: string
+  path: string
+  location: StoredLocation
+}
+
 export type DuplicateNameIssue = {
   _type: "DuplicateName"
   entity: string
@@ -33,6 +40,7 @@ export type KdlIssue =
   | MissingRequireIssue
   | RequiredChildIssue
   | RequiredArgumentIssue
+  | MissingPathIssue
   | DuplicateNameIssue
 
 export type ParseContext = {
@@ -66,6 +74,10 @@ const rendererMap: RendererMap = {
     const header = `bundle \"${headerBundle}\" requires unknown package \"${payload.require}\"`
     const location = payload.location
     yield* renderSimpleSnippet(shared, location, header)
+  }),
+  MissingPath: (payload, shared) => Effect.gen(function*() {
+    const header = `path for '${payload.label}' does not exist: ${payload.path}`
+    yield* renderSimpleSnippet(shared, payload.location, header)
   }),
   DuplicateName: (payload, shared) => Effect.gen(function*() {
     const header = `duplicate ${payload.entity} \"${payload.name}\"`
