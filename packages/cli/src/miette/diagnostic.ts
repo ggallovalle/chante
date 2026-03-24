@@ -1,0 +1,52 @@
+import { Predicate, Schema } from "effect"
+import { LabeledSpan } from "./index.js"
+
+const TypeId = "~miette/Diagnostic"
+
+export const isDiagnostic = (u: unknown): u is Diagnostic => Predicate.hasProperty(u, TypeId)
+
+export class Diagnostic extends Schema.ErrorClass(TypeId)({
+  _tag: Schema.tag("Diagnostic"),
+  code: Schema.optional(Schema.String).annotate({
+    description: "Unique diagnostic code that can be used to look up more information about this Diagnostic. Ideally also globally unique, and documented in the toplevel crate’s documentation for easy searching. Rust path format (foo::bar::baz) is recommended, but more classic codes like E0123 or enums will work just fine."
+  }),
+  severity: Schema.optional(Schema.Literals(["advice", "warning", "error"])).annotate({
+    description: `Diagnostic severity. This may be used by ReportHandlers to change the display format of this diagnostic.
+
+If None, reporters should treat this as Severity::Error.`
+  }),
+  help: Schema.optional(Schema.String).annotate({
+    description: "Additional help text related to this Diagnostic. Do you have any advice for the poor soul who’s just run into this issue?"
+  }),
+  url: Schema.optional(Schema.String).annotate({
+    description: "URL to visit for a more detailed explanation/help about this Diagnostic."
+  }),
+  sourceCode: Schema.optional(Schema.Any).annotate({
+    description: "Source code to apply this Diagnostic’s Diagnostic::labels to."
+  }),
+  labels: Schema.optional(Schema.Array(LabeledSpan)).annotate({
+    description: "Labels to apply to this Diagnostic’s Diagnostic::source_code"
+  }),
+  related: Schema.optional(Schema.Array(Schema.suspend(() => LabeledSpan))).annotate({
+    description: "Additional related Diagnostics."
+  }),
+  diagnosticSource: Schema.optional(Schema.suspend(() => LabeledSpan)).annotate({
+    description: "The cause of the error."
+  }),
+}) {
+  /**
+   * @since 4.0.0
+   */
+  readonly [TypeId] = TypeId
+
+  get severityValue() {
+    return this.severity ?? "error"
+  }
+
+  override get message() {
+    const hasHelp = !Predicate.isUndefined(this.help)
+    const message = `${this.severityValue}: ${this.code}${hasHelp ? "\n" : ""}${this.help ?? ""}`
+    return message
+  }
+}
+
