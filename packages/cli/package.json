@@ -13,8 +13,8 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "test": "vitest run",
-    "test:watch": "vitest watch"
+    "test": "bunx --bun vitest run",
+    "test:watch": "bunx --bun vitest watch"
   },
   "dependencies": {
     "@bgotink/kdl": "^0.4.0",
