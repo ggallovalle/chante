@@ -1,0 +1,31 @@
+import { test as baseTest } from "vitest"
+import { Effect, Scope, Ref, Exit, Cause, Layer } from "effect"
+import { TestConsole, TestClock } from "effect/testing"
+
+const TestEnv = Layer.mergeAll(TestConsole.layer, TestClock.layer())
+
+export const test = baseTest
+  .extend("effect", async ({ }, { onCleanup }) => {
+    const scope = await Effect.runPromise(Scope.make("sequential"))
+    const ref = await Effect.runPromise(Ref.make(Exit.succeed(undefined) as Exit.Exit<any, any>))
+
+    onCleanup(async () => {
+      const exit = await Effect.runPromise(Ref.get(ref))
+      await Effect.runPromise(Scope.close(scope, exit))
+    })
+
+    const run: (test: Effect.Effect<any, any, Scope.Scope>) => Promise<any> = async (test) => {
+      const program = test.pipe(
+        Scope.provide(scope),
+        // Effect.provide(TestEnv)
+      )
+      const exit = await Effect.runPromiseExit(program)
+      await Effect.runPromise(Ref.set(ref, exit))
+      if (Exit.isFailure(exit)) {
+        const defect = Cause.prettyErrors(exit.cause)
+        throw defect
+      }
+    }
+
+    return run
+  })

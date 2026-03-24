@@ -1,4 +1,5 @@
-import { test, describe } from "vitest"
+import { describe } from "vitest"
+import { test } from "../fixtures.js"
 import { SourceOffset, SourceSpan, LabeledSpan, SpanContents } from "../../src/miette"
 
 describe("SourceOffset", () => {
