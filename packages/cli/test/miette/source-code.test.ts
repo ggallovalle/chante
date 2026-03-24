@@ -6,6 +6,7 @@ import {
   SourceSpan,
   SourceCode,
   StringSourceCode,
+  FromFileSourceCode,
   OutOfBounds
 } from "../../src/miette/index.js"
 
@@ -142,4 +143,8 @@ export function runSourceCodeTests(
 
 runSourceCodeTests("StringSourceCode", (source) => {
   return Effect.succeed(new StringSourceCode(source))
+})
+
+runSourceCodeTests("FromFileSourceCode", (source) => {
+  return Effect.succeed(new FromFileSourceCode("tmp", "some-path", "config.json", "json", new StringSourceCode(source)))
 })

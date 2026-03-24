@@ -1,5 +1,5 @@
 import { Schema } from "effect"
-export { type SourceCode, StringSourceCode } from "./source-code.js"
+export { type SourceCode, StringSourceCode, FromFileSourceCode } from "./source-code.js"
 export { type MietteError, OutOfBounds, IoError, isMietteError } from "./error.js"
 
 function utf8Length(char: string): number {

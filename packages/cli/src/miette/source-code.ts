@@ -106,7 +106,6 @@ export class StringSourceCode implements SourceCode {
         let {
           slice,
           startByte,
-          startLine,
           lineCount
         } = sliceWithContext(
           this.data,
@@ -163,4 +162,27 @@ export class StringSourceCode implements SourceCode {
     })
   }
 
+}
+
+
+export class FromFileSourceCode implements SourceCode {
+  #inner: SourceCode
+
+  constructor(public fs: string, public path: string, public name: string, public language: string, content: SourceCode) {
+    this.#inner = content
+  }
+
+  readSpan(span: SourceSpan, contextLinesBefore: number, contextLinesAfter: number): Effect.Effect<SpanContents, MietteError> {
+    return Effect.map(this.#inner.readSpan(span, contextLinesBefore, contextLinesAfter), (span) => {
+      return SpanContents.from({
+        data: span.data,
+        span: span.span,
+        line: span.line,
+        column: span.column,
+        lineCount: span.lineCount,
+        name: this.name,
+        language: this.language,
+      })
+    })
+  }
 }
