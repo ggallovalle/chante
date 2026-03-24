@@ -15,3 +15,12 @@ for file in examples/errors/*.kdl; do
 done
 ```
 
+
+## test
+
+> Run tests
+
+```bash
+bun run test
+```
+

@@ -12,7 +12,9 @@
     "chante": "./dist/cli.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest watch"
   },
   "dependencies": {
     "@bgotink/kdl": "^0.4.0",
@@ -21,7 +23,9 @@
     "effect": "catalog:effect"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "^22.5.4",
+    "vitest": "^4.1.0"
   },
   "engines": {
     "bun": ">=1.2.14",

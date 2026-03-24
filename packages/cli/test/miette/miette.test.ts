@@ -1,8 +1,8 @@
-import { test, describe, expect } from "bun:test"
-import { SourceOffset, SourceSpan, LabeledSpan, SpanContents } from "./index.js"
+import { test, describe } from "vitest"
+import { SourceOffset, SourceSpan, LabeledSpan, SpanContents } from "../../src/miette"
 
 describe("SourceOffset", () => {
-  test(".fromLocation (miette parity)", () => {
+  test(".fromLocation (miette parity)", ({ expect }) => {
     const source = "f\n\noo\r\nbar"
 
     expect(SourceOffset.fromLocation(source, 1, 1).offset).toBe(0)
@@ -23,7 +23,7 @@ describe("SourceOffset", () => {
     )
   })
 
-  test(".fromLocation handles UTF-8 correctly", () => {
+  test(".fromLocation handles UTF-8 correctly", ({ expect }) => {
     const source = "a💀b" // 💀 = 4 bytes
 
     expect(SourceOffset.fromLocation(source, 1, 1).offset).toBe(0)
@@ -33,7 +33,7 @@ describe("SourceOffset", () => {
 })
 
 describe("SourceSpan", () => {
-  test(".from creates a span correctly", () => {
+  test(".from creates a span correctly", ({ expect }) => {
     const start = SourceOffset.from(5)
     const span = SourceSpan.from(start, 10)
 
@@ -42,7 +42,7 @@ describe("SourceSpan", () => {
     expect(span.isEmpty).toBe(false)
   })
 
-  test(".isEmpty returns true for zero-length spans", () => {
+  test(".isEmpty returns true for zero-length spans", ({ expect }) => {
     const start = SourceOffset.from(3)
     const span = SourceSpan.from(start, 0)
 
@@ -51,7 +51,7 @@ describe("SourceSpan", () => {
     expect(span.isEmpty).toBe(true)
   })
 
-  test("offsetValue reflects underlying SourceOffset", () => {
+  test("offsetValue reflects underlying SourceOffset", ({ expect }) => {
     const start = SourceOffset.from(42)
     const span = SourceSpan.from(start, 1)
 
@@ -60,7 +60,7 @@ describe("SourceSpan", () => {
 })
 
 describe("LabeledSpan", () => {
-  test(".from creates non-primary labeled span", () => {
+  test(".from creates non-primary labeled span", ({ expect }) => {
     const span = LabeledSpan.from("hello", 5, 10)
 
     expect(span.label).toBe("hello")
@@ -69,7 +69,7 @@ describe("LabeledSpan", () => {
     expect(span.isPrimary).toBe(false)
   })
 
-  test(".fromSpan uses existing span", () => {
+  test(".fromSpan uses existing span", ({ expect }) => {
     const base = SourceSpan.from(SourceOffset.from(3), 4)
     const span = LabeledSpan.fromSpan("label", base)
 
@@ -78,14 +78,14 @@ describe("LabeledSpan", () => {
     expect(span.len).toBe(4)
   })
 
-  test(".primaryFromSpan sets primary=true", () => {
+  test(".primaryFromSpan sets primary=true", ({ expect }) => {
     const base = SourceSpan.from(SourceOffset.from(1), 2)
     const span = LabeledSpan.primaryFromSpan("primary", base)
 
     expect(span.isPrimary).toBe(true)
   })
 
-  test(".at creates labeled span from span", () => {
+  test(".at creates labeled span from span", ({ expect }) => {
     const base = SourceSpan.from(SourceOffset.from(0), 3)
     const span = LabeledSpan.at(base, "test")
 
@@ -93,14 +93,14 @@ describe("LabeledSpan", () => {
     expect(span.len).toBe(3)
   })
 
-  test(".atOffset creates zero-length span", () => {
+  test(".atOffset creates zero-length span", ({ expect }) => {
     const span = LabeledSpan.atOffset(4, "msg")
 
     expect(span.offset).toBe(4)
     expect(span.len).toBe(0)
   })
 
-  test(".underline creates unlabeled span", () => {
+  test(".underline creates unlabeled span", ({ expect }) => {
     const base = SourceSpan.from(SourceOffset.from(2), 5)
     const span = LabeledSpan.underline(base)
 
@@ -113,7 +113,7 @@ describe("SpanContents", () => {
   const data = new TextEncoder().encode("hello world")
   const span = SourceSpan.from(SourceOffset.from(0), 5)
 
-  test(".from creates basic contents", () => {
+  test(".from creates basic contents", ({ expect }) => {
     const contents = SpanContents.from({
       data,
       span,
@@ -131,7 +131,7 @@ describe("SpanContents", () => {
     expect(contents.language).toBeUndefined()
   })
 
-  test(".fromNamed sets name", () => {
+  test(".fromNamed sets name", ({ expect }) => {
     const contents = SpanContents.fromNamed({
       name: "file.ts",
       data,
@@ -144,7 +144,7 @@ describe("SpanContents", () => {
     expect(contents.name).toBe("file.ts")
   })
 
-  test(".withLanguage returns new instance", () => {
+  test(".withLanguage returns new instance", ({ expect }) => {
     const contents = SpanContents.from({
       data,
       span,
@@ -159,7 +159,7 @@ describe("SpanContents", () => {
     expect(updated.language).toBe("ts")
   })
 
-  test("derived getters work", () => {
+  test("derived getters work", ({ expect }) => {
     const contents = SpanContents.from({
       data,
       span,
