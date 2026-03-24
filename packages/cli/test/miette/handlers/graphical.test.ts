@@ -1,27 +1,67 @@
-import { describe } from "vitest"
+import { describe, assert } from "vitest"
 import { Effect, Stream } from "effect"
 import { test } from "../../fixtures.js"
 import { GraphicalReportHandler } from "../../../src/miette/handlers/graphical.js"
+import { GraphicalTheme } from "../../../src/miette/handlers/theme.js"
 import { Diagnostic } from "../../../src/miette/diagnostic.js"
 
+const getReport = Effect.fnUntraced(function*(handler: GraphicalReportHandler, diagnostic: Diagnostic) {
+  const report = yield* Stream.runCollect(
+    handler.renderReport(diagnostic)
+    // .pipe(
+    //   Stream.tap((line) => Effect.log(`line-> ${line}`))
+    // )
+  )
+
+  const iterator = {
+    index: 0,
+    values: report,
+    get done() {
+      return this.index === this.values.length
+    },
+    next() {
+      const value = this.values[this.index]
+      this.index = this.index + 1
+      return value
+    }
+  }
+
+
+  return iterator
+})
+
+const baseHandler = GraphicalReportHandler.themed(GraphicalTheme.unicodeNoColor())
+
 describe("GraphicalReportHandler", () => {
-  test("renderReport emits items in order", ({ expect, effect }) =>
+  test("header includes the code and the url", ({ expect, effect }) =>
     effect(Effect.gen(function*() {
-      const handler = GraphicalReportHandler.default()
-      const diagnostic = new Diagnostic({})
+      const diagnostic = new Diagnostic({
+        code: "E0001",
+        url: "https://example.com",
+        severity: "error"
+      })
+      const report = yield* getReport(baseHandler, diagnostic)
 
-      const report = yield* Stream.runCollect(
-        handler.renderReport(diagnostic),
-      )
+      expect(report.next()).toEqual("E0001 (https://example.com)")
+      expect(report.next()).toEqual("")
+      assert(report.done)
+    }))
+  )
 
-      expect(report).toEqual([
-        "hello world",
-        "hello world",
-        "hello inner",
-        "hello inner",
-        "hello header",
-        "hello header",
-      ])
+  test("when options.link == none dont show the url", ({ expect, effect }) =>
+    effect(Effect.gen(function*() {
+      const handler = new GraphicalReportHandler({ ...baseHandler, links: "none" })
+
+      const diagnostic = new Diagnostic({
+        code: "E0002",
+        url: "https://example.com/hidden",
+        severity: "warning"
+      })
+      const report = yield* getReport(handler, diagnostic)
+
+      expect(report.next()).toEqual("E0002")
+      expect(report.next()).toEqual("")
+      assert(report.done)
     }))
   )
 })
