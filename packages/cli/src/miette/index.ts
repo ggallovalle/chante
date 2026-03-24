@@ -208,4 +208,8 @@ export class SpanContents extends Schema.Class<SpanContents>("miette/SpanContent
   get len(): number {
     return this.span.len
   }
+
+  decode(): string {
+    return new TextDecoder().decode(this.data)
+  }
 }
