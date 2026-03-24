@@ -78,6 +78,54 @@ export function runSourceCodeTests(
       expect(contents.line).toBe(1)
       expect(contents.column).toBe(0)
     })
+
+    test("with_context", async () => {
+      const src = create("xxx\nfoo\nbar\nbaz\n\nyyy\n")
+      const span = SourceSpan.from(SourceOffset.from(8), 3)
+
+      const exit = await Effect.runPromiseExit(src.readSpan(span, 1, 1))
+      if (!Exit.isSuccess(exit)) throw exit.cause
+
+      const contents = exit.value
+
+      expect(decode(contents.data)).toBe("foo\nbar\nbaz\n")
+      expect(contents.line).toBe(1)
+      expect(contents.column).toBe(0)
+    })
+
+    test("multiline_with_context", async () => {
+      const src = create("aaa\nxxx\n\nfoo\nbar\nbaz\n\nyyy\nbbb\n")
+      const span = SourceSpan.from(SourceOffset.from(9), 11)
+
+      const exit = await Effect.runPromiseExit(src.readSpan(span, 1, 1))
+      if (!Exit.isSuccess(exit)) throw exit.cause
+
+      const contents = exit.value
+
+      expect(decode(contents.data)).toBe("\nfoo\nbar\nbaz\n\n")
+      expect(contents.line).toBe(2)
+      expect(contents.column).toBe(0)
+
+      const expectedSpan = SourceSpan.from(SourceOffset.from(8), 14)
+      expect(contents.span).toEqual(expectedSpan)
+    })
+
+    test("multiline_with_context_line_start", async () => {
+      const src = create("one\ntwo\n\nthree\nfour\nfive\n\nsix\nseven\n")
+      const span = SourceSpan.from(SourceOffset.from(2), 0)
+
+      const exit = await Effect.runPromiseExit(src.readSpan(span, 2, 2))
+      if (!Exit.isSuccess(exit)) throw exit.cause
+
+      const contents = exit.value
+
+      expect(decode(contents.data)).toBe("one\ntwo\n\n")
+      expect(contents.line).toBe(0)
+      expect(contents.column).toBe(0)
+
+      const expectedSpan = SourceSpan.from(SourceOffset.from(0), 9)
+      expect(contents.span).toEqual(expectedSpan)
+    })
   })
 }
 
@@ -85,4 +133,3 @@ export function runSourceCodeTests(
 runSourceCodeTests("StringSourceCode", (source) => {
   return new StringSourceCode(source)
 })
-

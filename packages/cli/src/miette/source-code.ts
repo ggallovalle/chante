@@ -1,6 +1,6 @@
 import { Effect } from "effect"
 import { type MietteError, OutOfBounds } from "./error.js"
-import { SourceSpan, SpanContents } from "./index.js"
+import { SourceOffset, SourceSpan, SpanContents } from "./index.js"
 
 export interface SourceCode {
   readSpan(
@@ -128,6 +128,11 @@ export class StringSourceCode implements SourceCode {
           lineCount = endLine - lineInSource + 1
         }
 
+        const { line: lineAtSliceStart } = findLineAndColumn(
+          startByte,
+          this.lineStarts
+        )
+
         // With context we reset column to 0 (miette's behaviour for these
         // tests). Without context it reflects the real column in the source.
         const column =
@@ -135,10 +140,19 @@ export class StringSourceCode implements SourceCode {
             ? start - this.lineStarts[lineInSource]
             : 0
 
+        const line = contextBefore === 0 && contextAfter === 0
+          ? lineInSource
+          : lineAtSliceStart
+
+        const spanForContents = SourceSpan.from(
+          SourceOffset.from(startByte),
+          slice.length
+        )
+
         return SpanContents.from({
           data: slice,
-          span,
-          line: lineInSource,
+          span: spanForContents,
+          line,
           column,
           lineCount
         })
