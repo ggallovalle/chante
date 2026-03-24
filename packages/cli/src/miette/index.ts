@@ -1,6 +1,7 @@
 import { Schema } from "effect"
 export { type SourceCode, StringSourceCode, FromFileSourceCode } from "./source-code.js"
 export { type MietteError, OutOfBounds, IoError, isMietteError } from "./error.js"
+export { GraphicalTheme, ThemeCharacters, ThemeStyles } from "./handlers/theme.js"
 
 function utf8Length(char: string): number {
   const codePoint = char.codePointAt(0)!

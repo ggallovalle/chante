@@ -110,11 +110,10 @@ export class Style extends Schema.Class<Style>("colors/Style")({
   }
 }
 
-export class Styled {
-  constructor(
-    readonly style: Style,
-    private readonly prefix: string
-  ) { }
+export class Styled extends Schema.Class<Styled>("colors/Styled")({
+  style: Style,
+  prefix: Schema.String
+}) {
 
   stiled(value: any): string {
     return `${this.prefix}${value}\x1b[0m`
@@ -240,7 +239,6 @@ class StyleBuilder {
       }
     }
 
-    return new Styled(this.style, prefix)
+    return new Styled({ style: this.style, prefix })
   }
 }
-
