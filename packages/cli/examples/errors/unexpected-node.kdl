@@ -1,0 +1,8 @@
+bundles {
+  bundle "shells" {
+    config {
+      cp "from" "to"
+      unknown "from" "to"
+    }
+  }
+}

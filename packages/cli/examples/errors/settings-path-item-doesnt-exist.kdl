@@ -1,0 +1,5 @@
+settings {
+  paths {
+    dotfiles "$HOME/some-folder"
+  }
+}

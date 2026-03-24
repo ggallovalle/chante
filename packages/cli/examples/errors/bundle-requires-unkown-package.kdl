@@ -1,0 +1,11 @@
+packages {
+  package "zsh"
+}
+
+bundles {
+  bundle "shells" {
+    require "zsh"
+    require "unknown"
+  }
+}
+

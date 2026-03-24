@@ -1,0 +1,8 @@
+settings {
+
+}
+
+packagesxx {
+  package "zsh"
+  package "bash"
+}
