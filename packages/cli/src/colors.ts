@@ -112,11 +112,12 @@ export class Style extends Schema.Class<Style>("colors/Style")({
 
 export class Styled extends Schema.Class<Styled>("colors/Styled")({
   style: Style,
-  prefix: Schema.String
+  prefix: Schema.String,
+  sufix: Schema.String
 }) {
 
   stiled(value: any): string {
-    return `${this.prefix}${value}\x1b[0m`
+    return `${this.prefix}${value}${this.sufix}`
   }
 }
 
@@ -239,6 +240,8 @@ class StyleBuilder {
       }
     }
 
-    return new Styled({ style: this.style, prefix })
+    const sufix = prefix === "" ? "" : "\x1b[0m"
+
+    return new Styled({ style: this.style, prefix, sufix })
   }
 }

@@ -13,9 +13,9 @@ const bgFromFg = (fg: string): string => {
 }
 
 describe("Style.builder", () => {
-  test("baseline no style adds only reset", ({ expect }) => {
+  test("baseline no style doesn't add reset", ({ expect }) => {
     const styled = Style.builder().buildAnsi().stiled("x")
-    expect(styled).toBe(`x${reset}`)
+    expect(styled).toBe("x")
   })
 
   test("foreground css color is applied", ({ expect }) => {
@@ -81,8 +81,8 @@ describe("Style.builder", () => {
     )
   })
 
-  test("stiled converts non-string payloads and appends reset", ({ expect }) => {
+  test("stiled converts non-string payloads", ({ expect }) => {
     const styled = Style.builder().buildAnsi().stiled(123)
-    expect(styled).toBe(`123${reset}`)
+    expect(styled).toBe("123")
   })
 })
