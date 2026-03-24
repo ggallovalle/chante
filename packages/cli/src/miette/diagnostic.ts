@@ -27,10 +27,10 @@ If None, reporters should treat this as Severity::Error.`
   labels: Schema.optional(Schema.Array(LabeledSpan)).annotate({
     description: "Labels to apply to this Diagnostic’s Diagnostic::source_code"
   }),
-  related: Schema.optional(Schema.Array(Schema.suspend(() => LabeledSpan))).annotate({
+  related: Schema.optional(Schema.Array(Schema.suspend((): Schema.Codec<Diagnostic> => Diagnostic as any))).annotate({
     description: "Additional related Diagnostics."
   }),
-  diagnosticSource: Schema.optional(Schema.suspend(() => LabeledSpan)).annotate({
+  diagnosticSource: Schema.optional(Schema.suspend((): Schema.Codec<Diagnostic> => Diagnostic as any)).annotate({
     description: "The cause of the error."
   }),
 }) {
