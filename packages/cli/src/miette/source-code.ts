@@ -48,7 +48,10 @@ function sliceWithContext(
   const endOffset = startOffset + span.len
 
   const { line: startLine } = findLineAndColumn(startOffset, lineStarts)
-  const { line: endLine } = findLineAndColumn(endOffset, lineStarts)
+  // `endOffset` is exclusive, so use the last byte in the span to find the
+  // ending line. When the span is empty we fall back to the start line.
+  const lastOffset = span.len === 0 ? startOffset : endOffset - 1
+  const { line: endLine } = findLineAndColumn(lastOffset, lineStarts)
 
   const contextStartLine = Math.max(0, startLine - before)
   const contextEndLine = Math.min(lineStarts.length - 1, endLine + after)
@@ -76,6 +79,16 @@ export class StringSourceCode implements SourceCode {
     this.lineStarts = computeLineStarts(this.data)
   }
 
+  /**
+   * Return the bytes contained in `span`, optionally padded with a number of
+   * lines before and after the span (mirroring rust miette semantics).
+   *
+   * - With zero context lines we return exactly the span bytes.
+   * - With context, we expand to include the requested surrounding lines.
+   * - `line` is always the line number in the original source.
+   * - `column` is the real column when no context is requested; otherwise it is
+   *   reset to the start of the returned slice.
+   */
   readSpan(
     span: SourceSpan,
     contextBefore: number,
@@ -90,9 +103,10 @@ export class StringSourceCode implements SourceCode {
           throw new OutOfBounds()
         }
 
-        const {
+        let {
           slice,
           startByte,
+          startLine,
           lineCount
         } = sliceWithContext(
           this.data,
@@ -102,15 +116,29 @@ export class StringSourceCode implements SourceCode {
           contextAfter
         )
 
-        const { line } = findLineAndColumn(start, this.lineStarts)
+        const { line: lineInSource } = findLineAndColumn(start, this.lineStarts)
 
-        // ✅ column relative to slice
-        const column = start - startByte
+        // Without context we want the exact span, not the surrounding line(s).
+        if (contextBefore === 0 && contextAfter === 0) {
+          slice = this.data.slice(start, end)
+          startByte = start
+
+          const lastOffset = span.len === 0 ? start : end - 1
+          const { line: endLine } = findLineAndColumn(lastOffset, this.lineStarts)
+          lineCount = endLine - lineInSource + 1
+        }
+
+        // With context we reset column to 0 (miette's behaviour for these
+        // tests). Without context it reflects the real column in the source.
+        const column =
+          contextBefore === 0 && contextAfter === 0
+            ? start - this.lineStarts[lineInSource]
+            : 0
 
         return SpanContents.from({
           data: slice,
           span,
-          line,
+          line: lineInSource,
           column,
           lineCount
         })
