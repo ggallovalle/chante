@@ -17,6 +17,7 @@
   "dependencies": {
     "@bgotink/kdl": "^0.4.0",
     "@effect/platform-node": "catalog:effect",
+    "@shikijs/cli": "^4.0.2",
     "effect": "catalog:effect"
   },
   "devDependencies": {
