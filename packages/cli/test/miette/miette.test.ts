@@ -1,6 +1,6 @@
 import { describe } from "vitest"
 import { test } from "../fixtures.js"
-import { SourceOffset, SourceSpan, LabeledSpan, SpanContents } from "../../src/miette"
+import { SourceOffset, SourceSpan, LabeledSpan, SpanContents } from "../../src/miette.js"
 
 describe("SourceOffset", () => {
   test(".fromLocation (miette parity)", ({ expect }) => {

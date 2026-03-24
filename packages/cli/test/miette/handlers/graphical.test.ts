@@ -1,9 +1,7 @@
 import { describe, assert } from "vitest"
 import { Effect, Stream } from "effect"
 import { test } from "../../fixtures.js"
-import { GraphicalReportHandler } from "../../../src/miette/handlers/graphical.js"
-import { GraphicalTheme } from "../../../src/miette/handlers/theme.js"
-import { Diagnostic } from "../../../src/miette/diagnostic.js"
+import { Diagnostic, GraphicalTheme, GraphicalReportHandler } from "../../../src/miette.js"
 
 const getReport = Effect.fnUntraced(function*(handler: GraphicalReportHandler, diagnostic: Diagnostic) {
   const report = yield* Stream.runCollect(handler.renderReport(diagnostic))
@@ -30,7 +28,7 @@ describe("GraphicalReportHandler", () => {
   test("header includes the code and the url", ({ expect, effect }) =>
     effect(Effect.gen(function*() {
       const diagnostic = new Diagnostic({
-        message: "root",
+        info: "root",
         code: "E0001",
         url: "https://example.com",
         severity: "error"
@@ -38,10 +36,6 @@ describe("GraphicalReportHandler", () => {
       const report = yield* getReport(baseHandler, diagnostic)
 
       expect(report.next()).toEqual("E0001 (https://example.com)")
-      expect(report.next()).toEqual("")
-      expect(report.next()).toEqual("  × root")
-      expect(report.next()).toEqual("")
-      assert(report.done)
     }))
   )
 
@@ -50,7 +44,7 @@ describe("GraphicalReportHandler", () => {
       const handler = new GraphicalReportHandler({ ...baseHandler, links: "none" })
 
       const diagnostic = new Diagnostic({
-        message: "root hidden",
+        info: "root hidden",
         code: "E0002",
         url: "https://example.com/hidden",
         severity: "warning"
@@ -58,8 +52,47 @@ describe("GraphicalReportHandler", () => {
       const report = yield* getReport(handler, diagnostic)
 
       expect(report.next()).toEqual("E0002")
-      expect(report.next()).toEqual("")
-      expect(report.next()).toEqual("  × root hidden")
+    }))
+  )
+
+  test.for([
+    [
+      "error",
+      "  × file not found",
+      new Diagnostic({
+        info: "file not found",
+        code: "E0001",
+        url: "https://example.com",
+        severity: "error"
+      })
+    ],
+    [
+      "warning",
+      "  ⚠ root hidden",
+      new Diagnostic({
+        info: "root hidden",
+        code: "E0002",
+        url: "https://example.com/hidden",
+        severity: "warning"
+      })
+    ],
+    [
+      "advice",
+      "  ☞ file a complain",
+      new Diagnostic({
+        info: "file a complain",
+        code: "E0003",
+        url: "https://example.com/whoami",
+        severity: "advice"
+      }),
+    ]
+  ] as const)("renders the icon according to severity($0)", ([_, message, diagnostic], { expect, effect }) =>
+    effect(Effect.gen(function*() {
+      const report = yield* getReport(baseHandler, diagnostic)
+
+      report.next()
+      report.next()
+      expect(report.next()).toEqual(message)
       expect(report.next()).toEqual("")
       assert(report.done)
     }))
@@ -68,18 +101,18 @@ describe("GraphicalReportHandler", () => {
   test("renders the cause chain", ({ expect, effect }) =>
     effect(Effect.gen(function*() {
       const deepest = new Diagnostic({
-        message: "inner-most",
+        info: "inner-most",
         severity: "error"
       })
 
       const inner = new Diagnostic({
-        message: "inner",
+        info: "inner",
         diagnosticSource: deepest,
         severity: "error"
       })
 
       const root = new Diagnostic({
-        message: "root",
+        info: "root",
         diagnosticSource: inner,
         severity: "error"
       })

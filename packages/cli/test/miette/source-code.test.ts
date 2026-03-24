@@ -8,7 +8,7 @@ import {
   StringSourceCode,
   FromFileSourceCode,
   OutOfBounds
-} from "../../src/miette/index.js"
+} from "../../src/miette.js"
 
 export function runSourceCodeTests(
   name: string,

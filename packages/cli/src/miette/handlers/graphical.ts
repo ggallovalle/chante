@@ -168,26 +168,26 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     return lines
   }
 
-  private renderCauses(queue: Queue.Queue<string, Cause.Done>, diagnostic: Diagnostic, parentSrc?: SourceCode) {
+  private renderCauses(queue: Queue.Queue<string, Cause.Done>, diagnostic: Diagnostic, _parentSrc?: SourceCode) {
     const self = this
     return Effect.gen(function*() {
-      const severityStyle: Styled = (() => {
+      const [severityStyle, severityIcon] = (() => {
         switch (diagnostic.severity) {
           case "warning":
-            return self.theme.styles.warning
+            return [self.theme.styles.warning, self.theme.characters.warning]
           case "advice":
-            return self.theme.styles.advice
+            return [self.theme.styles.advice, self.theme.characters.advice]
           case "error":
           default:
-            return self.theme.styles.error
+            return [self.theme.styles.error, self.theme.characters.error]
         }
       })()
 
       let emitted = false
       const width = Math.max(0, self.termwidth - 2)
 
-      const iconIndent = `${severityStyle.stiled(`${self.theme.characters.error}`)}`
-      const rootLines = self.wrapText(diagnostic.message, {
+      const iconIndent = `${severityStyle.stiled(`${severityIcon}`)}`
+      const rootLines = self.wrapText(diagnostic.info, {
         initialIndent: `  ${iconIndent} `,
         subsequentIndent: `  ${severityStyle.stiled(self.theme.characters.vbar)} `,
         width,
@@ -217,7 +217,7 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
         const subsequentIndent = `  ${severityStyle.stiled(restGlyph)}   `
         const availableWidth = Math.max(0, width - subsequentIndent.length)
 
-        const wrapped = self.wrapText(cause.message, {
+        const wrapped = self.wrapText(cause.info, {
           initialIndent,
           subsequentIndent,
           width: availableWidth,

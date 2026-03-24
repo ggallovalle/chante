@@ -1,5 +1,5 @@
 import { Predicate, Schema } from "effect"
-import { LabeledSpan } from "./index.js"
+import { LabeledSpan } from "./protocol.js"
 
 const TypeId = "~miette/Diagnostic"
 
@@ -7,7 +7,7 @@ export const isDiagnostic = (u: unknown): u is Diagnostic => Predicate.hasProper
 
 export class Diagnostic extends Schema.ErrorClass(TypeId)({
   _tag: Schema.tag("Diagnostic"),
-  message: Schema.String,
+  info: Schema.String,
   template: Schema.optional(Schema.String),
   meta: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   code: Schema.optional(Schema.String).annotate({
@@ -44,5 +44,22 @@ If None, reporters should treat this as Severity::Error.`
 
   get severityValue() {
     return this.severity ?? "error"
+  }
+
+  override get message() {
+    const code = this.code === "undefined" ? "" : `(${this.code})`
+    return `${this.severityValue}: ${code} ${this.info}`
+  }
+
+  toJSON() {
+    return {
+      code: this.code,
+      message: this.info,
+      severity: this.severityValue
+    }
+  }
+
+  override toString() {
+    return `Diagnostic(${this.message})`
   }
 }

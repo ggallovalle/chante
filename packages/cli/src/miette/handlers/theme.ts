@@ -73,7 +73,7 @@ export class ThemeCharacters extends Schema.Class<ThemeCharacters>("miette/Theme
       underbar: "┬",
       underline: "─",
       error: "💥",
-      warning: "⚠️",
+      warning: "⚠",
       advice: "💡"
     })
   }
