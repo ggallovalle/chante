@@ -7,6 +7,9 @@ export const isDiagnostic = (u: unknown): u is Diagnostic => Predicate.hasProper
 
 export class Diagnostic extends Schema.ErrorClass(TypeId)({
   _tag: Schema.tag("Diagnostic"),
+  message: Schema.String,
+  template: Schema.optional(Schema.String),
+  meta: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   code: Schema.optional(Schema.String).annotate({
     description: "Unique diagnostic code that can be used to look up more information about this Diagnostic. Ideally also globally unique, and documented in the toplevel crate’s documentation for easy searching. Rust path format (foo::bar::baz) is recommended, but more classic codes like E0123 or enums will work just fine."
   }),
@@ -42,11 +45,4 @@ If None, reporters should treat this as Severity::Error.`
   get severityValue() {
     return this.severity ?? "error"
   }
-
-  override get message() {
-    const hasHelp = !Predicate.isUndefined(this.help)
-    const message = `${this.severityValue}: ${this.code}${hasHelp ? "\n" : ""}${this.help ?? ""}`
-    return message
-  }
 }
-

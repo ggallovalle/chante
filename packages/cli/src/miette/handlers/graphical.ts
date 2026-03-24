@@ -1,4 +1,5 @@
 import { Stream, Effect, Schema, Queue, Cause } from "effect"
+import wrapAnsi from "wrap-ansi"
 import { GraphicalTheme } from "./theme.js"
 import { Diagnostic } from "../diagnostic.js"
 import { SourceCode } from "../source-code.js"
@@ -73,6 +74,7 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     return Effect.gen(function*() {
       const _src: SourceCode | undefined = diagnostic.sourceCode ?? parentSrc
       yield* self.renderHeader(queue, diagnostic, false)
+      yield* self.renderCauses(queue, diagnostic, _src)
     })
   }
 
@@ -115,5 +117,123 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       }
     })
   }
-}
 
+  private collectCauses(diagnostic?: Diagnostic | null): Array<Diagnostic> {
+    const causes: Diagnostic[] = []
+    let current: Diagnostic | undefined | null = diagnostic
+    while (current) {
+      causes.push(current)
+      current = current.diagnosticSource
+    }
+    return causes
+  }
+
+  private wrapText(text: string, opts: { initialIndent: string; subsequentIndent: string; width: number; wrapLines: boolean; breakWords: boolean }) {
+    const { initialIndent, subsequentIndent, width, wrapLines, breakWords } = opts
+
+    const lines: string[] = []
+
+    if (wrapLines) {
+      const wrapped = wrapAnsi(text, Math.max(0, width), {
+        hard: breakWords,
+        trim: false
+      })
+
+      wrapped.split("\n").forEach((line, idx) => {
+        lines.push(`${idx === 0 ? initialIndent : subsequentIndent}${line}`)
+      })
+
+      return lines
+    }
+
+    const trimmedSub = subsequentIndent.trimEnd()
+    const parts = text.split("\n")
+
+    parts.forEach((line, idx) => {
+      let prefix: string
+      if (idx === 0) {
+        prefix = line.trim().length === 0 ? initialIndent.trimEnd() : initialIndent
+      } else if (line.trim().length === 0) {
+        prefix = trimmedSub
+      } else {
+        prefix = subsequentIndent
+      }
+      lines.push(`${prefix}${line}`)
+    })
+
+    if (text.endsWith("\n")) {
+      lines.push("")
+    }
+
+    return lines
+  }
+
+  private renderCauses(queue: Queue.Queue<string, Cause.Done>, diagnostic: Diagnostic, parentSrc?: SourceCode) {
+    const self = this
+    return Effect.gen(function*() {
+      const severityStyle: Styled = (() => {
+        switch (diagnostic.severity) {
+          case "warning":
+            return self.theme.styles.warning
+          case "advice":
+            return self.theme.styles.advice
+          case "error":
+          default:
+            return self.theme.styles.error
+        }
+      })()
+
+      let emitted = false
+      const width = Math.max(0, self.termwidth - 2)
+
+      const iconIndent = `${severityStyle.stiled(`${self.theme.characters.error}`)}`
+      const rootLines = self.wrapText(diagnostic.message, {
+        initialIndent: `  ${iconIndent} `,
+        subsequentIndent: `  ${severityStyle.stiled(self.theme.characters.vbar)} `,
+        width,
+        wrapLines: self.wrapLines,
+        breakWords: self.breakWords
+      })
+
+      for (const line of rootLines) {
+        yield* Queue.offer(queue, line)
+        emitted = true
+      }
+
+      if (!self.withCauseChain) {
+        if (emitted) yield* Queue.offer(queue, "")
+        return
+      }
+
+      const causes = self.collectCauses(diagnostic.diagnosticSource)
+
+      for (let i = 0; i < causes.length; i++) {
+        const cause = causes[i]
+        const isLast = i === causes.length - 1
+        const branch = isLast ? self.theme.characters.lbot : self.theme.characters.lcross
+        const branchPrefix = `${branch}${self.theme.characters.hbar}${self.theme.characters.rarrow}`
+        const initialIndent = `  ${severityStyle.stiled(branchPrefix)} `
+        const restGlyph = isLast ? " " : self.theme.characters.vbar
+        const subsequentIndent = `  ${severityStyle.stiled(restGlyph)}   `
+        const availableWidth = Math.max(0, width - subsequentIndent.length)
+
+        const wrapped = self.wrapText(cause.message, {
+          initialIndent,
+          subsequentIndent,
+          width: availableWidth,
+          wrapLines: self.wrapLines,
+          breakWords: self.breakWords
+        })
+
+        for (const line of wrapped) {
+          yield* Queue.offer(queue, line)
+          emitted = true
+        }
+      }
+
+      if (emitted) {
+        yield* Queue.offer(queue, "")
+      }
+    })
+  }
+}
