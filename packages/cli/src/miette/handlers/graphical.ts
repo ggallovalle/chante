@@ -35,18 +35,22 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   }
 
   public renderReport(diagnostic: Diagnostic) {
+    const self = this
     return Stream.callback<string>((queue) => {
       return Effect.gen(function*() {
+        yield* Effect.log("starting report")
         yield* Queue.offer(queue, "hello world")
         yield* Queue.offer(queue, "hello world")
+        yield* self.renderReportInner(queue, diagnostic, diagnostic.sourceCode)
+        yield* Queue.end(queue)
       })
     })
   }
 
-  private renderReportInner(queue: Queue.Queue<string, Cause.Done>, diagnostic: Diagnostic, parentSrc: SourceCode) {
+  private renderReportInner(queue: Queue.Queue<string, Cause.Done>, diagnostic: Diagnostic, parentSrc?: SourceCode) {
     const self = this
     return Effect.gen(function*() {
-      const src: SourceCode = diagnostic.sourceCode ?? parentSrc
+      const src: SourceCode | undefined = diagnostic.sourceCode ?? parentSrc
       yield* Queue.offer(queue, "hello inner")
       yield* Queue.offer(queue, "hello inner")
       yield* self.renderHeader(queue, diagnostic, false)
