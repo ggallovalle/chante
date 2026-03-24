@@ -236,13 +236,11 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
   const kdlIssues: KdlIssue[] = []
   const failWith: FailWith = (...issues) => invalid(issues, opts)
 
-
   const settings = yield* getSettings(doc, failWith)
-  const packages = yield* childRequired(doc, "packages", failWith)
 
   const configPkgs = []
   const packageNames = new Map<string, StoredLocation>()
-  for (const pkg of packages.findNodesByName("package")) {
+  for (const pkg of doc.findNodeByName("packages")?.findNodesByName("package") ?? []) {
     const name = yield* argumentString(pkg, 0, failWith)
     const pkgLoc = getLocationStrict(pkg)
     const existing = packageNames.get(name)
@@ -264,11 +262,9 @@ export const parseFrom = Effect.fn("parseFrom")(function*(opts: ParseContext) {
   }
 
 
-  const bundles = yield* childRequired(doc, "bundles", failWith)
-
   const configBundles = []
   const bundleNames = new Map<string, StoredLocation>()
-  for (const bundle of bundles.findNodesByName("bundle")) {
+  for (const bundle of doc.findNodeByName("bundles")?.findNodesByName("bundle") ?? []) {
     const bundleName = yield* argumentString(bundle, 0, failWith)
     const bundleLoc = getLocationStrict(bundle)
     const existing = bundleNames.get(bundleName)
