@@ -1,19 +1,39 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "module": "Node20",
-    "target": "ES2023",
-    "lib": [
-      "ES2023"
-    ],
-    "incremental": true,
-    "declaration": true,
-    "sourceMap": false,
+    // based of: https://github.com/tsconfig/bases/blob/main/bases/bun.json
+    // Environment setup & latest features
+    "lib": ["ESNext"],
+    "target": "ESNext",
+    "module": "Preserve",
+    "moduleDetection": "force",
+    "jsx": "react-jsx",
+    "allowJs": false,
+
+    // Bundler mode
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+
+    // Linting
+    // based of: https://github.com/tsconfig/bases/blob/main/bases/strictest.json
     "strict": true,
-    "esModuleInterop": true,
-    "preserveConstEnums": true,
-    "forceConsistentCasingInFileNames": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
-    "noImplicitReturns": true
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+
+    // interop constrains
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
   },
   "exclude": [
     "**/node_modules",
