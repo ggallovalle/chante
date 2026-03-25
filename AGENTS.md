@@ -24,7 +24,8 @@ Bun 1.3+, TypeScript 5.9, Effect 4-beta, Vite 8, Vitest 4
 ## Code Style
 
 - **Formatting**: Spaces (not tabs), double quotes for strings
-- **Imports**: Use `@repo/domain` for shared types; Biome auto-organizes imports
+- **Re-exports**: Avoid barrel `index.ts` files; use `<folder-name>.ts` to re-export public contents from a sibling directory named `<folder-name>/`
+- **Imports**: Use `@repo/domain` for shared types; for internal project imports within `src`, always include the file extension (e.g., `import "~/config.js"`); Biome auto-organizes imports
 - **Types**: Effect Schema for validation; `typeof Schema.Type` for inline
   types, `Schema.Schema.Type<typeof T>` for exports
 - **Naming**: camelCase variables/functions, PascalCase types/classes, file-name for files
