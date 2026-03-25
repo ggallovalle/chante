@@ -24,9 +24,9 @@
     "wrap-ansi": "^9.0.0"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^22.5.4",
-    "vitest": "^4.1.0"
+    "@types/bun": "catalog:typescript",
+    "@types/node": "catalog:typescript",
+    "vitest": "catalog:vite"
   },
   "engines": {
     "bun": ">=1.2.14",

@@ -12,6 +12,14 @@
         "@effect/platform-bun": "^4.0.0-beta.36",
         "@effect/platform-node": "^4.0.0-beta.36",
         "@effect/language-service": "^0.81.0"
+      },
+      "vite": {
+        "vitest": "^4.1.0"
+      },
+      "typescript": {
+        "typescript": "5.9.3",
+        "@types/bun": "latest",
+        "@types/node": "^22.5.4",
       }
     }
   },
@@ -23,8 +31,8 @@
     "url": "git+ssh://git@github.com/ggallovalle/chante.git"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "5.9.3",
+    "@types/bun": "catalog:typescript",
+    "typescript": "catalog:typescript",
     "@effect/language-service": "catalog:effect"
   },
   "engines": {
