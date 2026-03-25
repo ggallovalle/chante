@@ -2,7 +2,7 @@ import { Stream, Effect, Schema, Queue, Cause } from "effect"
 import wrapAnsi from "wrap-ansi"
 import { GraphicalTheme } from "~/miette/handlers/theme.js"
 import { Diagnostic } from "~/miette/diagnostic.js"
-import { SourceCode } from "~/miette/source-code.js"
+import type { SourceCode } from "~/miette/source-code.js"
 import { Styled } from "~/colors.js"
 
 export const LinkStyle = Schema.Literals(["link", "text", "none"])
@@ -120,10 +120,10 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
 
   private collectCauses(diagnostic?: Diagnostic | null): Array<Diagnostic> {
     const causes: Diagnostic[] = []
-    let current: Diagnostic | undefined | null = diagnostic
-    while (current) {
+    let current: Diagnostic | null | undefined = diagnostic
+    while (current != null) {
       causes.push(current)
-      current = current.diagnosticSource
+      current = current.diagnosticSource ?? null
     }
     return causes
   }
@@ -208,7 +208,7 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       const causes = self.collectCauses(diagnostic.diagnosticSource)
 
       for (let i = 0; i < causes.length; i++) {
-        const cause = causes[i]
+        const cause = causes[i]!
         const isLast = i === causes.length - 1
         const branch = isLast ? self.theme.characters.lbot : self.theme.characters.lcross
         const branchPrefix = `${branch}${self.theme.characters.hbar}${self.theme.characters.rarrow}`

@@ -184,7 +184,7 @@ export class GraphicalTheme extends Schema.Class<GraphicalTheme>("miette/Graphic
   }
 
   static default(): GraphicalTheme {
-    const noColor = process.env.NO_COLOR
+    const noColor = process.env["NO_COLOR"]
     const isTty = Boolean(process.stdout?.isTTY && process.stderr?.isTTY)
 
     if (!isTty) return GraphicalTheme.none()

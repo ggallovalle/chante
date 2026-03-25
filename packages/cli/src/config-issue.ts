@@ -1,7 +1,8 @@
 import { codeToANSI } from '@shikijs/cli'
 import type { StoredLocation, Node } from "@bgotink/kdl"
 import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
-import { Output, IOutput } from "~/output.js"
+import { Output } from "~/output.js"
+import type { IOutput } from "~/output.js"
 
 export type MissingRequireIssue = {
   _type: "MissingRequire"
@@ -196,8 +197,8 @@ const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, out
 export const renderSchemaError = Effect.fnUntraced(function*(error: Schema.SchemaError) {
   const output = yield* Output
   if (error.issue._tag === "InvalidValue") {
-    const kdlIssues = error.issue.annotations?.kdlIssues as KdlIssue[] | undefined
-    const parseFromOptions = error.issue.annotations?.parseFromOptions as ParseContext | undefined
+    const kdlIssues = error.issue.annotations?.["kdlIssues"] as KdlIssue[] | undefined
+    const parseFromOptions = error.issue.annotations?.["parseFromOptions"] as ParseContext | undefined
 
     if (kdlIssues && kdlIssues.length > 0 && parseFromOptions) {
       return yield* Effect.forEach(

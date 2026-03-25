@@ -29,11 +29,14 @@ function findLineAndColumn(
   let line = 0
 
   for (let i = 0; i < lineStarts.length; i++) {
-    if (lineStarts[i] > offset) break
+    const current = lineStarts[i]
+    if (current === undefined) break
+    if (current > offset) break
     line = i
   }
 
-  const column = offset - lineStarts[line]
+  const lineStart = lineStarts[line] ?? 0
+  const column = offset - lineStart
   return { line, column }
 }
 
@@ -56,10 +59,10 @@ function sliceWithContext(
   const contextStartLine = Math.max(0, startLine - before)
   const contextEndLine = Math.min(lineStarts.length - 1, endLine + after)
 
-  const startByte = lineStarts[contextStartLine]
+  const startByte = lineStarts[contextStartLine] ?? 0
   const endByte =
     contextEndLine + 1 < lineStarts.length
-      ? lineStarts[contextEndLine + 1]
+      ? lineStarts[contextEndLine + 1] ?? data.length
       : data.length
 
   return {
@@ -136,7 +139,7 @@ export class StringSourceCode implements SourceCode {
         // tests). Without context it reflects the real column in the source.
         const column =
           contextBefore === 0 && contextAfter === 0
-            ? start - this.lineStarts[lineInSource]
+            ? start - (this.lineStarts[lineInSource] ?? 0)
             : 0
 
         const line = contextBefore === 0 && contextAfter === 0
@@ -167,8 +170,16 @@ export class StringSourceCode implements SourceCode {
 
 export class FromFileSourceCode implements SourceCode {
   #inner: SourceCode
+  public fs: string
+  public path: string
+  public name: string
+  public language: string
 
-  constructor(public fs: string, public path: string, public name: string, public language: string, content: SourceCode) {
+  constructor(fs: string, path: string, name: string, language: string, content: SourceCode) {
+    this.fs = fs
+    this.path = path
+    this.name = name
+    this.language = language
     this.#inner = content
   }
 

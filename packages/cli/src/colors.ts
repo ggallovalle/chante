@@ -36,7 +36,11 @@ const EffectBit = {
 type EffectBitKey = keyof typeof EffectBit
 
 class StyleFlags {
-  constructor(private readonly bits: number = 0) { }
+  private readonly bits: number
+
+  constructor(bits: number = 0) {
+    this.bits = bits
+  }
 
   static empty(): StyleFlags {
     return new StyleFlags(0)
