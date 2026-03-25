@@ -15,6 +15,7 @@
   },
   "linter": {
     "enabled": true,
+    // see https://biomejs.dev/linter/javascript/sources
     "rules": {
       "recommended": true,
       "complexity": {

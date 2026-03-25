@@ -1,8 +1,8 @@
-import { Cause, Effect, Exit, Layer, Ref, Scope } from "effect"
-import { TestClock, TestConsole } from "effect/testing"
+import { Cause, Effect, Exit, Ref, Scope } from "effect"
+// import { TestClock, TestConsole } from "effect/testing"
 import { test as baseTest } from "vitest"
 
-const _TestEnv = Layer.mergeAll(TestConsole.layer, TestClock.layer())
+// const _TestEnv = Layer.mergeAll(TestConsole.layer, TestClock.layer())
 
 export const test = baseTest.extend("effect", async ({}, { onCleanup }) => {
   const scope = await Effect.runPromise(Scope.make("sequential"))
