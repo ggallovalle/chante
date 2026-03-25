@@ -39,12 +39,14 @@ If None, reporters should treat this as Severity::Error.`,
   }),
   related: Schema.optional(
     Schema.Array(
+      // biome-ignore lint/suspicious/noExplicitAny: because of schema suspend quirk
       Schema.suspend((): Schema.Codec<Diagnostic> => Diagnostic as any),
     ),
   ).annotate({
     description: "Additional related Diagnostics.",
   }),
   diagnosticSource: Schema.optional(
+    // biome-ignore lint/suspicious/noExplicitAny: because of schema suspend quirk
     Schema.suspend((): Schema.Codec<Diagnostic> => Diagnostic as any),
   ).annotate({
     description: "The cause of the error.",

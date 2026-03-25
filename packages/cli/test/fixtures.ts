@@ -1,13 +1,10 @@
 import { Cause, Effect, Exit, Ref, Scope } from "effect"
-// import { TestClock, TestConsole } from "effect/testing"
 import { test as baseTest } from "vitest"
-
-// const _TestEnv = Layer.mergeAll(TestConsole.layer, TestClock.layer())
 
 export const test = baseTest.extend("effect", async ({}, { onCleanup }) => {
   const scope = await Effect.runPromise(Scope.make("sequential"))
   const ref = await Effect.runPromise(
-    Ref.make(Exit.succeed(undefined) as Exit.Exit<any, any>),
+    Ref.make(Exit.succeed(undefined) as Exit.Exit<unknown, unknown>),
   )
 
   onCleanup(async () => {
@@ -15,19 +12,20 @@ export const test = baseTest.extend("effect", async ({}, { onCleanup }) => {
     await Effect.runPromise(Scope.close(scope, exit))
   })
 
-  const run: (test: Effect.Effect<any, any, Scope.Scope>) => Promise<any> =
-    async (test) => {
-      const program = test.pipe(
-        Scope.provide(scope),
-        // Effect.provide(TestEnv)
-      )
-      const exit = await Effect.runPromiseExit(program)
-      await Effect.runPromise(Ref.set(ref, exit))
-      if (Exit.isFailure(exit)) {
-        const defect = Cause.prettyErrors(exit.cause)
-        throw defect
-      }
+  const run: (
+    test: Effect.Effect<unknown, unknown, Scope.Scope>,
+  ) => Promise<void> = async (test) => {
+    const program = test.pipe(
+      Scope.provide(scope),
+      // Effect.provide(TestEnv)
+    )
+    const exit = await Effect.runPromiseExit(program)
+    await Effect.runPromise(Ref.set(ref, exit))
+    if (Exit.isFailure(exit)) {
+      const defect = Cause.prettyErrors(exit.cause)
+      throw defect
     }
+  }
 
   return run
 })

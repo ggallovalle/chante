@@ -1,7 +1,9 @@
 import { Schema } from "effect"
 
 function utf8Length(char: string): number {
-  const codePoint = char.codePointAt(0)!
+  const codePoint = char.codePointAt(0)
+
+  if (codePoint === undefined) return 0
 
   if (codePoint <= 0x7f) return 1
   if (codePoint <= 0x7ff) return 2

@@ -116,8 +116,8 @@ export class Styled extends Schema.Class<Styled>("colors/Styled")({
   prefix: Schema.String,
   sufix: Schema.String,
 }) {
-  stiled(value: any): string {
-    return `${this.prefix}${value}${this.sufix}`
+  stiled(value: unknown): string {
+    return `${this.prefix}${String(value)}${this.sufix}`
   }
 }
 

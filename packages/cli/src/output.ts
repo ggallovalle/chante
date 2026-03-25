@@ -20,14 +20,14 @@ export const GlobalOutputFlag = GlobalFlag.setting("output")({
 
 export interface IOutput {
   logMsg(message: string): Effect.Effect<void>
-  logKeyValue(key: string, value: any): Effect.Effect<void>
-  logRecord(record: Record<string, any>): Effect.Effect<void>
+  logKeyValue(key: string, value: unknown): Effect.Effect<void>
+  logRecord(record: Record<string, unknown>): Effect.Effect<void>
   logSchema(
     schema: Schema.Top,
     value: unknown,
-  ): Effect.Effect<void, Schema.SchemaError>
+  ): Effect.Effect<void, Schema.SchemaError, unknown>
   errorMsg(message: string): Effect.Effect<void>
-  errorKeyValue(key: string, value: any): Effect.Effect<void>
+  errorKeyValue(key: string, value: unknown): Effect.Effect<void>
   errorUnknown(unknown: unknown): Effect.Effect<void>
   hintMsg(message: string): Effect.Effect<void>
 }
@@ -57,11 +57,9 @@ export const OutputLayer = Layer.effect(
       },
       logSchema(schema, value) {
         const codec = Schema.encodeUnknownEffect(Schema.toCodecJson(schema))
-        const result = Effect.map(codec(value), (json) =>
-          output.dir(json, { depth: null }),
+        return Effect.flatMap(codec(value), (json) =>
+          Effect.sync(() => output.dir(json, { depth: null })),
         )
-        // bypass the possible dependencies for encoding the schema
-        return result as any
       },
       errorMsg(message) {
         return Effect.sync(() => output.error(`[X] ${message}`))

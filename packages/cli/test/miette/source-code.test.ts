@@ -12,7 +12,7 @@ import { test } from "~test/fixtures.js"
 
 export function runSourceCodeTests(
   name: string,
-  create: (source: string) => Effect.Effect<SourceCode, any>,
+  create: (source: string) => Effect.Effect<SourceCode, unknown>,
 ) {
   describe(name, () => {
     test("basic", ({ expect, effect }) =>

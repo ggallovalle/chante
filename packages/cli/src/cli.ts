@@ -126,4 +126,7 @@ const Layers = Layer.mergeAll(
   NodeServices.layer,
 )
 
-program.pipe(Effect.provide(Layers), NodeRuntime.runMain)
+const main = program.pipe(Effect.provide(Layers))
+
+// biome-ignore lint/suspicious/noExplicitAny: I know
+NodeRuntime.runMain(main as Effect.Effect<void, any, never>)

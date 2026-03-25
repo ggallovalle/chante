@@ -171,12 +171,12 @@ const renderMultiLabelSnippet = (
     for (let lineNo = contextStart; lineNo <= contextEnd; lineNo++) {
       const lineText = lines[lineNo - 1] ?? ""
       const gutter = String(lineNo).padStart(lineNoWidth, " ")
-      const labels = labelsByLine.get(lineNo)
-      const hasLabels = labels && labels.length > 0
+      const labelsForLine = labelsByLine.get(lineNo) ?? []
+      const hasLabels = labelsForLine.length > 0
       const marker = hasLabels ? ">" : " "
       if (hasLabels) {
         yield* Console.error(`${marker} ${gutter} | ${lineText}`)
-        for (const label of labels!) {
+        for (const label of labelsForLine) {
           const underlineStart = Math.max(0, label.location.start.column - 1)
           const underlineEnd = Math.max(
             underlineStart,
@@ -245,18 +245,24 @@ export const renderSchemaError = Effect.fnUntraced(function* (
 ) {
   const output = yield* Output
   if (error.issue._tag === "InvalidValue") {
-    const kdlIssues = error.issue.annotations?.kdlIssues as
+    const kdlIssues = error.issue.annotations?.["kdlIssues"] as
       | KdlIssue[]
       | undefined
-    const parseFromOptions = error.issue.annotations?.parseFromOptions as
+    const parseFromOptions = error.issue.annotations?.["parseFromOptions"] as
       | ParseContext
       | undefined
 
     if (kdlIssues && kdlIssues.length > 0 && parseFromOptions) {
       return yield* Effect.forEach(
         kdlIssues,
-        (payload) =>
-          rendererMap[payload._type](payload as any, parseFromOptions, output),
+        (payload) => {
+          const render = rendererMap[payload._type] as (
+            issue: KdlIssue,
+            shared: ParseContext,
+            output: IOutput,
+          ) => Effect.Effect<void>
+          return render(payload, parseFromOptions, output)
+        },
         { discard: true },
       )
     }

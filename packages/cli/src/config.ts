@@ -27,10 +27,12 @@ const getLocationStrict = (
   element: Parameters<typeof getLocation>[0],
 ): StoredLocation => {
   const location = getLocation(element)
-  // if (!location) {
-  //   throw new Error("KDL location is required; ensure parser runs with storeLocations: true")
-  // }
-  return location as unknown as any
+  if (!location) {
+    throw new Error(
+      "KDL location is required; ensure parser runs with storeLocations: true",
+    )
+  }
+  return location as StoredLocation
 }
 
 export class StoredLocationSchema extends Schema.Opaque<StoredLocationSchema>()(

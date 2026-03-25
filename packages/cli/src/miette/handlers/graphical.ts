@@ -230,9 +230,8 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
 
       const causes = self.collectCauses(diagnostic.diagnosticSource)
 
-      for (let i = 0; i < causes.length; i++) {
-        const cause = causes[i]!
-        const isLast = i === causes.length - 1
+      for (const [index, cause] of causes.entries()) {
+        const isLast = index === causes.length - 1
         const branch = isLast
           ? self.theme.characters.lbot
           : self.theme.characters.lcross
