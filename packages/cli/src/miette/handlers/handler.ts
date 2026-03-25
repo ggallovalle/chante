@@ -1,5 +1,5 @@
 import { Schema } from "effect"
-import { GraphicalTheme } from "./theme.js"
+import { GraphicalTheme } from "~/miette/handlers/theme.js"
 
 export class MietteHandlerOpts extends Schema.Class<MietteHandlerOpts>("miette/MietteHandlerOpts")({
   linkify: Schema.optional(Schema.Boolean),

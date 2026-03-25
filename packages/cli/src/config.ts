@@ -1,7 +1,7 @@
 import { Effect, Schema, Predicate, FileSystem, Path, type Config, Option } from "effect"
 import { parse, getLocation, type StoredLocation, type Document, type Node } from "@bgotink/kdl"
-import { invalid, type ParseContext, type KdlIssue, type DuplicateNameIssue } from "./config-issue.js"
-import * as env from "./env.js"
+import { invalid, type ParseContext, type KdlIssue, type DuplicateNameIssue } from "~/config-issue.js"
+import * as env from "~/env.js"
 import { CliError } from "effect/unstable/cli"
 
 const getLocationStrict = (element: Parameters<typeof getLocation>[0]): StoredLocation => {

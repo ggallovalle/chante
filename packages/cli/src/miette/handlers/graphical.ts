@@ -1,9 +1,9 @@
 import { Stream, Effect, Schema, Queue, Cause } from "effect"
 import wrapAnsi from "wrap-ansi"
-import { GraphicalTheme } from "./theme.js"
-import { Diagnostic } from "../diagnostic.js"
-import { SourceCode } from "../source-code.js"
-import { Styled } from "../../colors.js"
+import { GraphicalTheme } from "~/miette/handlers/theme.js"
+import { Diagnostic } from "~/miette/diagnostic.js"
+import { SourceCode } from "~/miette/source-code.js"
+import { Styled } from "~/colors.js"
 
 export const LinkStyle = Schema.Literals(["link", "text", "none"])
 export type LinkStyle = Schema.Schema.Type<typeof LinkStyle>

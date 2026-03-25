@@ -1,6 +1,6 @@
 import { describe } from "vitest"
 import { Effect } from "effect"
-import { test } from "../fixtures.js"
+import { test } from "~test/fixtures.js"
 import {
   SourceOffset,
   SourceSpan,
@@ -8,7 +8,7 @@ import {
   StringSourceCode,
   FromFileSourceCode,
   OutOfBounds
-} from "../../src/miette.js"
+} from "~/miette.js"
 
 export function runSourceCodeTests(
   name: string,

@@ -1,7 +1,7 @@
 import { describe, assert } from "vitest"
 import { Effect, Stream } from "effect"
-import { test } from "../../fixtures.js"
-import { Diagnostic, GraphicalTheme, GraphicalReportHandler } from "../../../src/miette.js"
+import { test } from "~test/fixtures.js"
+import { Diagnostic, GraphicalTheme, GraphicalReportHandler } from "~/miette.js"
 
 const getReport = Effect.fnUntraced(function*(handler: GraphicalReportHandler, diagnostic: Diagnostic) {
   const report = yield* Stream.runCollect(handler.renderReport(diagnostic))

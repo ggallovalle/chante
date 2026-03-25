@@ -1,5 +1,5 @@
 import { Schema } from "effect"
-import { Style, Color, Styled } from "../../colors.js"
+import { Style, Color, Styled } from "~/colors.js"
 
 const ansi = (code: number): Color => ({ _tag: "ansi", value: code }) as Color
 

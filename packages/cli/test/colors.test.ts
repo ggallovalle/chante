@@ -1,6 +1,6 @@
 import { describe } from "vitest"
-import { test } from "./fixtures.js"
-import { Style, Color } from "../src/colors.js"
+import { test } from "~test/fixtures.js"
+import { Style, Color } from "~/colors.js"
 
 const css = (value: string) => ({ _tag: "css", value }) satisfies Color
 

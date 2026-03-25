@@ -1,5 +1,5 @@
 import { Predicate, Schema } from "effect"
-import { LabeledSpan } from "./protocol.js"
+import { LabeledSpan } from "~/miette/protocol.js"
 
 const TypeId = "~miette/Diagnostic"
 

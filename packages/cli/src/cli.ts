@@ -2,10 +2,10 @@ import { Effect, Layer, Logger } from "effect"
 import { Command, Flag, GlobalFlag } from "effect/unstable/cli"
 import { NodeServices, NodeRuntime } from "@effect/platform-node"
 
-import * as env from "./env.js"
-import { GlobalOutputFlag, Output, OutputLayer } from "./output.js"
-import { parseFromCli, ChanteConfig } from "./config.js"
-import { renderSchemaError } from "./config-issue.js"
+import * as env from "~/env.js"
+import { GlobalOutputFlag, Output, OutputLayer } from "~/output.js"
+import { parseFromCli, ChanteConfig } from "~/config.js"
+import { renderSchemaError } from "~/config-issue.js"
 
 const configFlag = Flag.file("config", { mustExist: true }).pipe(
   Flag.withAlias("c"),
@@ -109,4 +109,3 @@ program.pipe(
   Effect.provide(Layers),
   NodeRuntime.runMain
 )
-

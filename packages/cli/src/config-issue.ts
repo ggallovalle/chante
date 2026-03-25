@@ -1,7 +1,7 @@
 import { codeToANSI } from '@shikijs/cli'
 import type { StoredLocation, Node } from "@bgotink/kdl"
 import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
-import { Output, IOutput } from "./output.js"
+import { Output, IOutput } from "~/output.js"
 
 export type MissingRequireIssue = {
   _type: "MissingRequire"
