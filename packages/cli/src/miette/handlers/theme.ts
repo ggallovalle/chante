@@ -1,9 +1,11 @@
 import { Schema } from "effect"
-import { Style, Color, Styled } from "~/colors.js"
+import { type Color, Style, Styled } from "~/colors.js"
 
 const ansi = (code: number): Color => ({ _tag: "ansi", value: code }) as Color
 
-export class ThemeCharacters extends Schema.Class<ThemeCharacters>("miette/ThemeCharacters")({
+export class ThemeCharacters extends Schema.Class<ThemeCharacters>(
+  "miette/ThemeCharacters",
+)({
   hbar: Schema.String,
   vbar: Schema.String,
   xbar: Schema.String,
@@ -24,7 +26,7 @@ export class ThemeCharacters extends Schema.Class<ThemeCharacters>("miette/Theme
   underline: Schema.String,
   error: Schema.String,
   warning: Schema.String,
-  advice: Schema.String
+  advice: Schema.String,
 }) {
   static unicode(): ThemeCharacters {
     return new ThemeCharacters({
@@ -48,7 +50,7 @@ export class ThemeCharacters extends Schema.Class<ThemeCharacters>("miette/Theme
       underline: "─",
       error: "×",
       warning: "⚠",
-      advice: "☞"
+      advice: "☞",
     })
   }
 
@@ -74,7 +76,7 @@ export class ThemeCharacters extends Schema.Class<ThemeCharacters>("miette/Theme
       underline: "─",
       error: "💥",
       warning: "⚠",
-      advice: "💡"
+      advice: "💡",
     })
   }
 
@@ -100,19 +102,21 @@ export class ThemeCharacters extends Schema.Class<ThemeCharacters>("miette/Theme
       underline: "^",
       error: "x",
       warning: "!",
-      advice: ">"
+      advice: ">",
     })
   }
 }
 
-export class ThemeStyles extends Schema.Class<ThemeStyles>("miette/ThemeStyles")({
+export class ThemeStyles extends Schema.Class<ThemeStyles>(
+  "miette/ThemeStyles",
+)({
   error: Styled,
   warning: Styled,
   advice: Styled,
   help: Styled,
   link: Styled,
   linum: Styled,
-  highlights: Schema.Array(Styled)
+  highlights: Schema.Array(Styled),
 }) {
   static ansi(): ThemeStyles {
     return new ThemeStyles({
@@ -120,13 +124,17 @@ export class ThemeStyles extends Schema.Class<ThemeStyles>("miette/ThemeStyles")
       warning: Style.builder().fg(ansi(33)).buildAnsi(),
       advice: Style.builder().fg(ansi(36)).buildAnsi(),
       help: Style.builder().fg(ansi(36)).buildAnsi(),
-      link: Style.builder().fg(ansi(36)).effect("underline").effect("bold").buildAnsi(),
+      link: Style.builder()
+        .fg(ansi(36))
+        .effect("underline")
+        .effect("bold")
+        .buildAnsi(),
       linum: Style.builder().effect("dimmed").buildAnsi(),
       highlights: [
         Style.builder().fg(ansi(35)).effect("bold").buildAnsi(),
         Style.builder().fg(ansi(33)).effect("bold").buildAnsi(),
-        Style.builder().fg(ansi(32)).effect("bold").buildAnsi()
-      ]
+        Style.builder().fg(ansi(32)).effect("bold").buildAnsi(),
+      ],
     })
   }
 
@@ -139,52 +147,54 @@ export class ThemeStyles extends Schema.Class<ThemeStyles>("miette/ThemeStyles")
       help: plain,
       link: plain,
       linum: plain,
-      highlights: [plain]
+      highlights: [plain],
     })
   }
 }
 
-export class GraphicalTheme extends Schema.Class<GraphicalTheme>("miette/GraphicalTheme")({
+export class GraphicalTheme extends Schema.Class<GraphicalTheme>(
+  "miette/GraphicalTheme",
+)({
   characters: ThemeCharacters,
-  styles: ThemeStyles
+  styles: ThemeStyles,
 }) {
   static ascii(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.ascii(),
-      styles: ThemeStyles.ansi()
+      styles: ThemeStyles.ansi(),
     })
   }
 
   static unicode(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.unicode(),
-      styles: ThemeStyles.ansi()
+      styles: ThemeStyles.ansi(),
     })
   }
 
   static unicodeNoColor(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.unicode(),
-      styles: ThemeStyles.none()
+      styles: ThemeStyles.none(),
     })
   }
 
   static none(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.ascii(),
-      styles: ThemeStyles.none()
+      styles: ThemeStyles.none(),
     })
   }
 
   static emoji(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.emoji(),
-      styles: ThemeStyles.ansi()
+      styles: ThemeStyles.ansi(),
     })
   }
 
   static default(): GraphicalTheme {
-    const noColor = process.env["NO_COLOR"]
+    const noColor = process.env.NO_COLOR
     const isTty = Boolean(process.stdout?.isTTY && process.stderr?.isTTY)
 
     if (!isTty) return GraphicalTheme.none()

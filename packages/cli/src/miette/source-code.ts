@@ -6,7 +6,7 @@ export interface SourceCode {
   readSpan(
     span: SourceSpan,
     contextLinesBefore: number,
-    contextLinesAfter: number
+    contextLinesAfter: number,
   ): Effect.Effect<SpanContents, MietteError>
 }
 
@@ -24,7 +24,7 @@ function computeLineStarts(data: Uint8Array): number[] {
 
 function findLineAndColumn(
   offset: number,
-  lineStarts: number[]
+  lineStarts: number[],
 ): { line: number; column: number } {
   let line = 0
 
@@ -45,7 +45,7 @@ function sliceWithContext(
   span: SourceSpan,
   lineStarts: number[],
   before: number,
-  after: number
+  after: number,
 ) {
   const startOffset = span.offsetValue
   const endOffset = startOffset + span.len
@@ -62,14 +62,14 @@ function sliceWithContext(
   const startByte = lineStarts[contextStartLine] ?? 0
   const endByte =
     contextEndLine + 1 < lineStarts.length
-      ? lineStarts[contextEndLine + 1] ?? data.length
+      ? (lineStarts[contextEndLine + 1] ?? data.length)
       : data.length
 
   return {
     slice: data.slice(startByte, endByte),
     startByte,
     startLine,
-    lineCount: contextEndLine - contextStartLine + 1
+    lineCount: contextEndLine - contextStartLine + 1,
   }
 }
 
@@ -95,7 +95,7 @@ export class StringSourceCode implements SourceCode {
   readSpan(
     span: SourceSpan,
     contextBefore: number,
-    contextAfter: number
+    contextAfter: number,
   ): Effect.Effect<SpanContents, OutOfBounds> {
     return Effect.try({
       try: () => {
@@ -106,16 +106,12 @@ export class StringSourceCode implements SourceCode {
           throw new OutOfBounds()
         }
 
-        let {
-          slice,
-          startByte,
-          lineCount
-        } = sliceWithContext(
+        let { slice, startByte, lineCount } = sliceWithContext(
           this.data,
           span,
           this.lineStarts,
           contextBefore,
-          contextAfter
+          contextAfter,
         )
 
         const { line: lineInSource } = findLineAndColumn(start, this.lineStarts)
@@ -126,13 +122,16 @@ export class StringSourceCode implements SourceCode {
           startByte = start
 
           const lastOffset = span.len === 0 ? start : end - 1
-          const { line: endLine } = findLineAndColumn(lastOffset, this.lineStarts)
+          const { line: endLine } = findLineAndColumn(
+            lastOffset,
+            this.lineStarts,
+          )
           lineCount = endLine - lineInSource + 1
         }
 
         const { line: lineAtSliceStart } = findLineAndColumn(
           startByte,
-          this.lineStarts
+          this.lineStarts,
         )
 
         // With context we reset column to 0 (miette's behaviour for these
@@ -142,13 +141,14 @@ export class StringSourceCode implements SourceCode {
             ? start - (this.lineStarts[lineInSource] ?? 0)
             : 0
 
-        const line = contextBefore === 0 && contextAfter === 0
-          ? lineInSource
-          : lineAtSliceStart
+        const line =
+          contextBefore === 0 && contextAfter === 0
+            ? lineInSource
+            : lineAtSliceStart
 
         const spanForContents = SourceSpan.from(
           SourceOffset.from(startByte),
-          slice.length
+          slice.length,
         )
 
         return SpanContents.from({
@@ -156,17 +156,15 @@ export class StringSourceCode implements SourceCode {
           span: spanForContents,
           line,
           column,
-          lineCount
+          lineCount,
         })
       },
       catch() {
         return new OutOfBounds()
-      }
+      },
     })
   }
-
 }
-
 
 export class FromFileSourceCode implements SourceCode {
   #inner: SourceCode
@@ -175,7 +173,13 @@ export class FromFileSourceCode implements SourceCode {
   public name: string
   public language: string
 
-  constructor(fs: string, path: string, name: string, language: string, content: SourceCode) {
+  constructor(
+    fs: string,
+    path: string,
+    name: string,
+    language: string,
+    content: SourceCode,
+  ) {
     this.fs = fs
     this.path = path
     this.name = name
@@ -183,17 +187,24 @@ export class FromFileSourceCode implements SourceCode {
     this.#inner = content
   }
 
-  readSpan(span: SourceSpan, contextLinesBefore: number, contextLinesAfter: number): Effect.Effect<SpanContents, MietteError> {
-    return Effect.map(this.#inner.readSpan(span, contextLinesBefore, contextLinesAfter), (span) => {
-      return SpanContents.from({
-        data: span.data,
-        span: span.span,
-        line: span.line,
-        column: span.column,
-        lineCount: span.lineCount,
-        name: this.name,
-        language: this.language,
-      })
-    })
+  readSpan(
+    span: SourceSpan,
+    contextLinesBefore: number,
+    contextLinesAfter: number,
+  ): Effect.Effect<SpanContents, MietteError> {
+    return Effect.map(
+      this.#inner.readSpan(span, contextLinesBefore, contextLinesAfter),
+      (span) => {
+        return SpanContents.from({
+          data: span.data,
+          span: span.span,
+          line: span.line,
+          column: span.column,
+          lineCount: span.lineCount,
+          name: this.name,
+          language: this.language,
+        })
+      },
+    )
   }
 }

@@ -1,15 +1,16 @@
-import { Stream, Effect, Schema, Queue, Cause } from "effect"
+import { type Cause, Effect, Queue, Schema, Stream } from "effect"
 import wrapAnsi from "wrap-ansi"
+import type { Styled } from "~/colors.js"
+import type { Diagnostic } from "~/miette/diagnostic.js"
 import { GraphicalTheme } from "~/miette/handlers/theme.js"
-import { Diagnostic } from "~/miette/diagnostic.js"
 import type { SourceCode } from "~/miette/source-code.js"
-import { Styled } from "~/colors.js"
 
 export const LinkStyle = Schema.Literals(["link", "text", "none"])
 export type LinkStyle = Schema.Schema.Type<typeof LinkStyle>
 
-
-export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>("GraphicalReportHandler")({
+export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>(
+  "GraphicalReportHandler",
+)({
   links: LinkStyle,
   termwidth: Schema.Number,
   theme: GraphicalTheme,
@@ -23,7 +24,6 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   linkDisplayText: Schema.optional(Schema.String),
   showRelatedAsNested: Schema.Boolean,
 }) {
-
   public static default() {
     return new GraphicalReportHandler({
       links: "text",
@@ -61,7 +61,7 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   public renderReport(diagnostic: Diagnostic) {
     const self = this
     return Stream.callback<string>((queue) => {
-      return Effect.gen(function*() {
+      return Effect.gen(function* () {
         // yield* Queue.offer(queue, "render-report")
         yield* self.renderReportInner(queue, diagnostic, diagnostic.sourceCode)
         yield* Queue.end(queue)
@@ -69,18 +69,26 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     })
   }
 
-  private renderReportInner(queue: Queue.Queue<string, Cause.Done>, diagnostic: Diagnostic, parentSrc?: SourceCode) {
+  private renderReportInner(
+    queue: Queue.Queue<string, Cause.Done>,
+    diagnostic: Diagnostic,
+    parentSrc?: SourceCode,
+  ) {
     const self = this
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const _src: SourceCode | undefined = diagnostic.sourceCode ?? parentSrc
       yield* self.renderHeader(queue, diagnostic, false)
       yield* self.renderCauses(queue, diagnostic, _src)
     })
   }
 
-  private renderHeader(queue: Queue.Queue<string, Cause.Done>, diagnostic: Diagnostic, isNested: boolean) {
+  private renderHeader(
+    queue: Queue.Queue<string, Cause.Done>,
+    diagnostic: Diagnostic,
+    isNested: boolean,
+  ) {
     const self = this
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       let needNewline = isNested
 
       const severityStyle: Styled = (() => {
@@ -89,7 +97,6 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
             return self.theme.styles.warning
           case "advice":
             return self.theme.styles.advice
-          case "error":
           default:
             return self.theme.styles.error
         }
@@ -97,7 +104,9 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
 
       // Link style OSC 8 hyperlink
       if (self.links === "link" && diagnostic.url) {
-        const code = diagnostic.code ? severityStyle.stiled(diagnostic.code) + " " : ""
+        const code = diagnostic.code
+          ? `${severityStyle.stiled(diagnostic.code)} `
+          : ""
         const displayText = self.linkDisplayText ?? "(link)"
         const linkStyled = self.theme.styles.link.stiled(displayText)
         const line = `\u001b]8;;${diagnostic.url}\u001b\\${code}${linkStyled}\u001b]8;;\u001b\\`
@@ -128,15 +137,25 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     return causes
   }
 
-  private wrapText(text: string, opts: { initialIndent: string; subsequentIndent: string; width: number; wrapLines: boolean; breakWords: boolean }) {
-    const { initialIndent, subsequentIndent, width, wrapLines, breakWords } = opts
+  private wrapText(
+    text: string,
+    opts: {
+      initialIndent: string
+      subsequentIndent: string
+      width: number
+      wrapLines: boolean
+      breakWords: boolean
+    },
+  ) {
+    const { initialIndent, subsequentIndent, width, wrapLines, breakWords } =
+      opts
 
     const lines: string[] = []
 
     if (wrapLines) {
       const wrapped = wrapAnsi(text, Math.max(0, width), {
         hard: breakWords,
-        trim: false
+        trim: false,
       })
 
       wrapped.split("\n").forEach((line, idx) => {
@@ -152,7 +171,8 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     parts.forEach((line, idx) => {
       let prefix: string
       if (idx === 0) {
-        prefix = line.trim().length === 0 ? initialIndent.trimEnd() : initialIndent
+        prefix =
+          line.trim().length === 0 ? initialIndent.trimEnd() : initialIndent
       } else if (line.trim().length === 0) {
         prefix = trimmedSub
       } else {
@@ -168,16 +188,19 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     return lines
   }
 
-  private renderCauses(queue: Queue.Queue<string, Cause.Done>, diagnostic: Diagnostic, _parentSrc?: SourceCode) {
+  private renderCauses(
+    queue: Queue.Queue<string, Cause.Done>,
+    diagnostic: Diagnostic,
+    _parentSrc?: SourceCode,
+  ) {
     const self = this
-    return Effect.gen(function*() {
+    return Effect.gen(function* () {
       const [severityStyle, severityIcon] = (() => {
         switch (diagnostic.severity) {
           case "warning":
             return [self.theme.styles.warning, self.theme.characters.warning]
           case "advice":
             return [self.theme.styles.advice, self.theme.characters.advice]
-          case "error":
           default:
             return [self.theme.styles.error, self.theme.characters.error]
         }
@@ -192,7 +215,7 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
         subsequentIndent: `  ${severityStyle.stiled(self.theme.characters.vbar)} `,
         width,
         wrapLines: self.wrapLines,
-        breakWords: self.breakWords
+        breakWords: self.breakWords,
       })
 
       for (const line of rootLines) {
@@ -210,7 +233,9 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       for (let i = 0; i < causes.length; i++) {
         const cause = causes[i]!
         const isLast = i === causes.length - 1
-        const branch = isLast ? self.theme.characters.lbot : self.theme.characters.lcross
+        const branch = isLast
+          ? self.theme.characters.lbot
+          : self.theme.characters.lcross
         const branchPrefix = `${branch}${self.theme.characters.hbar}${self.theme.characters.rarrow}`
         const initialIndent = `  ${severityStyle.stiled(branchPrefix)} `
         const restGlyph = isLast ? " " : self.theme.characters.vbar
@@ -222,7 +247,7 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
           subsequentIndent,
           width: availableWidth,
           wrapLines: self.wrapLines,
-          breakWords: self.breakWords
+          breakWords: self.breakWords,
         })
 
         for (const line of wrapped) {

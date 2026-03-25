@@ -9,8 +9,10 @@ function utf8Length(char: string): number {
   return 4
 }
 
-export class SourceOffset extends Schema.Class<SourceOffset>("miette/SourceOffset")({
-  offset: Schema.Number
+export class SourceOffset extends Schema.Class<SourceOffset>(
+  "miette/SourceOffset",
+)({
+  offset: Schema.Number,
 }) {
   static from(offset: number) {
     return new SourceOffset({ offset })
@@ -46,7 +48,7 @@ export class SourceOffset extends Schema.Class<SourceOffset>("miette/SourceOffse
 
 export class SourceSpan extends Schema.Class<SourceSpan>("miette/SourceSpan")({
   offset: Schema.instanceOf(SourceOffset),
-  length: Schema.Number
+  length: Schema.Number,
 }) {
   static from(start: SourceOffset, length: number) {
     return new SourceSpan({ offset: start, length })
@@ -74,44 +76,36 @@ export class SourceSpan extends Schema.Class<SourceSpan>("miette/SourceSpan")({
   }
 }
 
-export class LabeledSpan extends Schema.Class<LabeledSpan>("miette/LabeledSpan")({
+export class LabeledSpan extends Schema.Class<LabeledSpan>(
+  "miette/LabeledSpan",
+)({
   label: Schema.optional(Schema.String),
   span: SourceSpan,
-  primary: Schema.Boolean
+  primary: Schema.Boolean,
 }) {
   // --- factories ---
 
-  static from(
-    label: string | undefined,
-    offset: number,
-    length: number
-  ) {
+  static from(label: string | undefined, offset: number, length: number) {
     return new LabeledSpan({
       label,
       span: SourceSpan.from(SourceOffset.from(offset), length),
-      primary: false
+      primary: false,
     })
   }
 
-  static fromSpan(
-    label: string | undefined,
-    span: SourceSpan
-  ) {
+  static fromSpan(label: string | undefined, span: SourceSpan) {
     return new LabeledSpan({
       label,
       span,
-      primary: false
+      primary: false,
     })
   }
 
-  static primaryFromSpan(
-    label: string | undefined,
-    span: SourceSpan
-  ) {
+  static primaryFromSpan(label: string | undefined, span: SourceSpan) {
     return new LabeledSpan({
       label,
       span,
-      primary: true
+      primary: true,
     })
   }
 
@@ -146,14 +140,16 @@ export class LabeledSpan extends Schema.Class<LabeledSpan>("miette/LabeledSpan")
   }
 }
 
-export class SpanContents extends Schema.Class<SpanContents>("miette/SpanContents")({
+export class SpanContents extends Schema.Class<SpanContents>(
+  "miette/SpanContents",
+)({
   data: Schema.Uint8Array,
   span: SourceSpan,
   line: Schema.Number,
   column: Schema.Number,
   lineCount: Schema.Number,
   name: Schema.optional(Schema.String),
-  language: Schema.optional(Schema.String)
+  language: Schema.optional(Schema.String),
 }) {
   // --- factories ---
 
@@ -179,7 +175,7 @@ export class SpanContents extends Schema.Class<SpanContents>("miette/SpanContent
   }) {
     return new SpanContents({
       ...args,
-      language: undefined
+      language: undefined,
     })
   }
 
@@ -193,7 +189,7 @@ export class SpanContents extends Schema.Class<SpanContents>("miette/SpanContent
       column: this.column,
       lineCount: this.lineCount,
       name: this.name,
-      language
+      language,
     })
   }
 

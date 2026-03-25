@@ -1,6 +1,11 @@
 import { describe } from "vitest"
+import {
+  LabeledSpan,
+  SourceOffset,
+  SourceSpan,
+  SpanContents,
+} from "~/miette.js"
 import { test } from "~test/fixtures.js"
-import { SourceOffset, SourceSpan, LabeledSpan, SpanContents } from "~/miette.js"
 
 describe("SourceOffset", () => {
   test(".fromLocation (miette parity)", ({ expect }) => {
@@ -20,7 +25,7 @@ describe("SourceOffset", () => {
 
     // Out-of-range (should clamp to source length in bytes)
     expect(SourceOffset.fromLocation(source, 5, 1).offset).toBe(
-      new TextEncoder().encode(source).length
+      new TextEncoder().encode(source).length,
     )
   })
 
@@ -120,7 +125,7 @@ describe("SpanContents", () => {
       span,
       line: 0,
       column: 0,
-      lineCount: 1
+      lineCount: 1,
     })
 
     expect(contents.data).toBe(data)
@@ -139,7 +144,7 @@ describe("SpanContents", () => {
       span,
       line: 0,
       column: 0,
-      lineCount: 1
+      lineCount: 1,
     })
 
     expect(contents.name).toBe("file.ts")
@@ -151,7 +156,7 @@ describe("SpanContents", () => {
       span,
       line: 0,
       column: 0,
-      lineCount: 1
+      lineCount: 1,
     })
 
     const updated = contents.withLanguage("ts")
@@ -166,7 +171,7 @@ describe("SpanContents", () => {
       span,
       line: 0,
       column: 0,
-      lineCount: 1
+      lineCount: 1,
     })
 
     expect(contents.offset).toBe(0)

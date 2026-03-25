@@ -1,13 +1,13 @@
 import { describe } from "vitest"
+import { type Color, Style } from "~/colors.js"
 import { test } from "~test/fixtures.js"
-import { Style, Color } from "~/colors.js"
 
 const css = (value: string) => ({ _tag: "css", value }) satisfies Color
 
 const reset = "\x1b[0m"
 
 const bgFromFg = (fg: string): string => {
-  if (fg.startsWith("\x1b[38;")) return "\x1b[48;" + fg.slice(5)
+  if (fg.startsWith("\x1b[38;")) return `\x1b[48;${fg.slice(5)}`
   if (fg.startsWith("\x1b[")) return fg.replace("[3", "[4") // best effort for 30-37 -> 40-47
   return fg
 }
@@ -21,15 +21,14 @@ describe("Style.builder", () => {
   test("foreground css color is applied", ({ expect }) => {
     const fg = Bun.color("red", "ansi") ?? ""
 
-    const styled = Style.builder()
-      .fg(css("red"))
-      .buildAnsi()
-      .stiled("hi")
+    const styled = Style.builder().fg(css("red")).buildAnsi().stiled("hi")
 
     expect(styled).toBe(`${fg}hi${reset}`)
   })
 
-  test("foreground then background ordering and bg translation", ({ expect }) => {
+  test("foreground then background ordering and bg translation", ({
+    expect,
+  }) => {
     const fg = Bun.color("red", "ansi") ?? ""
     const bg = Bun.color("green", "ansi") ?? ""
 
@@ -63,7 +62,9 @@ describe("Style.builder", () => {
     expect(styled).toBe(`\x1b[3m\x1b[4mhi${reset}`)
   })
 
-  test("combined style concatenates colors, bold, and effects", ({ expect }) => {
+  test("combined style concatenates colors, bold, and effects", ({
+    expect,
+  }) => {
     const fg = Bun.color("red", "ansi") ?? ""
     const bg = Bun.color("green", "ansi") ?? ""
 
@@ -76,9 +77,7 @@ describe("Style.builder", () => {
       .buildAnsi()
       .stiled("hi")
 
-    expect(styled).toBe(
-      `${fg}${bgFromFg(bg)}\x1b[1m\x1b[3m\x1b[4mhi${reset}`
-    )
+    expect(styled).toBe(`${fg}${bgFromFg(bg)}\x1b[1m\x1b[3m\x1b[4mhi${reset}`)
   })
 
   test("stiled converts non-string payloads", ({ expect }) => {

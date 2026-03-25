@@ -9,7 +9,7 @@ export const TextEffect = Schema.Literals([
   "blinkFast",
   "reversed",
   "hidden",
-  "strikethrough"
+  "strikethrough",
 ])
 
 export type TextEffect = Schema.Schema.Type<typeof TextEffect>
@@ -30,7 +30,7 @@ const EffectBit = {
   blinkFast: 4,
   reversed: 5,
   hidden: 6,
-  strikethrough: 7
+  strikethrough: 7,
 } as const
 
 type EffectBitKey = keyof typeof EffectBit
@@ -61,9 +61,7 @@ class StyleFlags {
     const shift = this.resolve(effect)
     if (shift === null) return this
 
-    const next = value
-      ? this.bits | (1 << shift)
-      : this.bits & ~(1 << shift)
+    const next = value ? this.bits | (1 << shift) : this.bits & ~(1 << shift)
 
     return new StyleFlags(next)
   }
@@ -102,12 +100,11 @@ function effectToFlag(effect: TextEffect): EffectBitKey | null {
   }
 }
 
-
 export class Style extends Schema.Class<Style>("colors/Style")({
   fg: Schema.optional(Color),
   bg: Schema.optional(Color),
   bold: Schema.Boolean,
-  flags: Schema.Number // your bitmask
+  flags: Schema.Number, // your bitmask
 }) {
   static builder() {
     return StyleBuilder.empty()
@@ -117,9 +114,8 @@ export class Style extends Schema.Class<Style>("colors/Style")({
 export class Styled extends Schema.Class<Styled>("colors/Styled")({
   style: Style,
   prefix: Schema.String,
-  sufix: Schema.String
+  sufix: Schema.String,
 }) {
-
   stiled(value: any): string {
     return `${this.prefix}${value}${this.sufix}`
   }
@@ -155,9 +151,7 @@ function colorToAnsi(color: Color, type: "fg" | "bg"): string | null {
 
   if (type === "fg") return ansi
 
-  return ansi.startsWith("\x1b[38;")
-    ? "\x1b[48;" + ansi.slice(5)
-    : ansi
+  return ansi.startsWith("\x1b[38;") ? `\x1b[48;${ansi.slice(5)}` : ansi
 }
 
 class StyleBuilder {
@@ -173,8 +167,8 @@ class StyleBuilder {
         fg: undefined,
         bg: undefined,
         bold: false,
-        flags: 0
-      })
+        flags: 0,
+      }),
     )
   }
 
@@ -194,9 +188,7 @@ class StyleBuilder {
       return this
     }
 
-    const flags = new StyleFlags(this.style.flags)
-      .set(effect, value)
-      .value
+    const flags = new StyleFlags(this.style.flags).set(effect, value).value
 
     this.style = new Style({ ...this.style, flags })
     return this
@@ -234,7 +226,7 @@ class StyleBuilder {
       "blinkFast",
       "reversed",
       "hidden",
-      "strikethrough"
+      "strikethrough",
     ]
 
     for (const effect of effects) {

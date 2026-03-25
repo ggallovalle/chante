@@ -1,7 +1,9 @@
 import { Schema } from "effect"
 import { GraphicalTheme } from "~/miette/handlers/theme.js"
 
-export class MietteHandlerOpts extends Schema.Class<MietteHandlerOpts>("miette/MietteHandlerOpts")({
+export class MietteHandlerOpts extends Schema.Class<MietteHandlerOpts>(
+  "miette/MietteHandlerOpts",
+)({
   linkify: Schema.optional(Schema.Boolean),
   width: Schema.optional(Schema.Number),
   theme: Schema.optional(GraphicalTheme),
@@ -13,7 +15,7 @@ export class MietteHandlerOpts extends Schema.Class<MietteHandlerOpts>("miette/M
   withCauseChain: Schema.optional(Schema.Boolean),
   breakWords: Schema.optional(Schema.Boolean),
   wrapLines: Schema.optional(Schema.Boolean),
-  showRelatedAsNested: Schema.optional(Schema.Boolean)
+  showRelatedAsNested: Schema.optional(Schema.Boolean),
 }) {
   static empty(): MietteHandlerOpts {
     return new MietteHandlerOpts({})

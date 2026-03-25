@@ -2,11 +2,10 @@ import { Predicate, Schema } from "effect"
 
 const TypeId = "~miette/MietteError"
 
-export const isMietteError = (u: unknown): u is MietteError => Predicate.hasProperty(u, TypeId)
+export const isMietteError = (u: unknown): u is MietteError =>
+  Predicate.hasProperty(u, TypeId)
 
-export type MietteError =
-  | OutOfBounds
-  | IoError
+export type MietteError = OutOfBounds | IoError
 
 export class OutOfBounds extends Schema.ErrorClass(`${TypeId}/OutOfBounds`)({
   _tag: Schema.tag("OutOfBounds"),
@@ -26,7 +25,7 @@ export class OutOfBounds extends Schema.ErrorClass(`${TypeId}/OutOfBounds`)({
 
 export class IoError extends Schema.ErrorClass(`${TypeId}/IoError`)({
   _tag: Schema.tag("MietteIssue"),
-  cause: Schema.Defect
+  cause: Schema.Defect,
 }) {
   /**
    * @since 4.0.0
@@ -37,4 +36,3 @@ export class IoError extends Schema.ErrorClass(`${TypeId}/IoError`)({
     return String(this.cause)
   }
 }
-

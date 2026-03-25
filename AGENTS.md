@@ -13,6 +13,7 @@
 | `mask deps add (package) [--dev] [--version=<string>]` | Add dependency                 |
 | `mask test`                                            | Run all tests                  |
 | `mask test --file test/file.test.ts`                   | Run single test file           |
+| `mask lint`                                            | Lint/format with Biome         |
 
 **Task runner:** Mask (https://github.com/jacobdeichert/mask). Consult repository `maskfile.md` files for the canonical list of tasks/flags before adding or invoking commands.
 

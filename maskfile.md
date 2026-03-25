@@ -45,3 +45,10 @@ fi
 ```bash
 bun run --workspaces build
 ```
+
+## lint
+> Run Biome lint/format with unsafe fixes
+
+```bash
+bunx --bun @biomejs/biome check --write --unsafe
+```

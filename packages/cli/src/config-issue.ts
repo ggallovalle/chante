@@ -1,8 +1,8 @@
-import { codeToANSI } from '@shikijs/cli'
-import type { StoredLocation, Node } from "@bgotink/kdl"
-import { Console, Effect, Schema, SchemaIssue, Option } from "effect"
-import { Output } from "~/output.js"
+import type { Node, StoredLocation } from "@bgotink/kdl"
+import { codeToANSI } from "@shikijs/cli"
+import { Console, Effect, Option, Schema, SchemaIssue } from "effect"
 import type { IOutput } from "~/output.js"
+import { Output } from "~/output.js"
 
 export type MissingRequireIssue = {
   _type: "MissingRequire"
@@ -66,47 +66,71 @@ type RendererMap = {
   [K in KdlIssue["_type"]]: (
     payload: Extract<KdlIssue, { _type: K }>,
     shared: ParseContext,
-    output: IOutput
+    output: IOutput,
   ) => Effect.Effect<void>
 }
 
 const rendererMap: RendererMap = {
-  RequiredChild: (_payload, shared, output) => Effect.gen(function*() {
-    yield* output.errorMsg(`config missing required '${_payload.child}' block`)
-    yield* renderSimpleSnippet(shared, _payload.location, output)
-    yield* output.hintMsg(`add a '${_payload.child}' block to the root config`)
-  }),
-  RequiredArgumentIssue: (payload, shared, output) => Effect.gen(function*() {
-    yield* output.errorMsg(`node '${payload.node.name.name}' missing required argument index '${payload.index}'`)
-    yield* renderSimpleSnippet(shared, payload.location, output)
-    yield* output.hintMsg(`provide argument #${payload.index + 1}`)
-  }),
-  MissingRequire: (payload, shared, output) => Effect.gen(function*() {
-    const headerBundle = payload.bundle ?? "<unknown bundle>"
-    yield* output.errorMsg(`bundle \"${headerBundle}\" requires unknown package \"${payload.require}\"`)
-    yield* renderSimpleSnippet(shared, payload.location, output)
-    yield* output.hintMsg(`add package \"${payload.require}\" to packages { ... }`)
-  }),
-  MissingPath: (payload, shared, output) => Effect.gen(function*() {
-    yield* output.errorMsg(`path for '${payload.label}' does not exist: ${payload.path}`)
-    yield* renderSimpleSnippet(shared, payload.location, output)
-    yield* output.hintMsg(`create the path or update settings.paths.${payload.label}`)
-  }),
-  ExpectedOneOf: (payload, shared, output) => Effect.gen(function*() {
-    yield* output.errorMsg(`unsupported node '${payload.actual}'`)
-    yield* renderSimpleSnippet(shared, payload.location, output)
-    yield* output.hintMsg(`expected one of: ${payload.expected.join(", ")}`)
-  }),
-  DuplicateName: (payload, shared, output) => Effect.gen(function*() {
-    yield* output.errorMsg(`duplicate ${payload.entity} \"${payload.name}\"`)
-    yield* renderMultiLabelSnippet(shared,
-      [
-        { location: payload.duplicate, message: "duplicate defined here", marker: "^" },
-        { location: payload.first, message: "first defined here", marker: "~" }
-      ],
-    )
-    yield* output.hintMsg(`rename or remove one of the '${payload.name}' ${payload.entity}s`)
-  })
+  RequiredChild: (_payload, shared, output) =>
+    Effect.gen(function* () {
+      yield* output.errorMsg(
+        `config missing required '${_payload.child}' block`,
+      )
+      yield* renderSimpleSnippet(shared, _payload.location, output)
+      yield* output.hintMsg(
+        `add a '${_payload.child}' block to the root config`,
+      )
+    }),
+  RequiredArgumentIssue: (payload, shared, output) =>
+    Effect.gen(function* () {
+      yield* output.errorMsg(
+        `node '${payload.node.name.name}' missing required argument index '${payload.index}'`,
+      )
+      yield* renderSimpleSnippet(shared, payload.location, output)
+      yield* output.hintMsg(`provide argument #${payload.index + 1}`)
+    }),
+  MissingRequire: (payload, shared, output) =>
+    Effect.gen(function* () {
+      const headerBundle = payload.bundle ?? "<unknown bundle>"
+      yield* output.errorMsg(
+        `bundle "${headerBundle}" requires unknown package "${payload.require}"`,
+      )
+      yield* renderSimpleSnippet(shared, payload.location, output)
+      yield* output.hintMsg(
+        `add package "${payload.require}" to packages { ... }`,
+      )
+    }),
+  MissingPath: (payload, shared, output) =>
+    Effect.gen(function* () {
+      yield* output.errorMsg(
+        `path for '${payload.label}' does not exist: ${payload.path}`,
+      )
+      yield* renderSimpleSnippet(shared, payload.location, output)
+      yield* output.hintMsg(
+        `create the path or update settings.paths.${payload.label}`,
+      )
+    }),
+  ExpectedOneOf: (payload, shared, output) =>
+    Effect.gen(function* () {
+      yield* output.errorMsg(`unsupported node '${payload.actual}'`)
+      yield* renderSimpleSnippet(shared, payload.location, output)
+      yield* output.hintMsg(`expected one of: ${payload.expected.join(", ")}`)
+    }),
+  DuplicateName: (payload, shared, output) =>
+    Effect.gen(function* () {
+      yield* output.errorMsg(`duplicate ${payload.entity} "${payload.name}"`)
+      yield* renderMultiLabelSnippet(shared, [
+        {
+          location: payload.duplicate,
+          message: "duplicate defined here",
+          marker: "^",
+        },
+        { location: payload.first, message: "first defined here", marker: "~" },
+      ])
+      yield* output.hintMsg(
+        `rename or remove one of the '${payload.name}' ${payload.entity}s`,
+      )
+    }),
 }
 
 type LabelledLocation = {
@@ -115,10 +139,14 @@ type LabelledLocation = {
   marker: string
 }
 
-const kdlSyntaxHighlight = (content: string) => Effect.promise(() => codeToANSI(content, "kdl", "github-dark"))
+const kdlSyntaxHighlight = (content: string) =>
+  Effect.promise(() => codeToANSI(content, "kdl", "github-dark"))
 
-const renderMultiLabelSnippet = (shared: ParseContext, labels: LabelledLocation[]) =>
-  Effect.gen(function*() {
+const renderMultiLabelSnippet = (
+  shared: ParseContext,
+  labels: LabelledLocation[],
+) =>
+  Effect.gen(function* () {
     const pretty = yield* kdlSyntaxHighlight(shared.content)
     const lines = pretty.split(/\r?\n/)
     const minLine = Math.min(...labels.map((l) => l.location.start.line))
@@ -127,7 +155,9 @@ const renderMultiLabelSnippet = (shared: ParseContext, labels: LabelledLocation[
     const contextEnd = Math.min(lines.length, maxLine + 2)
     const lineNoWidth = String(contextEnd).length
 
-    yield* Console.info(`--> ${shared.path}:${minLine}:${labels[0]!.location.start.column}`)
+    yield* Console.info(
+      `--> ${shared.path}:${minLine}:${labels[0]?.location.start.column}`,
+    )
     yield* Console.error(" |")
 
     const labelsByLine = new Map<number, LabelledLocation[]>()
@@ -148,10 +178,19 @@ const renderMultiLabelSnippet = (shared: ParseContext, labels: LabelledLocation[
         yield* Console.error(`${marker} ${gutter} | ${lineText}`)
         for (const label of labels!) {
           const underlineStart = Math.max(0, label.location.start.column - 1)
-          const underlineEnd = Math.max(underlineStart, label.location.end.column - 1)
-          const underlineLength = Math.max(1, underlineEnd - underlineStart || 1)
-          const caretLine = " ".repeat(underlineStart) + label.marker.repeat(underlineLength)
-          yield* Console.error(`${" ".repeat(1)} ${" ".repeat(lineNoWidth)} | ${caretLine} ${label.message}`)
+          const underlineEnd = Math.max(
+            underlineStart,
+            label.location.end.column - 1,
+          )
+          const underlineLength = Math.max(
+            1,
+            underlineEnd - underlineStart || 1,
+          )
+          const caretLine =
+            " ".repeat(underlineStart) + label.marker.repeat(underlineLength)
+          yield* Console.error(
+            `${" ".repeat(1)} ${" ".repeat(lineNoWidth)} | ${caretLine} ${label.message}`,
+          )
         }
       } else {
         yield* Console.info(`${marker} ${gutter} | ${lineText}`)
@@ -160,8 +199,12 @@ const renderMultiLabelSnippet = (shared: ParseContext, labels: LabelledLocation[
     return yield* Console.error(" |")
   })
 
-const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, output: IOutput) =>
-  Effect.gen(function*() {
+const renderSimpleSnippet = (
+  shared: ParseContext,
+  location: StoredLocation,
+  output: IOutput,
+) =>
+  Effect.gen(function* () {
     const pretty = yield* kdlSyntaxHighlight(shared.content)
     const lines = pretty.split(/\r?\n/)
     const startLine = location.start.line
@@ -185,8 +228,11 @@ const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, out
         const underlineStart = Math.max(0, startColumn - 1)
         const underlineEnd = Math.max(underlineStart, endColumn - 1)
         const underlineLength = Math.max(1, underlineEnd - underlineStart || 1)
-        const caretLine = " ".repeat(underlineStart) + "^".repeat(underlineLength)
-        yield* Console.error(`${" ".repeat(1)} ${" ".repeat(lineNoWidth)} | ${caretLine}`)
+        const caretLine =
+          " ".repeat(underlineStart) + "^".repeat(underlineLength)
+        yield* Console.error(
+          `${" ".repeat(1)} ${" ".repeat(lineNoWidth)} | ${caretLine}`,
+        )
       } else {
         yield* Console.info(`  ${gutter} | ${lineText}`)
       }
@@ -194,37 +240,43 @@ const renderSimpleSnippet = (shared: ParseContext, location: StoredLocation, out
     return yield* Console.error(" |")
   })
 
-export const renderSchemaError = Effect.fnUntraced(function*(error: Schema.SchemaError) {
+export const renderSchemaError = Effect.fnUntraced(function* (
+  error: Schema.SchemaError,
+) {
   const output = yield* Output
   if (error.issue._tag === "InvalidValue") {
-    const kdlIssues = error.issue.annotations?.["kdlIssues"] as KdlIssue[] | undefined
-    const parseFromOptions = error.issue.annotations?.["parseFromOptions"] as ParseContext | undefined
+    const kdlIssues = error.issue.annotations?.kdlIssues as
+      | KdlIssue[]
+      | undefined
+    const parseFromOptions = error.issue.annotations?.parseFromOptions as
+      | ParseContext
+      | undefined
 
     if (kdlIssues && kdlIssues.length > 0 && parseFromOptions) {
       return yield* Effect.forEach(
         kdlIssues,
-        (payload) => rendererMap[payload._type](payload as any, parseFromOptions, output),
-        { discard: true }
+        (payload) =>
+          rendererMap[payload._type](payload as any, parseFromOptions, output),
+        { discard: true },
       )
     }
   }
 
   const failure = standardSchemaFormatter(error.issue)
   for (const issue of failure.issues) {
-    yield* output.errorKeyValue(issue.path?.join(".") ?? "<unknown>", issue.message)
+    yield* output.errorKeyValue(
+      issue.path?.join(".") ?? "<unknown>",
+      issue.message,
+    )
   }
 })
 
-
-export const invalid = (
-  issues: ReadonlyArray<KdlIssue>,
-  ctx: ParseContext
-) =>
+export const invalid = (issues: ReadonlyArray<KdlIssue>, ctx: ParseContext) =>
   Effect.fail(
     new Schema.SchemaError(
       new SchemaIssue.InvalidValue(Option.none(), {
         kdlIssues: issues,
-        parseFromOptions: ctx
-      })
-    )
+        parseFromOptions: ctx,
+      }),
+    ),
   )
