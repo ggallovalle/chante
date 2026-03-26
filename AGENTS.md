@@ -99,10 +99,11 @@ invoking commands.
 - Never use try/catch for Effect operations
 - Custom errors via `Effect.fail` or service-specific error types
 
-### Re-exports
+### Module Structure & Re-exports
 
-- Avoid barrel `index.ts` files
-- Use `<folder-name>.ts` to re-export from a sibling `<folder-name>/` directory
+- Use `<folder-name>.ts` as barrel file (NOT `index.ts`)
+- **Never use `export *`** — be explicit about each export
+- Group exports by source module; separate type exports from value exports
 
 ## Structure
 

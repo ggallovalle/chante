@@ -2,7 +2,7 @@ import { NodeRuntime, NodeServices } from "@effect/platform-node"
 import { Effect, Layer, Logger } from "effect"
 import { Command } from "effect/unstable/cli"
 import { doctor, down, root, up } from "~/commands.js"
-import { renderSchemaError } from "~/config-issue.js"
+import { renderSchemaError } from "~/config/issue.js"
 import { GlobalOutputFlag, Output, OutputLayer } from "~/output.js"
 
 const program = root.pipe(
