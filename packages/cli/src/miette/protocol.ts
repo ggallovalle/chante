@@ -56,6 +56,13 @@ export class SourceSpan extends Schema.Class<SourceSpan>("miette/SourceSpan")({
     return new SourceSpan({ offset: start, length })
   }
 
+  static fromStartEnd(start: number, end: number) {
+    return new SourceSpan({
+      offset: SourceOffset.from(start),
+      length: end - start,
+    })
+  }
+
   /**
    * The absolute offset, in bytes, from the beginning of a SourceCode.
    */

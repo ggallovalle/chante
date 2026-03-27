@@ -9,6 +9,8 @@ import {
 } from "@bgotink/kdl"
 import { Effect, Option, Schema, SchemaGetter, SchemaIssue } from "effect"
 
+import { SourceSpan } from "~/miette.js"
+
 export type Component = Value | Identifier | Tag | Entry | Node | Document
 
 export const KdlPrimitive = Schema.Union([
@@ -18,11 +20,17 @@ export const KdlPrimitive = Schema.Union([
   Schema.Null,
 ])
 
+function span(component: Component) {
+  const location = getLocation(component)
+  if (location === undefined) return undefined
+  return SourceSpan.fromStartEnd(location.start.offset, location.end.offset)
+}
+
 function meta(component: Component, message: string) {
   return {
     message: message,
     kdlComponent: component,
-    kdlLocation: getLocation(component),
+    kdlSpan: span(component),
   }
 }
 
@@ -32,6 +40,7 @@ export const KdlValue = Schema.instanceOf(Value, {
       Schema.Struct({
         value: KdlPrimitive,
         tag: Schema.NullOr(Schema.String),
+        span: Schema.optional(SourceSpan),
       }),
       {
         decode: SchemaGetter.transform((value) => {
@@ -42,6 +51,7 @@ export const KdlValue = Schema.instanceOf(Value, {
         encode: SchemaGetter.transform((value) => ({
           value: value.getValue(),
           tag: value.getTag(),
+          span: span(value),
         })),
       },
     ),
@@ -74,6 +84,7 @@ export const KdlNumber = Schema.instanceOf(Value, {
           return Effect.succeed({
             value,
             tag: component.getTag(),
+            span: span(component),
           })
         }),
       },
@@ -107,6 +118,7 @@ export const KdlBoolean = Schema.instanceOf(Value, {
           return Effect.succeed({
             value,
             tag: component.getTag(),
+            span: span(component),
           })
         }),
       },
@@ -140,6 +152,7 @@ export const KdlString = Schema.instanceOf(Value, {
           return Effect.succeed({
             value,
             tag: component.getTag(),
+            span: span(component),
           })
         }),
       },

@@ -48,6 +48,23 @@ describe("SourceSpan", () => {
     expect(span.isEmpty).toBe(false)
   })
 
+  test(".fromStartEnd creates span from start/end offsets", ({ expect }) => {
+    const span = SourceSpan.fromStartEnd(5, 15)
+
+    expect(span.offsetValue).toBe(5)
+    expect(span.len).toBe(10)
+  })
+
+  test(".fromStartEnd creates zero-length span when start equals end", ({
+    expect,
+  }) => {
+    const span = SourceSpan.fromStartEnd(3, 3)
+
+    expect(span.offsetValue).toBe(3)
+    expect(span.len).toBe(0)
+    expect(span.isEmpty).toBe(true)
+  })
+
   test(".isEmpty returns true for zero-length spans", ({ expect }) => {
     const start = SourceOffset.from(3)
     const span = SourceSpan.from(start, 0)

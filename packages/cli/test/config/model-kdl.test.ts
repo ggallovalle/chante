@@ -28,14 +28,17 @@ describe("KdlValue", () => {
       age: {
         value: "john",
         tag: null,
+        span: null,
       },
       name: {
         value: true,
         tag: null,
+        span: null,
       },
       isAlive: {
         value: 69,
         tag: null,
+        span: null,
       },
     })
   })
