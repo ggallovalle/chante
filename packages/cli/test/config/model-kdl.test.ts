@@ -1,4 +1,4 @@
-import { Value as ModelValue } from "@bgotink/kdl"
+import { Tag as ModelTag, Value as ModelValue } from "@bgotink/kdl"
 import { Result, Schema } from "effect"
 import { assert, describe } from "vitest"
 import { decodeSourceResult, Value } from "~/config/model-kdl.js"
@@ -15,7 +15,7 @@ describe("Value", () => {
       const result = decode(`"john"`)
       expect(Result.getOrThrow(result)).toEqual({
         value: "john",
-        tag: null,
+        tag: undefined,
         span: SourceSpan.from(0, 6),
       })
     })
@@ -39,10 +39,15 @@ describe("Value", () => {
     const decode = Schema.decodeUnknownResult(schema)
 
     test("accepts number values", ({ expect }) => {
-      const result = decode(new ModelValue(42))
+      const value = new ModelValue(42)
+      value.tag = new ModelTag("person")
+      const result = decode(value)
       expect(Result.getOrThrow(result)).toEqual({
         value: 42,
-        tag: null,
+        tag: {
+          span: undefined,
+          type: "person",
+        },
         span: undefined,
       })
     })
@@ -69,7 +74,7 @@ describe("Value", () => {
       const result = decode(new ModelValue(true))
       expect(Result.getOrThrow(result)).toEqual({
         value: true,
-        tag: null,
+        tag: undefined,
         span: undefined,
       })
     })
@@ -97,7 +102,7 @@ describe("Value", () => {
       const value = Result.getOrThrow(result)
       expect(value).toEqual({
         value: new URL("https://github.com"),
-        tag: null,
+        tag: undefined,
         span: undefined,
       })
     })

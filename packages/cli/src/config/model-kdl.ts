@@ -3,10 +3,10 @@ import {
   type Entry,
   getLocation,
   type Identifier,
+  type Tag as ModelTag,
   Value as ModelValue,
   type Node,
   parse,
-  type Tag,
 } from "@bgotink/kdl"
 import {
   Effect,
@@ -22,15 +22,19 @@ import { SourceSpan } from "~/miette.js"
 
 export type ModelComponent =
   | ModelValue
+  | ModelTag
   | Identifier
-  | Tag
   | Entry
   | Node
   | Document
 
+export interface Tag {
+  readonly type: string
+  readonly span: SourceSpan | undefined
+}
 export interface Value<T> {
   readonly value: T
-  readonly tag: string | null
+  readonly tag: Tag | undefined
   readonly span: SourceSpan | undefined
 }
 
@@ -61,7 +65,7 @@ export const Value = <A extends Schema.Top>(inner: A): ValueSchema<A> =>
         return Effect.mapBothEager(parser, {
           onSuccess: (value) => ({
             value,
-            tag: component.getTag(),
+            tag: tag(component),
             span: span(component),
           }),
           // <- here
@@ -154,5 +158,16 @@ function meta(component: ModelComponent, message?: string) {
     message: message ?? "Some unknown error",
     kdlComponent: component,
     kdlSpan: span(component),
+  }
+}
+
+function tag(component: ModelValue) {
+  const value = component.tag
+  if (value == null) {
+    return undefined
+  }
+  return {
+    type: value.getName(),
+    span: span(component),
   }
 }
