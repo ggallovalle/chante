@@ -17,6 +17,11 @@ export type KdlComponent =
   | Node
   | Document
 
+export interface Value<T> {
+  readonly value: T
+  readonly span: SourceSpan | undefined
+}
+
 export interface ValueTagged<T> {
   readonly value: T
   readonly span: SourceSpan | undefined

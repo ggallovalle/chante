@@ -12,6 +12,52 @@ import {
 import { SourceSpan } from "~/miette.js"
 import type * as Model from "./model.js"
 
+export interface Value<A extends Schema.Top>
+  extends Schema.declareConstructor<
+    Model.Value<A["Type"]>,
+    ModelValue,
+    readonly [A]
+  > {}
+
+export const Value = <A extends Schema.Top>(inner: A): Value<A> =>
+  Schema.declareConstructor<Model.Value<A["Type"]>, ModelValue>()(
+    [inner],
+    ([valueCodec]) =>
+      (component, ast, options) => {
+        if (!(component instanceof ModelValue)) {
+          return Effect.fail(
+            new SchemaIssue.InvalidType(ast, Option.some(component)),
+          )
+        }
+        if (component.tag != null) {
+          return Effect.fail(
+            new SchemaIssue.InvalidValue(
+              Option.some(component),
+              meta(
+                component,
+                `Expected no tag name, got "${component.getTag()}"`,
+              ),
+            ),
+          )
+        }
+        const value = component.getValue()
+        const parser = SchemaParser.decodeUnknownEffect(valueCodec)(
+          value,
+          options,
+        )
+
+        return Effect.mapBothEager(parser, {
+          onSuccess: (value) => ({ value, span: span(component) }),
+          onFailure: (issue) =>
+            new SchemaIssue.InvalidValue(
+              Option.some(value),
+              meta(component, findMessage(issue)),
+            ),
+        })
+      },
+    { kdlComponent: "value" },
+  )
+
 export interface ValueTagged<A extends Schema.Top>
   extends Schema.declareConstructor<
     Model.ValueTagged<A["Type"]>,
