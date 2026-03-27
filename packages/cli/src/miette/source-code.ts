@@ -1,6 +1,6 @@
 import { Effect } from "effect"
 import { type MietteError, OutOfBounds } from "~/miette/error.js"
-import { SourceOffset, SourceSpan, SpanContents } from "~/miette/protocol.js"
+import { SourceSpan, SpanContents } from "~/miette/protocol.js"
 
 export interface SourceCode {
   readSpan(
@@ -47,13 +47,11 @@ function sliceWithContext(
   before: number,
   after: number,
 ) {
-  const startOffset = span.offsetValue
-  const endOffset = startOffset + span.len
+  const startOffset = span.offset
+  const endOffset = startOffset + span.length
+  const lastOffset = span.length === 0 ? startOffset : endOffset - 1
 
   const { line: startLine } = findLineAndColumn(startOffset, lineStarts)
-  // `endOffset` is exclusive, so use the last byte in the span to find the
-  // ending line. When the span is empty we fall back to the start line.
-  const lastOffset = span.len === 0 ? startOffset : endOffset - 1
   const { line: endLine } = findLineAndColumn(lastOffset, lineStarts)
 
   const contextStartLine = Math.max(0, startLine - before)
@@ -99,8 +97,8 @@ export class StringSourceCode implements SourceCode {
   ): Effect.Effect<SpanContents, OutOfBounds> {
     return Effect.try({
       try: () => {
-        const start = span.offsetValue
-        const end = start + span.len
+        const start = span.offset
+        const end = start + span.length
 
         if (end > this.data.length) {
           throw new OutOfBounds()
@@ -121,7 +119,7 @@ export class StringSourceCode implements SourceCode {
           slice = this.data.slice(start, end)
           startByte = start
 
-          const lastOffset = span.len === 0 ? start : end - 1
+          const lastOffset = span.length === 0 ? start : end - 1
           const { line: endLine } = findLineAndColumn(
             lastOffset,
             this.lineStarts,
@@ -146,10 +144,7 @@ export class StringSourceCode implements SourceCode {
             ? lineInSource
             : lineAtSliceStart
 
-        const spanForContents = SourceSpan.from(
-          SourceOffset.from(startByte),
-          slice.length,
-        )
+        const spanForContents = SourceSpan.from(startByte, slice.length)
 
         return SpanContents.from({
           data: slice,

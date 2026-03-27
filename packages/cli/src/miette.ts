@@ -14,7 +14,6 @@ export {
 } from "~/miette/handlers/theme.js"
 export {
   LabeledSpan,
-  SourceOffset,
   SourceSpan,
   SpanContents,
 } from "~/miette/protocol.js"

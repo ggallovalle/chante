@@ -51,7 +51,11 @@ describe("KdlString", () => {
 
   test("accepts string values", ({ expect }) => {
     const result = encode(new Value("john"))
-    expect(Result.getOrThrow(result)).toEqual({ value: "john", tag: null })
+    expect(Result.getOrThrow(result)).toEqual({
+      value: "john",
+      tag: null,
+      span: null,
+    })
   })
 
   test("rejects any other value", ({ expect }) => {
@@ -74,7 +78,11 @@ describe("KdlNumber", () => {
 
   test("accepts number values", ({ expect }) => {
     const result = encode(new Value(42))
-    expect(Result.getOrThrow(result)).toEqual({ value: 42, tag: null })
+    expect(Result.getOrThrow(result)).toEqual({
+      value: 42,
+      tag: null,
+      span: null,
+    })
   })
 
   test("rejects any other value", ({ expect }) => {
@@ -97,7 +105,11 @@ describe("KdlBoolean", () => {
 
   test("accepts boolean values", ({ expect }) => {
     const result = encode(new Value(true))
-    expect(Result.getOrThrow(result)).toEqual({ value: true, tag: null })
+    expect(Result.getOrThrow(result)).toEqual({
+      value: true,
+      tag: null,
+      span: null,
+    })
   })
 
   test("rejects any other value", ({ expect }) => {

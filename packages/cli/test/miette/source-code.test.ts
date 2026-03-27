@@ -4,7 +4,6 @@ import {
   FromFileSourceCode,
   OutOfBounds,
   type SourceCode,
-  SourceOffset,
   SourceSpan,
   StringSourceCode,
 } from "~/miette.js"
@@ -19,7 +18,7 @@ export function runSourceCodeTests(
       effect(
         Effect.gen(function* () {
           const src = yield* create("foo\n")
-          const span = SourceSpan.from(SourceOffset.from(0), 4)
+          const span = SourceSpan.from(0, 4)
 
           const contents = yield* src.readSpan(span, 0, 0)
 
@@ -33,7 +32,7 @@ export function runSourceCodeTests(
       effect(
         Effect.gen(function* () {
           const src = yield* create("foobar")
-          const span = SourceSpan.from(SourceOffset.from(3), 3)
+          const span = SourceSpan.from(3, 3)
 
           const contents = yield* src.readSpan(span, 1, 1)
 
@@ -47,7 +46,7 @@ export function runSourceCodeTests(
       effect(
         Effect.gen(function* () {
           const src = yield* create("foo\nbar\nbaz\n")
-          const span = SourceSpan.from(SourceOffset.from(4), 4)
+          const span = SourceSpan.from(4, 4)
 
           const contents = yield* src.readSpan(span, 0, 0)
 
@@ -61,7 +60,7 @@ export function runSourceCodeTests(
       effect(
         Effect.gen(function* () {
           const src = yield* create("foo\nbarbar\nbaz\n")
-          const span = SourceSpan.from(SourceOffset.from(7), 4)
+          const span = SourceSpan.from(7, 4)
 
           const contents = yield* src.readSpan(span, 0, 0)
 
@@ -75,7 +74,7 @@ export function runSourceCodeTests(
       effect(
         Effect.gen(function* () {
           const src = yield* create("foo\r\nbar\r\nbaz\r\n")
-          const span = SourceSpan.from(SourceOffset.from(5), 5)
+          const span = SourceSpan.from(5, 5)
 
           const contents = yield* src.readSpan(span, 0, 0)
 
@@ -89,7 +88,7 @@ export function runSourceCodeTests(
       effect(
         Effect.gen(function* () {
           const src = yield* create("xxx\nfoo\nbar\nbaz\n\nyyy\n")
-          const span = SourceSpan.from(SourceOffset.from(8), 3)
+          const span = SourceSpan.from(8, 3)
 
           const contents = yield* src.readSpan(span, 1, 1)
 
@@ -103,7 +102,7 @@ export function runSourceCodeTests(
       effect(
         Effect.gen(function* () {
           const src = yield* create("aaa\nxxx\n\nfoo\nbar\nbaz\n\nyyy\nbbb\n")
-          const span = SourceSpan.from(SourceOffset.from(9), 11)
+          const span = SourceSpan.from(9, 11)
 
           const contents = yield* src.readSpan(span, 1, 1)
 
@@ -111,7 +110,7 @@ export function runSourceCodeTests(
           expect(contents.line).toBe(2)
           expect(contents.column).toBe(0)
 
-          const expectedSpan = SourceSpan.from(SourceOffset.from(8), 14)
+          const expectedSpan = SourceSpan.from(8, 14)
           expect(contents.span).toEqual(expectedSpan)
         }),
       ))
@@ -122,7 +121,7 @@ export function runSourceCodeTests(
           const src = yield* create(
             "one\ntwo\n\nthree\nfour\nfive\n\nsix\nseven\n",
           )
-          const span = SourceSpan.from(SourceOffset.from(2), 0)
+          const span = SourceSpan.from(2, 0)
 
           const contents = yield* src.readSpan(span, 2, 2)
 
@@ -130,7 +129,7 @@ export function runSourceCodeTests(
           expect(contents.line).toBe(0)
           expect(contents.column).toBe(0)
 
-          const expectedSpan = SourceSpan.from(SourceOffset.from(0), 9)
+          const expectedSpan = SourceSpan.from(0, 9)
           expect(contents.span).toEqual(expectedSpan)
         }),
       ))
@@ -139,7 +138,7 @@ export function runSourceCodeTests(
       effect(
         Effect.gen(function* () {
           const src = yield* create("short")
-          const span = SourceSpan.from(SourceOffset.from(10), 2)
+          const span = SourceSpan.from(10, 2)
 
           const result = yield* Effect.result(src.readSpan(span, 0, 0))
           expect(result._tag).toBe("Failure")

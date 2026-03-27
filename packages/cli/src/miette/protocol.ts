@@ -11,19 +11,18 @@ function utf8Length(char: string): number {
   return 4
 }
 
-export class SourceOffset extends Schema.Class<SourceOffset>(
-  "miette/SourceOffset",
-)({
+export class SourceSpan extends Schema.Class<SourceSpan>("miette/SourceSpan")({
   offset: Schema.Number,
+  length: Schema.Number,
 }) {
-  static from(offset: number) {
-    return new SourceOffset({ offset })
+  static from(start: number, length: number) {
+    return new SourceSpan({ offset: start, length })
   }
 
-  /**
-   * Little utility to help convert 1-based line/column locations into
-   * miette-compatible Spans
-   */
+  static fromStartEnd(start: number, end: number) {
+    return new SourceSpan({ offset: start, length: end - start })
+  }
+
   static fromLocation(source: string, line: number, column: number) {
     let currentLine = 0
     let currentCol = 0
@@ -44,42 +43,9 @@ export class SourceOffset extends Schema.Class<SourceOffset>(
       offset += utf8Length(char)
     }
 
-    return new SourceOffset({ offset })
-  }
-}
-
-export class SourceSpan extends Schema.Class<SourceSpan>("miette/SourceSpan")({
-  offset: Schema.instanceOf(SourceOffset),
-  length: Schema.Number,
-}) {
-  static from(start: SourceOffset, length: number) {
-    return new SourceSpan({ offset: start, length })
+    return new SourceSpan({ offset, length: 0 })
   }
 
-  static fromStartEnd(start: number, end: number) {
-    return new SourceSpan({
-      offset: SourceOffset.from(start),
-      length: end - start,
-    })
-  }
-
-  /**
-   * The absolute offset, in bytes, from the beginning of a SourceCode.
-   */
-  get offsetValue(): number {
-    return this.offset.offset
-  }
-
-  /**
-   * Total length of the SourceSpan, in bytes.
-   */
-  get len(): number {
-    return this.length
-  }
-
-  /**
-   * Whether this SourceSpan has a length of zero.
-   */
   get isEmpty(): boolean {
     return this.length === 0
   }
@@ -92,12 +58,10 @@ export class LabeledSpan extends Schema.Class<LabeledSpan>(
   span: SourceSpan,
   primary: Schema.Boolean,
 }) {
-  // --- factories ---
-
   static from(label: string | undefined, offset: number, length: number) {
     return new LabeledSpan({
       label,
-      span: SourceSpan.from(SourceOffset.from(offset), length),
+      span: SourceSpan.from(offset, length),
       primary: false,
     })
   }
@@ -130,14 +94,12 @@ export class LabeledSpan extends Schema.Class<LabeledSpan>(
     return LabeledSpan.fromSpan(undefined, span)
   }
 
-  // --- derived / convenience getters ---
-
   get offset(): number {
-    return this.span.offsetValue
+    return this.span.offset
   }
 
   get len(): number {
-    return this.span.len
+    return this.span.length
   }
 
   get isEmpty(): boolean {
@@ -160,8 +122,6 @@ export class SpanContents extends Schema.Class<SpanContents>(
   name: Schema.optional(Schema.String),
   language: Schema.optional(Schema.String),
 }) {
-  // --- factories ---
-
   static from(args: {
     data: Uint8Array
     span: SourceSpan
@@ -188,8 +148,6 @@ export class SpanContents extends Schema.Class<SpanContents>(
     })
   }
 
-  // --- immutable helper (not a mutator) ---
-
   withLanguage(language: string) {
     return new SpanContents({
       data: this.data,
@@ -202,14 +160,12 @@ export class SpanContents extends Schema.Class<SpanContents>(
     })
   }
 
-  // --- derived convenience ---
-
   get offset(): number {
-    return this.span.offsetValue
+    return this.span.offset
   }
 
   get len(): number {
-    return this.span.len
+    return this.span.length
   }
 
   decode(): string {

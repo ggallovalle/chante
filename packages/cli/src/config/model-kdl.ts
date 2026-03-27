@@ -63,6 +63,7 @@ export const KdlNumber = Schema.instanceOf(Value, {
       Schema.Struct({
         value: Schema.Number,
         tag: Schema.NullOr(Schema.String),
+        span: Schema.optional(SourceSpan),
       }),
       {
         decode: SchemaGetter.transform((value) => {
@@ -97,6 +98,7 @@ export const KdlBoolean = Schema.instanceOf(Value, {
       Schema.Struct({
         value: Schema.Boolean,
         tag: Schema.NullOr(Schema.String),
+        span: Schema.optional(SourceSpan),
       }),
       {
         decode: SchemaGetter.transform((value) => {
@@ -131,6 +133,7 @@ export const KdlString = Schema.instanceOf(Value, {
       Schema.Struct({
         value: Schema.String,
         tag: Schema.NullOr(Schema.String),
+        span: Schema.optional(SourceSpan),
       }),
       {
         decode: SchemaGetter.transform((value) => {
