@@ -1,21 +1,20 @@
 import { Tag as ModelTag, Value as ModelValue } from "@bgotink/kdl"
 import { Result, Schema } from "effect"
 import { assert, describe } from "vitest"
-import { decodeSourceResult, Value } from "~/kdl/model.js"
+import { KdlSchema } from "~/kdl.js"
 import { SourceSpan } from "~/miette.js"
 import { test } from "~test/fixtures.js"
 
-describe("Value", () => {
+describe("ValueTagged", () => {
   describe("primitive string", () => {
     const inner = Schema.String
-    const schema = Value(inner)
-    const decode = decodeSourceResult(schema)
+    const schema = KdlSchema.ValueTagged(inner)
+    const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts string values", ({ expect }) => {
       const result = decode(`"john"`)
       expect(Result.getOrThrow(result)).toEqual({
         value: "john",
-        tag: undefined,
         span: SourceSpan.from(0, 6),
       })
     })
@@ -35,7 +34,7 @@ describe("Value", () => {
 
   describe("primitive number", () => {
     const inner = Schema.Number
-    const schema = Value(inner)
+    const schema = KdlSchema.ValueTagged(inner)
     const decode = Schema.decodeUnknownResult(schema)
 
     test("accepts number values", ({ expect }) => {
@@ -44,10 +43,8 @@ describe("Value", () => {
       const result = decode(value)
       expect(Result.getOrThrow(result)).toEqual({
         value: 42,
-        tag: {
-          span: undefined,
-          type: "person",
-        },
+        tagName: "person",
+        tagSpan: undefined,
         span: undefined,
       })
     })
@@ -67,7 +64,7 @@ describe("Value", () => {
 
   describe("primitive boolean", () => {
     const inner = Schema.Boolean
-    const schema = Value(inner)
+    const schema = KdlSchema.ValueTagged(inner)
     const decode = Schema.decodeUnknownResult(schema)
 
     test("accepts boolean values", ({ expect }) => {
@@ -94,7 +91,7 @@ describe("Value", () => {
 
   describe("from string inner", () => {
     const inner = Schema.URLFromString
-    const schema = Value(inner)
+    const schema = KdlSchema.ValueTagged(inner)
     const decode = Schema.decodeUnknownResult(schema)
 
     test("accepts strings", ({ expect }) => {
