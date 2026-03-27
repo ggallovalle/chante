@@ -171,3 +171,18 @@ function tag(component: ModelValue) {
     span: span(component),
   }
 }
+
+/*
+const Workspace = Kdl.Node("workspace", {
+  name: Kdl.EntryArgument(0, String),
+  openOnOutput: Kdl.NodeOption("open-on-output", String)
+}).pipe(
+  // inspired by ParseOptions.onExcessProperty
+  Kdl.checkOnExcessChildren("error")
+)
+
+const Config = Kdl.Node(({
+  worspaces: Kdl.NodeChildren(Workspace)
+    .pipe(Kdl.checkUniqueBy((worspace) => worspace.name))
+}))
+*/

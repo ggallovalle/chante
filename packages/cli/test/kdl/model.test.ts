@@ -1,7 +1,7 @@
 import { Tag as ModelTag, Value as ModelValue } from "@bgotink/kdl"
 import { Result, Schema } from "effect"
 import { assert, describe } from "vitest"
-import { decodeSourceResult, Value } from "~/config/model-kdl.js"
+import { decodeSourceResult, Value } from "~/kdl/model.js"
 import { SourceSpan } from "~/miette.js"
 import { test } from "~test/fixtures.js"
 
