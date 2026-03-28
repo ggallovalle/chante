@@ -28,3 +28,8 @@ export interface ValueTagged<T> {
   readonly tagName: string | undefined
   readonly tagSpan: SourceSpan | undefined
 }
+
+export interface EntryArgument<T> {
+  readonly index: number
+  readonly data: Value<T> | ValueTagged<T>
+}

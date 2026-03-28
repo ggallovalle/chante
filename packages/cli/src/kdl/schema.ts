@@ -1,4 +1,9 @@
-import { getLocation, Value as ModelValue, parse } from "@bgotink/kdl"
+import {
+  getLocation,
+  Node as KdlNode,
+  Value as KdlValue,
+  parse,
+} from "@bgotink/kdl"
 import {
   Effect,
   Option,
@@ -15,16 +20,16 @@ import type * as Model from "./model.js"
 export interface Value<A extends Schema.Top>
   extends Schema.declareConstructor<
     Model.Value<A["Type"]>,
-    ModelValue,
+    KdlValue,
     readonly [A]
   > {}
 
 export const Value = <A extends Schema.Top>(inner: A): Value<A> =>
-  Schema.declareConstructor<Model.Value<A["Type"]>, ModelValue>()(
+  Schema.declareConstructor<Model.Value<A["Type"]>, KdlValue>()(
     [inner],
     ([valueCodec]) =>
       (component, ast, options) => {
-        if (!(component instanceof ModelValue)) {
+        if (!(component instanceof KdlValue)) {
           return Effect.fail(
             new SchemaIssue.InvalidType(ast, Option.some(component)),
           )
@@ -61,16 +66,16 @@ export const Value = <A extends Schema.Top>(inner: A): Value<A> =>
 export interface ValueTagged<A extends Schema.Top>
   extends Schema.declareConstructor<
     Model.ValueTagged<A["Type"]>,
-    ModelValue,
+    KdlValue,
     readonly [A]
   > {}
 
 export const ValueTagged = <A extends Schema.Top>(inner: A): ValueTagged<A> =>
-  Schema.declareConstructor<Model.ValueTagged<A["Type"]>, ModelValue>()(
+  Schema.declareConstructor<Model.ValueTagged<A["Type"]>, KdlValue>()(
     [inner],
     ([valueCodec]) =>
       (component, ast, options) => {
-        if (!(component instanceof ModelValue)) {
+        if (!(component instanceof KdlValue)) {
           return Effect.fail(
             new SchemaIssue.InvalidType(ast, Option.some(component)),
           )
@@ -100,6 +105,62 @@ export const ValueTagged = <A extends Schema.Top>(inner: A): ValueTagged<A> =>
         })
       },
     { kdlComponent: "value" },
+  )
+
+export interface EntryArgument<I extends Schema.Top>
+  extends Schema.declareConstructor<
+    Model.EntryArgument<I["Type"]>,
+    KdlNode,
+    readonly [Value<I>]
+  > {}
+
+export const EntryArgument = <I extends Schema.Top>(
+  index: number,
+  value: I,
+): EntryArgument<I> =>
+  Schema.declareConstructor<Model.EntryArgument<I["Type"]>, KdlNode>()(
+    [Value(value)],
+    ([valueCodec]) =>
+      (component, ast, options) => {
+        if (!(component instanceof KdlNode)) {
+          return Effect.fail(
+            new SchemaIssue.InvalidType(ast, Option.some(component)),
+          )
+        }
+        const entry = component.getArgumentEntry(index)
+        if (entry == null)
+          return Effect.fail(
+            new SchemaIssue.InvalidValue(
+              Option.some(entry),
+              meta(
+                component,
+                `Expected node "${component.getName()}" to have argument at index ${index}`,
+              ),
+            ),
+          )
+
+        const value = entry.value
+        const parser = SchemaParser.decodeUnknownEffect(valueCodec)(
+          value,
+          options,
+        )
+
+        return Effect.mapBothEager(parser, {
+          onSuccess: (value) => ({
+            data: value,
+            index,
+          }),
+          // <- here
+          onFailure: (issue) => {
+            // console.log(issue)
+            return new SchemaIssue.InvalidValue(
+              Option.some(value),
+              meta(value, findMessage(issue)),
+            )
+          },
+        })
+      },
+    { kdlComponent: "node" },
   )
 
 export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(

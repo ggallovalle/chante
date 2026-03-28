@@ -209,3 +209,31 @@ describe("ValueTagged", () => {
     })
   })
 })
+
+describe("EntryArgument", () => {
+  const valueSchema = Schema.String
+  const schema = KdlSchema.EntryArgument(0, valueSchema)
+  const decode = KdlSchema.decodeSourceResult(schema)
+
+  test("accepts string argument at index", ({ expect }) => {
+    const result = decode(`format "kdl"`)
+    const value = Result.getOrThrow(result)
+    expect(value.index).toEqual(0)
+    expect(value.data.value).toEqual("kdl")
+    expect(value.data.span).toBeDefined()
+  })
+
+  test("rejects when argument missing", ({ expect }) => {
+    const r = decode("bundle")
+    assert(r._tag === "Failure")
+    expect(r.failure.toString()).toEqual(
+      `Expected node "bundle" to have argument at index 0`,
+    )
+  })
+
+  test("rejects wrong type", ({ expect }) => {
+    const r = decode(`use-effect #true`)
+    assert(r._tag === "Failure")
+    expect(r.failure.toString()).toEqual("Expected string, got true")
+  })
+})
