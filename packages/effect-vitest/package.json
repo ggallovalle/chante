@@ -1,5 +1,5 @@
 {
-  "name": "@chante/cli",
+  "name": "@kbroom/effect-vitest",
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
@@ -8,26 +8,22 @@
     "type": "git",
     "url": "git+ssh://git@github.com/ggallovalle/chante.git"
   },
-  "bin": {
-    "chante": "./dist/cli.js"
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    }
   },
   "scripts": {
     "check": "tsc --noEmit -p tsconfig.build.json",
-    "build": "tsc -p tsconfig.build.json",
-    "test": "bunx --bun vitest run"
+    "build": "tsc -p tsconfig.build.json"
   },
-  "dependencies": {
-    "@bgotink/kdl": "^0.4.0",
-    "@effect/platform-node": "catalog:effect",
-    "@shikijs/cli": "^4.0.2",
+  "peerDependencies": {
     "effect": "catalog:effect",
-    "wrap-ansi": "^9.0.0"
+    "vitest": "catalog:vite"
   },
   "devDependencies": {
-    "@kbroom/effect-vitest": "workspace:*",
     "@types/bun": "catalog:typescript",
-    "@types/node": "catalog:typescript",
-    "vitest": "catalog:vite"
+    "typescript": "catalog:typescript"
   },
   "engines": {
     "bun": ">=1.2.14",

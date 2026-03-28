@@ -48,7 +48,16 @@
       "linter": {
         "rules": {
           "correctness": {
-            // for vitest dependency syntax
+            "noEmptyPattern": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/effect-vitest/**/*.{ts,tsx,js,jsx}"],
+      "linter": {
+        "rules": {
+          "correctness": {
             "noEmptyPattern": "off"
           }
         }
