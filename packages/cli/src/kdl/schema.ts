@@ -17,7 +17,11 @@ import {
 import { SourceSpan } from "~/miette.js"
 import type * as Model from "./model.js"
 
-export interface Value<A extends Schema.Top>
+export type ValueConstraint = Schema.Encoder<string | number | boolean | null>
+// biome-ignore lint/suspicious/noExplicitAny: I know
+export type ValueCodec<T = any> = Schema.Codec<T, KdlValue>
+
+export interface V<A extends Schema.Top>
   extends Schema.declareConstructor<
     Model.Value<A["Type"]>,
     KdlValue,
@@ -26,7 +30,7 @@ export interface Value<A extends Schema.Top>
   readonly value: A
 }
 
-export const Value = <A extends Schema.Top>(inner: A): Value<A> => {
+export const V = <A extends ValueConstraint>(inner: A): V<A> => {
   const schema = Schema.declareConstructor<Model.Value<A["Type"]>, KdlValue>()(
     [inner],
     ([valueCodec]) =>
@@ -74,8 +78,8 @@ export const Value = <A extends Schema.Top>(inner: A): Value<A> => {
   return Schema.make(schema.ast, { value: inner })
 }
 
-export const allowTagged = <A extends Schema.Top>(self: Value<A>): Value<A> =>
-  self.pipe(Schema.annotate({ kdlAllowTag: true })) as Value<A>
+export const allowTagged = <A extends Schema.Top>(self: V<A>): V<A> =>
+  self.pipe(Schema.annotate({ kdlAllowTag: true })) as V<A>
 
 export const resolveKdlSpan = (
   schemaOrIssue: Schema.Schema<unknown> | SchemaIssue.Issue,
@@ -89,10 +93,7 @@ export const resolveKdlSpan = (
   return undefined
 }
 
-// biome-ignore lint/suspicious/noExplicitAny: I know
-export type ValueCodec<T = any> = Schema.Codec<T, KdlValue>
-
-export interface EntryArgument<I extends ValueCodec>
+export interface Arg<I extends ValueCodec>
   extends Schema.declareConstructor<
     Model.EntryArgument<I["Type"]>,
     KdlNode,
@@ -102,10 +103,7 @@ export interface EntryArgument<I extends ValueCodec>
   readonly data: I
 }
 
-export const EntryArgument = <I extends ValueCodec>(
-  index: number,
-  data: I,
-): EntryArgument<I> => {
+export const Arg = <I extends ValueCodec>(index: number, data: I): Arg<I> => {
   const schema = Schema.declareConstructor<
     Model.EntryArgument<I["Type"]>,
     KdlNode
@@ -156,7 +154,7 @@ export const EntryArgument = <I extends ValueCodec>(
   return Schema.make(schema.ast, { data, index })
 }
 
-export interface EntryProperty<I extends ValueCodec>
+export interface Prop<I extends ValueCodec>
   extends Schema.declareConstructor<
     Model.EntryProperty<I["Type"]>,
     KdlNode,
@@ -166,10 +164,7 @@ export interface EntryProperty<I extends ValueCodec>
   readonly data: I
 }
 
-export const EntryProperty = <I extends ValueCodec>(
-  name: string,
-  data: I,
-): EntryProperty<I> => {
+export const Prop = <I extends ValueCodec>(name: string, data: I): Prop<I> => {
   const schema = Schema.declareConstructor<
     Model.EntryProperty<I["Type"]>,
     KdlNode
@@ -230,7 +225,7 @@ export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(
   const componentType = schema.ast.annotations?.["kdlComponent"]
   if (typeof componentType !== "string") {
     throw new Error(
-      "The schema MUST be a KDL component, AKA either a Value<T> | ",
+      "The schema MUST be a KDL component, either 'value', 'node' or 'document'",
     )
   }
 

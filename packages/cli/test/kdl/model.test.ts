@@ -6,7 +6,7 @@ import { test } from "~test/fixtures.js"
 
 describe("Value", () => {
   describe("primitive string", () => {
-    const schema = KdlSchema.EntryArgument(0, KdlSchema.Value(Schema.String))
+    const schema = KdlSchema.Arg(0, KdlSchema.V(Schema.String))
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts string values", ({ expect }) => {
@@ -40,7 +40,7 @@ describe("Value", () => {
   })
 
   describe("primitive number", () => {
-    const schema = KdlSchema.EntryArgument(0, KdlSchema.Value(Schema.Number))
+    const schema = KdlSchema.Arg(0, KdlSchema.V(Schema.Number))
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts number values", ({ expect }) => {
@@ -74,7 +74,7 @@ describe("Value", () => {
   })
 
   describe("primitive boolean", () => {
-    const schema = KdlSchema.EntryArgument(0, KdlSchema.Value(Schema.Boolean))
+    const schema = KdlSchema.Arg(0, KdlSchema.V(Schema.Boolean))
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts boolean values", ({ expect }) => {
@@ -108,10 +108,7 @@ describe("Value", () => {
   })
 
   describe("from string inner", () => {
-    const schema = KdlSchema.EntryArgument(
-      0,
-      KdlSchema.Value(Schema.URLFromString),
-    )
+    const schema = KdlSchema.Arg(0, KdlSchema.V(Schema.URLFromString))
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts strings", ({ expect }) => {
@@ -133,9 +130,9 @@ describe("Value", () => {
 
 describe("ValueTagged", () => {
   describe("primitive string", () => {
-    const schema = KdlSchema.EntryArgument(
+    const schema = KdlSchema.Arg(
       0,
-      KdlSchema.Value(Schema.String).pipe(KdlSchema.allowTagged),
+      KdlSchema.V(Schema.String).pipe(KdlSchema.allowTagged),
     )
     const decode = KdlSchema.decodeSourceResult(schema)
 
@@ -166,9 +163,9 @@ describe("ValueTagged", () => {
   })
 
   describe("primitive number", () => {
-    const schema = KdlSchema.EntryArgument(
+    const schema = KdlSchema.Arg(
       0,
-      KdlSchema.Value(Schema.Number).pipe(KdlSchema.allowTagged),
+      KdlSchema.V(Schema.Number).pipe(KdlSchema.allowTagged),
     )
     const decode = KdlSchema.decodeSourceResult(schema)
 
@@ -208,9 +205,9 @@ describe("ValueTagged", () => {
   })
 
   describe("primitive boolean", () => {
-    const schema = KdlSchema.EntryArgument(
+    const schema = KdlSchema.Arg(
       0,
-      KdlSchema.Value(Schema.Boolean).pipe(KdlSchema.allowTagged),
+      KdlSchema.V(Schema.Boolean).pipe(KdlSchema.allowTagged),
     )
     const decode = KdlSchema.decodeSourceResult(schema)
 
@@ -239,11 +236,36 @@ describe("ValueTagged", () => {
       expect(rNull.failure.toString()).toEqual("Expected boolean, got null")
     })
   })
+
+  describe("from string inner", () => {
+    const schema = KdlSchema.Arg(
+      0,
+      KdlSchema.V(Schema.URLFromString).pipe(KdlSchema.allowTagged),
+    )
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts strings", ({ expect }) => {
+      const result = decode(`arg "https://github.com"`)
+      expect(Result.getOrThrow(result).data.value).toEqual(
+        new URL("https://github.com"),
+      )
+      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
+    })
+
+    test("accepts strings - span", ({ expect }) => {
+      const result = decode(`arg "https://github.com"`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toEqual(
+        SourceSpan.from(4, 20),
+      )
+      expect(Result.getOrThrow(result).data.tagSpan).toBeUndefined()
+    })
+  })
 })
 
 describe("EntryArgument", () => {
-  const valueSchema = KdlSchema.Value(Schema.String)
-  const schema = KdlSchema.EntryArgument(0, valueSchema)
+  const valueSchema = KdlSchema.V(Schema.String)
+  const schema = KdlSchema.Arg(0, valueSchema)
   const decode = KdlSchema.decodeSourceResult(schema)
 
   test("accepts string argument at index", ({ expect }) => {
@@ -274,8 +296,8 @@ describe("EntryArgument", () => {
 })
 
 describe("EntryProperty", () => {
-  const valueSchema = KdlSchema.Value(Schema.String)
-  const schema = KdlSchema.EntryProperty("name", valueSchema)
+  const valueSchema = KdlSchema.V(Schema.String)
+  const schema = KdlSchema.Prop("name", valueSchema)
   const decode = KdlSchema.decodeSourceResult(schema)
 
   test("accepts string property", ({ expect }) => {
@@ -319,10 +341,8 @@ describe("EntryProperty", () => {
 
 describe("EntryProperty with ValueTagged", () => {
   describe("with String", () => {
-    const valueSchema = KdlSchema.Value(Schema.String).pipe(
-      KdlSchema.allowTagged,
-    )
-    const schema = KdlSchema.EntryProperty("name", valueSchema)
+    const valueSchema = KdlSchema.V(Schema.String).pipe(KdlSchema.allowTagged)
+    const schema = KdlSchema.Prop("name", valueSchema)
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts property", ({ expect }) => {
@@ -343,10 +363,10 @@ describe("EntryProperty with ValueTagged", () => {
   })
 
   describe("with URLFromString", () => {
-    const valueSchema = KdlSchema.Value(Schema.URLFromString).pipe(
+    const valueSchema = KdlSchema.V(Schema.URLFromString).pipe(
       KdlSchema.allowTagged,
     )
-    const schema = KdlSchema.EntryProperty("url", valueSchema)
+    const schema = KdlSchema.Prop("url", valueSchema)
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts URL property", ({ expect }) => {
