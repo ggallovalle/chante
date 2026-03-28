@@ -2,9 +2,9 @@ import type {
   Document,
   Entry,
   Identifier,
+  Node as KdlNode,
   Tag as KdlTag,
   Value as KdlValue,
-  Node,
 } from "@bgotink/kdl"
 
 import type { SourceSpan } from "~/miette.js"
@@ -14,7 +14,7 @@ export type KdlComponent =
   | KdlTag
   | Identifier
   | Entry
-  | Node
+  | KdlNode
   | Document
 
 export interface Value<T> {
@@ -33,5 +33,12 @@ export interface EntryProperty<T> {
   readonly name: string
   readonly nameSpan: SourceSpan | undefined
   readonly data: T
+  readonly span: SourceSpan | undefined
+}
+
+export interface Node<T> {
+  readonly name: string
+  readonly nameSpan: SourceSpan | undefined
+  readonly children: T
   readonly span: SourceSpan | undefined
 }

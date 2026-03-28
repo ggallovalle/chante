@@ -20,6 +20,14 @@ import type * as Model from "./model.js"
 export type ValueConstraint = Schema.Encoder<string | number | boolean | null>
 // biome-ignore lint/suspicious/noExplicitAny: I know
 export type ValueCodec<T = any> = Schema.Codec<T, KdlValue>
+// biome-ignore lint/suspicious/noExplicitAny: I know
+export type NodeCodec<T = any> = Schema.Codec<T, KdlNode>
+/**
+ * Constraint for a struct field map: an object whose values are schemas.
+ *
+ * @since 4.0.0
+ */
+export type Children = { readonly [x: PropertyKey]: NodeCodec }
 
 export interface V<A extends Schema.Top>
   extends Schema.declareConstructor<
@@ -217,6 +225,64 @@ export const Prop = <I extends ValueCodec>(name: string, data: I): Prop<I> => {
     { kdlComponent: "node" },
   )
   return Schema.make(schema.ast, { data, name })
+}
+
+export const Node = <const Fields extends Children>(
+  name: string,
+  children: Fields,
+) => {
+  const struct = Schema.Struct(children)
+  const schema = Schema.declareConstructor<
+    Model.Node<(typeof struct)["Type"]>,
+    KdlNode
+  >()(
+    [struct],
+    ([structCodec]) =>
+      (component, ast, options) => {
+        if (!(component instanceof KdlNode)) {
+          return Effect.fail(
+            new SchemaIssue.InvalidType(ast, Option.some(component)),
+          )
+        }
+
+        const componentName = component.getName()
+        if (componentName !== name) {
+          return Effect.fail(
+            new SchemaIssue.InvalidValue(
+              Option.some(component),
+              meta(
+                component.name,
+                `Expected node to have name "${name}", got "${componentName}"`,
+              ),
+            ),
+          )
+        }
+
+        const inner = Object.keys(children).reduce(
+          (acc, key) => {
+            acc[key] = component
+            return acc
+          },
+          {} as Record<PropertyKey, KdlNode>,
+        )
+
+        const parser = SchemaParser.decodeUnknownEffect(structCodec)(
+          inner,
+          options,
+        )
+
+        return Effect.mapEager(parser, (value) => ({
+          name,
+          children: value,
+          span: span(component),
+          nameSpan: span(component.name),
+        }))
+      },
+    { kdlComponent: "node" },
+  )
+
+  return schema
+  // return Schema.make(schema.ast, { chindren: struct, name })
 }
 
 export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(

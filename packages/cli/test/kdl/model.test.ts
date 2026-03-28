@@ -4,384 +4,229 @@ import { KdlSchema } from "~/kdl.js"
 import { SourceSpan } from "~/miette.js"
 import { test } from "~test/fixtures.js"
 
-describe("Value", () => {
-  describe("primitive string", () => {
-    const schema = KdlSchema.Arg(0, KdlSchema.V(Schema.String))
+describe("Node", () => {
+  describe("with string arg and prop", () => {
+    const schema = KdlSchema.Node("bundle", {
+      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+      version: KdlSchema.Prop("version", KdlSchema.V(Schema.String)),
+    })
     const decode = KdlSchema.decodeSourceResult(schema)
 
-    test("accepts string values", ({ expect }) => {
-      const result = decode(`arg "john"`)
-      expect(Result.getOrThrow(result).data.value).toEqual("john")
+    test("accepts node with arg and prop", ({ expect }) => {
+      const result = decode(`bundle "mylib" version="1.0.0"`)
+      const value = Result.getOrThrow(result)
+      expect(value.name).toEqual("bundle")
+      expect(value.children.name.data.value).toEqual("mylib")
+      expect(value.children.version.data.value).toEqual("1.0.0")
     })
 
-    test("accepts string values - span", ({ expect }) => {
-      const result = decode(`arg "john"`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 6))
-    })
-
-    test("rejects tagged values", ({ expect }) => {
-      const r = decode(`arg (name)"john"`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(`Expected no tag name, got "name"`)
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rNumber = decode(`arg 10`)
-      assert(rNumber._tag === "Failure")
-      expect(rNumber.failure.toString()).toEqual("Expected string, got 10")
-      const rBool = decode(`arg #true`)
-      assert(rBool._tag === "Failure")
-      expect(rBool.failure.toString()).toEqual("Expected string, got true")
-      const rNull = decode(`arg #null`)
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected string, got null")
-    })
-  })
-
-  describe("primitive number", () => {
-    const schema = KdlSchema.Arg(0, KdlSchema.V(Schema.Number))
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test("accepts number values", ({ expect }) => {
-      const result = decode(`arg 42`)
-      expect(Result.getOrThrow(result).data.value).toEqual(42)
-    })
-
-    test("accepts number values - span", ({ expect }) => {
-      const result = decode(`arg 42`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 2))
-    })
-
-    test("rejects tagged values", ({ expect }) => {
-      const r = decode(`arg (person)42`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(`Expected no tag name, got "person"`)
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rString = decode(`arg "john"`)
-      assert(rString._tag === "Failure")
-      expect(rString.failure.toString()).toEqual(`Expected number, got "john"`)
-      const rBool = decode(`arg #true`)
-      assert(rBool._tag === "Failure")
-      expect(rBool.failure.toString()).toEqual("Expected number, got true")
-      const rNull = decode(`arg #null`)
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected number, got null")
-    })
-  })
-
-  describe("primitive boolean", () => {
-    const schema = KdlSchema.Arg(0, KdlSchema.V(Schema.Boolean))
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test("accepts boolean values", ({ expect }) => {
-      const result = decode(`arg #true`)
-      expect(Result.getOrThrow(result).data.value).toEqual(true)
-    })
-
-    test("accepts boolean values - span", ({ expect }) => {
-      const result = decode(`arg #true`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 5))
-    })
-
-    test("rejects tagged values", ({ expect }) => {
-      const r = decode(`arg (float)#true`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(`Expected no tag name, got "float"`)
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rString = decode(`arg "doe"`)
-      assert(rString._tag === "Failure")
-      expect(rString.failure.toString()).toEqual(`Expected boolean, got "doe"`)
-      const rNumber = decode(`arg 67`)
-      assert(rNumber._tag === "Failure")
-      expect(rNumber.failure.toString()).toEqual("Expected boolean, got 67")
-      const rNull = decode(`arg #null`)
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected boolean, got null")
-    })
-  })
-
-  describe("from string inner", () => {
-    const schema = KdlSchema.Arg(0, KdlSchema.V(Schema.URLFromString))
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test("accepts strings", ({ expect }) => {
-      const result = decode(`arg "https://github.com"`)
-      expect(Result.getOrThrow(result).data.value).toEqual(
-        new URL("https://github.com"),
-      )
-    })
-
-    test("accepts strings - span", ({ expect }) => {
-      const result = decode(`arg "https://github.com"`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toEqual(
-        SourceSpan.from(4, 20),
-      )
-    })
-  })
-})
-
-describe("ValueTagged", () => {
-  describe("primitive string", () => {
-    const schema = KdlSchema.Arg(
-      0,
-      KdlSchema.V(Schema.String).pipe(KdlSchema.allowTagged),
-    )
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test("accepts string values", ({ expect }) => {
-      const result = decode(`arg "john"`)
-      expect(Result.getOrThrow(result).data.value).toEqual("john")
-      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
-    })
-
-    test("accepts string values - span", ({ expect }) => {
-      const result = decode(`arg "john"`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 6))
-      expect(Result.getOrThrow(result).data.tagSpan).toBeUndefined()
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rNumber = decode(`arg 10`)
-      assert(rNumber._tag === "Failure")
-      expect(rNumber.failure.toString()).toEqual("Expected string, got 10")
-      const rBool = decode(`arg #true`)
-      assert(rBool._tag === "Failure")
-      expect(rBool.failure.toString()).toEqual("Expected string, got true")
-      const rNull = decode(`arg #null`)
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected string, got null")
-    })
-  })
-
-  describe("primitive number", () => {
-    const schema = KdlSchema.Arg(
-      0,
-      KdlSchema.V(Schema.Number).pipe(KdlSchema.allowTagged),
-    )
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test.for([
-      ["untagged", "42", undefined],
-      ["tagged", "(person)42", "person"],
-    ])("accepts number values (%s)", (testCase, { expect }) => {
-      const input = testCase[1]
-      const tagName = testCase[2]
-      const result = decode(`arg ${input}`)
-      expect(Result.getOrThrow(result).data.value).toEqual(42)
-      expect(Result.getOrThrow(result).data.tagName).toEqual(tagName)
-    })
-
-    test("accepts number values - span", ({ expect }) => {
-      const result = decode(`arg (person)42`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toEqual(
-        SourceSpan.from(4, 10),
-      )
-      expect(Result.getOrThrow(result).data.tagSpan).toEqual(
-        SourceSpan.from(4, 8),
-      )
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rString = decode(`arg "john"`)
-      assert(rString._tag === "Failure")
-      expect(rString.failure.toString()).toEqual(`Expected number, got "john"`)
-      const rBool = decode(`arg #true`)
-      assert(rBool._tag === "Failure")
-      expect(rBool.failure.toString()).toEqual("Expected number, got true")
-      const rNull = decode(`arg #null`)
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected number, got null")
-    })
-  })
-
-  describe("primitive boolean", () => {
-    const schema = KdlSchema.Arg(
-      0,
-      KdlSchema.V(Schema.Boolean).pipe(KdlSchema.allowTagged),
-    )
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test("accepts boolean values", ({ expect }) => {
-      const result = decode(`arg #true`)
-      expect(Result.getOrThrow(result).data.value).toEqual(true)
-      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
-    })
-
-    test("accepts boolean values - span", ({ expect }) => {
-      const result = decode(`arg #true`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 5))
-      expect(Result.getOrThrow(result).data.tagSpan).toBeUndefined()
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rString = decode(`arg "doe"`)
-      assert(rString._tag === "Failure")
-      expect(rString.failure.toString()).toEqual(`Expected boolean, got "doe"`)
-      const rNumber = decode(`arg 67`)
-      assert(rNumber._tag === "Failure")
-      expect(rNumber.failure.toString()).toEqual("Expected boolean, got 67")
-      const rNull = decode(`arg #null`)
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected boolean, got null")
-    })
-  })
-
-  describe("from string inner", () => {
-    const schema = KdlSchema.Arg(
-      0,
-      KdlSchema.V(Schema.URLFromString).pipe(KdlSchema.allowTagged),
-    )
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test("accepts strings", ({ expect }) => {
-      const result = decode(`arg "https://github.com"`)
-      expect(Result.getOrThrow(result).data.value).toEqual(
-        new URL("https://github.com"),
-      )
-      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
-    })
-
-    test("accepts strings - span", ({ expect }) => {
-      const result = decode(`arg "https://github.com"`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toEqual(
-        SourceSpan.from(4, 20),
-      )
-      expect(Result.getOrThrow(result).data.tagSpan).toBeUndefined()
-    })
-  })
-})
-
-describe("EntryArgument", () => {
-  const valueSchema = KdlSchema.V(Schema.String)
-  const schema = KdlSchema.Arg(0, valueSchema)
-  const decode = KdlSchema.decodeSourceResult(schema)
-
-  test("accepts string argument at index", ({ expect }) => {
-    const result = decode(`format "kdl"`)
-    expect(Result.getOrThrow(result).index).toEqual(0)
-    expect(Result.getOrThrow(result).data.value).toEqual("kdl")
-  })
-
-  test("accepts string argument at index - span", ({ expect }) => {
-    const result = decode(`format "kdl"`)
-    expect(result._tag).toEqual("Success")
-    expect(Result.getOrThrow(result).data.span).toBeDefined()
-  })
-
-  test("rejects when argument missing", ({ expect }) => {
-    const r = decode("bundle")
-    assert(r._tag === "Failure")
-    expect(r.failure.toString()).toEqual(
-      `Expected node "bundle" to have argument at index 0`,
-    )
-  })
-
-  test("rejects wrong type", ({ expect }) => {
-    const r = decode(`use-effect #true`)
-    assert(r._tag === "Failure")
-    expect(r.failure.toString()).toEqual("Expected string, got true")
-  })
-})
-
-describe("EntryProperty", () => {
-  const valueSchema = KdlSchema.V(Schema.String)
-  const schema = KdlSchema.Prop("name", valueSchema)
-  const decode = KdlSchema.decodeSourceResult(schema)
-
-  test("accepts string property", ({ expect }) => {
-    const result = decode(`bundle name="mylib"`)
-    expect(Result.getOrThrow(result).name).toEqual("name")
-    expect(Result.getOrThrow(result).data.value).toEqual("mylib")
-  })
-
-  test("accepts string property - span", ({ expect }) => {
-    const result = decode(`bundle name="mylib"`)
-    expect(result._tag).toEqual("Success")
-    const value = Result.getOrThrow(result)
-    expect(value.data.span?.offset).toEqual(12)
-    expect(value.data.span?.length).toEqual(7)
-    expect(value.span?.offset).toEqual(7)
-    expect(value.span?.length).toEqual(12)
-    expect(value.nameSpan?.offset).toEqual(7)
-    expect(value.nameSpan?.length).toEqual(4)
-  })
-
-  test("rejects when property missing", ({ expect }) => {
-    const r = decode(`bundle`)
-    assert(r._tag === "Failure")
-    expect(r.failure.toString()).toEqual(
-      `Expected node "bundle" to have property "name"`,
-    )
-    const kdlSpan = KdlSchema.resolveKdlSpan(r.failure)
-    expect(kdlSpan).toBeDefined()
-    expect(kdlSpan?.offset).toEqual(0)
-    expect(kdlSpan?.length).toEqual(6)
-  })
-
-  test("rejects wrong type", ({ expect }) => {
-    const r = decode(`bundle name=42`)
-    assert(r._tag === "Failure")
-    expect(r.failure.toString()).toEqual("Expected string, got 42")
-    const kdlSpan = KdlSchema.resolveKdlSpan(r.failure)
-    expect(kdlSpan).toBeDefined()
-  })
-})
-
-describe("EntryProperty with ValueTagged", () => {
-  describe("with String", () => {
-    const valueSchema = KdlSchema.V(Schema.String).pipe(KdlSchema.allowTagged)
-    const schema = KdlSchema.Prop("name", valueSchema)
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test("accepts property", ({ expect }) => {
-      const result = decode(`bundle name="mylib"`)
-      expect(Result.getOrThrow(result).name).toEqual("name")
-      expect(Result.getOrThrow(result).data.value).toEqual("mylib")
-      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
-    })
-
-    test("accepts property - span", ({ expect }) => {
-      const result = decode(`bundle name="mylib"`)
+    test("accepts node with arg and prop - span", ({ expect }) => {
+      const result = decode(`bundle "mylib" version="1.0.0"`)
       expect(result._tag).toEqual("Success")
       const value = Result.getOrThrow(result)
-      expect(value.data.span).toBeDefined()
-      expect(value.span).toBeDefined()
-      expect(value.nameSpan).toBeDefined()
+      expect(value.span).toEqual(SourceSpan.from(0, 30))
+      expect(value.nameSpan).toEqual(SourceSpan.from(0, 6))
+      expect(value.children.name.data.span).toEqual(SourceSpan.from(7, 7))
+      expect(value.children.version.nameSpan).toEqual(SourceSpan.from(15, 7))
+      expect(value.children.version.data.span).toEqual(SourceSpan.from(23, 7))
+    })
+
+    test("rejects wrong name", ({ expect }) => {
+      const r = decode(`package "mylib" version="1.0.0"`)
+      assert(r._tag === "Failure")
+      expect(r.failure.toString()).toEqual(
+        `Expected node to have name "bundle", got "package"`,
+      )
+    })
+
+    test("rejects missing arg", ({ expect }) => {
+      const r = decode(`bundle version="1.0.0"`)
+      assert(r._tag === "Failure")
+      expect(r.failure.toString()).toEqual(
+        'Expected node "bundle" to have argument at index 0\n  at ["name"]',
+      )
+    })
+
+    test("rejects missing prop", ({ expect }) => {
+      const r = decode(`bundle "mylib"`)
+      assert(r._tag === "Failure")
+      expect(r.failure.toString()).toEqual(
+        'Expected node "bundle" to have property "version"\n  at ["version"]',
+      )
+    })
+
+    test("rejects wrong arg type", ({ expect }) => {
+      const r = decode(`bundle 42 version="1.0.0"`)
+      assert(r._tag === "Failure")
+      expect(r.failure.toString()).toEqual(
+        'Expected string, got 42\n  at ["name"]',
+      )
+    })
+
+    test("rejects wrong prop type", ({ expect }) => {
+      const r = decode(`bundle "mylib" version=42`)
+      assert(r._tag === "Failure")
+      expect(r.failure.toString()).toEqual(
+        'Expected string, got 42\n  at ["version"]',
+      )
+    })
+  })
+
+  describe("with number arg and prop", () => {
+    const schema = KdlSchema.Node("add", {
+      a: KdlSchema.Arg(0, KdlSchema.V(Schema.Number)),
+      b: KdlSchema.Prop("b", KdlSchema.V(Schema.Number)),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts node with number args", ({ expect }) => {
+      const result = decode(`add 5 b=10`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.a.data.value).toEqual(5)
+      expect(value.children.b.data.value).toEqual(10)
+    })
+
+    test("accepts node with number args - span", ({ expect }) => {
+      const result = decode(`add 5 b=10`)
+      expect(result._tag).toEqual("Success")
+      const value = Result.getOrThrow(result)
+      expect(value.children.a.data.span).toEqual(SourceSpan.from(4, 1))
+      expect(value.children.b.data.span).toEqual(SourceSpan.from(8, 2))
+    })
+  })
+
+  describe("with boolean arg and prop", () => {
+    const schema = KdlSchema.Node("config", {
+      enabled: KdlSchema.Arg(0, KdlSchema.V(Schema.Boolean)),
+      verbose: KdlSchema.Prop("verbose", KdlSchema.V(Schema.Boolean)),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts node with boolean args", ({ expect }) => {
+      const result = decode(`config #true verbose=#false`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.enabled.data.value).toEqual(true)
+      expect(value.children.verbose.data.value).toEqual(false)
     })
   })
 
   describe("with URLFromString", () => {
-    const valueSchema = KdlSchema.V(Schema.URLFromString).pipe(
-      KdlSchema.allowTagged,
-    )
-    const schema = KdlSchema.Prop("url", valueSchema)
+    const schema = KdlSchema.Node("link", {
+      url: KdlSchema.Arg(0, KdlSchema.V(Schema.URLFromString)),
+    })
     const decode = KdlSchema.decodeSourceResult(schema)
 
-    test("accepts URL property", ({ expect }) => {
-      const result = decode(`bundle url="https://github.com"`)
-      expect(Result.getOrThrow(result).name).toEqual("url")
-      expect(Result.getOrThrow(result).data.value).toEqual(
+    test("accepts URL arg", ({ expect }) => {
+      const result = decode(`link "https://github.com"`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.url.data.value).toEqual(
         new URL("https://github.com"),
       )
-      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
     })
 
-    test("accepts URL property - span", ({ expect }) => {
-      const result = decode(`bundle url="https://github.com"`)
+    test("accepts URL arg - span", ({ expect }) => {
+      const result = decode(`link "https://github.com"`)
       expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).data.span).toBeDefined()
+      expect(Result.getOrThrow(result).children.url.data.span).toEqual(
+        SourceSpan.from(5, 20),
+      )
+    })
+  })
+
+  describe("with allowTagged", () => {
+    const schema = KdlSchema.Node("value", {
+      data: KdlSchema.Arg(
+        0,
+        KdlSchema.V(Schema.String).pipe(KdlSchema.allowTagged),
+      ),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts tagged value", ({ expect }) => {
+      const result = decode(`value (type)"hello"`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.data.data.value).toEqual("hello")
+      expect(value.children.data.data.tagName).toEqual("type")
+    })
+
+    test("accepts untagged value", ({ expect }) => {
+      const result = decode(`value "hello"`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.data.data.value).toEqual("hello")
+      expect(value.children.data.data.tagName).toBeUndefined()
+    })
+
+    test("accepts tagged value - span", ({ expect }) => {
+      const result = decode(`value (type)"hello"`)
+      expect(result._tag).toEqual("Success")
+      const data = Result.getOrThrow(result).children.data.data
+      expect(data.span).toEqual(SourceSpan.from(6, 13))
+      expect(data.tagSpan).toEqual(SourceSpan.from(6, 6))
+    })
+  })
+
+  describe("with multiple args", () => {
+    const schema = KdlSchema.Node("add", {
+      a: KdlSchema.Arg(0, KdlSchema.V(Schema.Number)),
+      b: KdlSchema.Arg(1, KdlSchema.V(Schema.Number)),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts multiple args at different indices", ({ expect }) => {
+      const result = decode(`add 5 10`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.a.data.value).toEqual(5)
+      expect(value.children.b.data.value).toEqual(10)
+    })
+
+    test("rejects missing second arg", ({ expect }) => {
+      const r = decode(`add 5`)
+      assert(r._tag === "Failure")
+      expect(r.failure.toString()).toEqual(
+        'Expected node "add" to have argument at index 1\n  at ["b"]',
+      )
+    })
+  })
+
+  describe("rejects", () => {
+    const schema = KdlSchema.Node("bundle", {
+      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+      version: KdlSchema.Prop("version", KdlSchema.V(Schema.String)),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test.for([
+      [
+        "wrong name",
+        `package "mylib" version="1.0.0"`,
+        'Expected node to have name "bundle", got "package"',
+      ],
+      [
+        "missing arg",
+        `bundle version="1.0.0"`,
+        'Expected node "bundle" to have argument at index 0\n  at ["name"]',
+      ],
+      [
+        "missing prop",
+        `bundle "mylib"`,
+        'Expected node "bundle" to have property "version"\n  at ["version"]',
+      ],
+      [
+        "wrong arg type",
+        `bundle 42 version="1.0.0"`,
+        'Expected string, got 42\n  at ["name"]',
+      ],
+      [
+        "wrong prop type",
+        `bundle "mylib" version=42`,
+        'Expected string, got 42\n  at ["version"]',
+      ],
+    ] as [string, string, string][])("rejects %s", ([_, source, expected], {
+      expect,
+    }) => {
+      const r = decode(source)
+      assert(r._tag === "Failure")
+      expect(r.failure.toString()).toEqual(expected)
     })
   })
 })
