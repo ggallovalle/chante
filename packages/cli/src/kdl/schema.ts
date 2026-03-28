@@ -132,6 +132,7 @@ export interface EntryArgument<
     KdlNode,
     readonly [C]
   > {
+  readonly index: number
   readonly data: C
 }
 
@@ -189,7 +190,80 @@ export const EntryArgument = <
       },
     { kdlComponent: "node" },
   )
-  return Schema.make(schema.ast, { data })
+  return Schema.make(schema.ast, { data, index })
+}
+
+export interface EntryProperty<
+  I extends Schema.Top,
+  C extends ValueCodec<I["Type"]>,
+> extends Schema.declareConstructor<
+    Model.EntryProperty<I["Type"]>,
+    KdlNode,
+    readonly [C]
+  > {
+  readonly name: string
+  readonly data: C
+}
+
+export const EntryProperty = <
+  I extends Schema.Top,
+  C extends ValueCodec<I["Type"]>,
+>(
+  name: string,
+  data: C,
+): EntryProperty<I, C> => {
+  const schema = Schema.declareConstructor<
+    Model.EntryProperty<I["Type"]>,
+    KdlNode
+  >()(
+    [data],
+    ([dataCodec]) =>
+      (component, ast, options) => {
+        if (!(component instanceof KdlNode)) {
+          return Effect.fail(
+            new SchemaIssue.InvalidType(ast, Option.some(component)),
+          )
+        }
+        const entry = component.getPropertyEntry(name)
+        if (entry == null)
+          return Effect.fail(
+            new SchemaIssue.InvalidValue(
+              Option.some(entry),
+              meta(
+                component,
+                `Expected node "${component.getName()}" to have property "${name}"`,
+              ),
+            ),
+          )
+
+        // biome-ignore lint/style/noNonNullAssertion: I know because is a property
+        const identifier = entry.name!
+        const value = entry.value
+        const parser = SchemaParser.decodeUnknownEffect(dataCodec)(
+          value,
+          options,
+        )
+
+        return Effect.mapBothEager(parser, {
+          onSuccess: (value) => ({
+            name,
+            data: value,
+            span: span(entry),
+            nameSpan: span(identifier),
+          }),
+          // <- here
+          onFailure: (issue) => {
+            // console.log(issue)
+            return new SchemaIssue.InvalidValue(
+              Option.some(value),
+              meta(value, findMessage(issue)),
+            )
+          },
+        })
+      },
+    { kdlComponent: "node" },
+  )
+  return Schema.make(schema.ast, { data, name })
 }
 
 export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(

@@ -237,3 +237,83 @@ describe("EntryArgument", () => {
     expect(r.failure.toString()).toEqual("Expected string, got true")
   })
 })
+
+describe("EntryProperty", () => {
+  const valueSchema = KdlSchema.Value(Schema.String)
+  const schema = KdlSchema.EntryProperty("name", valueSchema)
+  const decode = KdlSchema.decodeSourceResult(schema)
+
+  test("accepts string property", ({ expect }) => {
+    const result = decode(`bundle name="mylib"`)
+    const value = Result.getOrThrow(result)
+    expect(value.name).toEqual("name")
+    expect(value.data.value).toEqual("mylib")
+    expect(value.data.span).toBeDefined()
+    expect(value.data.span?.offset).toEqual(12)
+    expect(value.data.span?.length).toEqual(7)
+    expect(value.span).toBeDefined()
+    expect(value.nameSpan).toBeDefined()
+    expect(value.span?.offset).toEqual(7)
+    expect(value.span?.length).toEqual(12)
+    expect(value.nameSpan?.offset).toEqual(7)
+    expect(value.nameSpan?.length).toEqual(4)
+  })
+
+  test("rejects when property missing", ({ expect }) => {
+    const r = decode(`bundle`)
+    assert(r._tag === "Failure")
+    expect(r.failure.toString()).toEqual(
+      `Expected node "bundle" to have property "name"`,
+    )
+    const failure = r.failure as {
+      annotations: { kdlSpan?: { offset: number; length: number } }
+    }
+    expect(failure.annotations.kdlSpan).toBeDefined()
+    expect(failure.annotations.kdlSpan?.offset).toEqual(0)
+    expect(failure.annotations.kdlSpan?.length).toEqual(6)
+  })
+
+  test("rejects wrong type", ({ expect }) => {
+    const r = decode(`bundle name=42`)
+    assert(r._tag === "Failure")
+    expect(r.failure.toString()).toEqual("Expected string, got 42")
+    const failure = r.failure as { annotations: { kdlSpan?: unknown } }
+    expect(failure.annotations.kdlSpan).toBeDefined()
+  })
+})
+
+describe("EntryProperty with ValueTagged", () => {
+  describe("with String", () => {
+    const valueSchema = KdlSchema.ValueTagged(Schema.String)
+    const schema = KdlSchema.EntryProperty("name", valueSchema)
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts property without tag", ({ expect }) => {
+      const result = decode(`bundle name="mylib"`)
+      const value = Result.getOrThrow(result)
+      expect(value.name).toEqual("name")
+      expect(value.data.value).toEqual("mylib")
+      expect(value.data.tagName).toBeUndefined()
+      expect(value.data.span).toBeDefined()
+      expect(value.span).toBeDefined()
+      expect(value.nameSpan).toBeDefined()
+    })
+  })
+
+  describe("with URLFromString", () => {
+    const valueSchema = KdlSchema.ValueTagged(Schema.URLFromString)
+    const schema = KdlSchema.EntryProperty("url", valueSchema)
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts URL property", ({ expect }) => {
+      const result = decode(`bundle url="https://github.com"`)
+      const value = Result.getOrThrow(result) as {
+        name: string
+        data: { value: URL; tagName: string | undefined }
+      }
+      expect(value.name).toEqual("url")
+      expect(value.data.value).toEqual(new URL("https://github.com"))
+      expect(value.data.tagName).toBeUndefined()
+    })
+  })
+})

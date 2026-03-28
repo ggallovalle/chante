@@ -33,3 +33,10 @@ export interface EntryArgument<T> {
   readonly index: number
   readonly data: Value<T> | ValueTagged<T>
 }
+
+export interface EntryProperty<T> {
+  readonly name: string
+  readonly nameSpan: SourceSpan | undefined
+  readonly data: Value<T> | ValueTagged<T>
+  readonly span: SourceSpan | undefined
+}
