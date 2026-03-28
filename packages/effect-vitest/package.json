@@ -15,7 +15,8 @@
   },
   "scripts": {
     "check": "tsc --noEmit -p tsconfig.build.json",
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p tsconfig.build.json",
+    "test": "bunx --bun vitest run"
   },
   "peerDependencies": {
     "effect": "catalog:effect",
@@ -23,7 +24,8 @@
   },
   "devDependencies": {
     "@types/bun": "catalog:typescript",
-    "typescript": "catalog:typescript"
+    "typescript": "catalog:typescript",
+    "vitest": "catalog:vite"
   },
   "engines": {
     "bun": ">=1.2.14",

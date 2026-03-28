@@ -46,6 +46,13 @@ fi
 bun run --workspaces build
 ```
 
+## test
+> Run tests in all packages
+
+```bash
+bun run --workspaces test
+```
+
 ## lint
 > Run Biome lint/format with unsafe fixes
 
