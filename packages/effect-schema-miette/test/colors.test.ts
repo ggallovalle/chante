@@ -1,5 +1,5 @@
+import { type Color, Style } from "@kbroom/effect-schema-miette/colors"
 import { describe } from "vitest"
-import { type Color, Style } from "~/colors.js"
 import { test } from "~test/fixtures.js"
 
 const css = (value: string) => ({ _tag: "css", value }) satisfies Color

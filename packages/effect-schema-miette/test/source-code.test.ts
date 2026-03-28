@@ -1,12 +1,12 @@
-import { Effect } from "effect"
-import { describe } from "vitest"
 import {
   FromFileSourceCode,
   OutOfBounds,
   type SourceCode,
   SourceSpan,
   StringSourceCode,
-} from "~/miette.js"
+} from "@kbroom/effect-schema-miette"
+import { Effect } from "effect"
+import { describe } from "vitest"
 import { test } from "~test/fixtures.js"
 
 export function runSourceCodeTests(

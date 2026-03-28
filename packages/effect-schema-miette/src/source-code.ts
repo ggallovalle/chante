@@ -1,6 +1,6 @@
 import { Effect } from "effect"
-import { type MietteError, OutOfBounds } from "~/miette/error.js"
-import { SourceSpan, SpanContents } from "~/miette/protocol.js"
+import { type MietteError, OutOfBounds } from "./error.js"
+import { SourceSpan, SpanContents } from "./protocol.js"
 
 export interface SourceCode {
   readSpan(

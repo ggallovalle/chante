@@ -44,6 +44,12 @@
   },
   "overrides": [
     {
+      "includes": ["**/*.d.ts"],
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
       "includes": ["packages/**/test/**/*.{ts,tsx,js,jsx}"],
       "linter": {
         "rules": {
@@ -55,6 +61,16 @@
     },
     {
       "includes": ["packages/effect-vitest/**/*.{ts,tsx,js,jsx}"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noEmptyPattern": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/effect-schema-miette/**/*.{ts,tsx,js,jsx}"],
       "linter": {
         "rules": {
           "correctness": {

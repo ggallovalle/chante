@@ -1,6 +1,10 @@
+import {
+  Diagnostic,
+  GraphicalReportHandler,
+  GraphicalTheme,
+} from "@kbroom/effect-schema-miette"
 import { Effect, Stream } from "effect"
 import { assert, describe } from "vitest"
-import { Diagnostic, GraphicalReportHandler, GraphicalTheme } from "~/miette.js"
 import { test } from "~test/fixtures.js"
 
 const getReport = Effect.fnUntraced(function* (

@@ -19,15 +19,32 @@
       "dependencies": {
         "@bgotink/kdl": "^0.4.0",
         "@effect/platform-node": "catalog:effect",
-        "@kbroom/effect-vitest": "workspace:*",
         "@shikijs/cli": "^4.0.2",
         "effect": "catalog:effect",
         "wrap-ansi": "^9.0.0",
       },
       "devDependencies": {
+        "@kbroom/effect-schema-miette": "workspace:*",
+        "@kbroom/effect-vitest": "workspace:*",
         "@types/bun": "catalog:typescript",
         "@types/node": "catalog:typescript",
         "vitest": "catalog:vite",
+      },
+    },
+    "packages/effect-schema-miette": {
+      "name": "@kbroom/effect-schema-miette",
+      "version": "0.0.1",
+      "dependencies": {
+        "wrap-ansi": "^9.0.0",
+      },
+      "devDependencies": {
+        "@kbroom/effect-vitest": "workspace:*",
+        "@types/bun": "catalog:typescript",
+        "typescript": "catalog:typescript",
+        "vitest": "catalog:vite",
+      },
+      "peerDependencies": {
+        "effect": "catalog:effect",
       },
     },
     "packages/effect-vitest": {
@@ -97,6 +114,8 @@
     "@ioredis/commands": ["@ioredis/commands@1.5.1", "", {}, "sha512-JH8ZL/ywcJyR9MmJ5BNqZllXNZQqQbnVZOqpPQqE1vHiFgAw4NHbvE0FOduNU8IX9babitBT46571OnPTT0Zcw=="],
 
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.5", "", {}, "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og=="],
+
+    "@kbroom/effect-schema-miette": ["@kbroom/effect-schema-miette@workspace:packages/effect-schema-miette"],
 
     "@kbroom/effect-vitest": ["@kbroom/effect-vitest@workspace:packages/effect-vitest"],
 

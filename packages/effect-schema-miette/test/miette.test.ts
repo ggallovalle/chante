@@ -1,5 +1,9 @@
+import {
+  LabeledSpan,
+  SourceSpan,
+  SpanContents,
+} from "@kbroom/effect-schema-miette"
 import { describe } from "vitest"
-import { LabeledSpan, SourceSpan, SpanContents } from "~/miette.js"
 import { test } from "~test/fixtures.js"
 
 describe("SourceSpan", () => {
