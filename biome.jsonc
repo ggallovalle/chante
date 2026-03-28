@@ -78,6 +78,16 @@
           }
         }
       }
+    },
+    {
+      "includes": ["packages/effect-schema-kdl/**/*.{ts,tsx,js,jsx}"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noEmptyPattern": "off"
+          }
+        }
+      }
     }
   ]
 }

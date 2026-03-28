@@ -4,6 +4,7 @@ import {
   Value as KdlValue,
   parse,
 } from "@bgotink/kdl"
+import { SourceSpan } from "@kbroom/effect-schema-miette"
 import {
   Effect,
   Option as EffectOption,
@@ -13,8 +14,6 @@ import {
   SchemaIssue,
   SchemaParser,
 } from "effect"
-
-import { SourceSpan } from "~/miette.js"
 import type * as Model from "./model.js"
 
 export type ValueConstraint = Schema.Encoder<string | number | boolean | null>

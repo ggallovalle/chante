@@ -1,1 +1,1 @@
-export * as KdlSchema from "~/kdl/schema.js"
+export { KdlSchema } from "@kbroom/effect-schema-kdl"

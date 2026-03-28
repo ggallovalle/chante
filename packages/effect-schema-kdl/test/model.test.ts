@@ -1,7 +1,7 @@
+import { KdlSchema } from "@kbroom/effect-schema-kdl"
+import { SourceSpan } from "@kbroom/effect-schema-miette"
 import { Result, Schema } from "effect"
 import { assert, describe } from "vitest"
-import { KdlSchema } from "~/kdl.js"
-import { SourceSpan } from "~/miette.js"
 import { test } from "~test/fixtures.js"
 
 describe("Node", () => {

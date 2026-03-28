@@ -7,7 +7,7 @@ import type {
   Value as KdlValue,
 } from "@bgotink/kdl"
 
-import type { SourceSpan } from "~/miette.js"
+import type { SourceSpan } from "@kbroom/effect-schema-miette"
 
 export type KdlComponent =
   | KdlValue
