@@ -20,23 +20,18 @@ export type KdlComponent =
 export interface Value<T> {
   readonly value: T
   readonly span: SourceSpan | undefined
-}
-
-export interface ValueTagged<T> {
-  readonly value: T
-  readonly span: SourceSpan | undefined
   readonly tagName: string | undefined
   readonly tagSpan: SourceSpan | undefined
 }
 
 export interface EntryArgument<T> {
   readonly index: number
-  readonly data: Value<T> | ValueTagged<T>
+  readonly data: Value<T>
 }
 
 export interface EntryProperty<T> {
   readonly name: string
   readonly nameSpan: SourceSpan | undefined
-  readonly data: Value<T> | ValueTagged<T>
+  readonly data: Value<T>
   readonly span: SourceSpan | undefined
 }

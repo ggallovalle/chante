@@ -36,7 +36,8 @@ export const Value = <A extends Schema.Top>(inner: A): Value<A> => {
             new SchemaIssue.InvalidType(ast, Option.some(component)),
           )
         }
-        if (component.tag != null) {
+        const allowTagged = ast.annotations?.["kdlAllowTag"] === true
+        if (!allowTagged && component.tag != null) {
           return Effect.fail(
             new SchemaIssue.InvalidValue(
               Option.some(component),
@@ -45,48 +46,6 @@ export const Value = <A extends Schema.Top>(inner: A): Value<A> => {
                 `Expected no tag name, got "${component.getTag()}"`,
               ),
             ),
-          )
-        }
-        const value = component.getValue()
-        const parser = SchemaParser.decodeUnknownEffect(valueCodec)(
-          value,
-          options,
-        )
-
-        return Effect.mapBothEager(parser, {
-          onSuccess: (value) => ({ value, span: span(component) }),
-          onFailure: (issue) =>
-            new SchemaIssue.InvalidValue(
-              Option.some(value),
-              meta(component, findMessage(issue)),
-            ),
-        })
-      },
-    { kdlComponent: "value" },
-  )
-  return Schema.make(schema.ast, { value: inner })
-}
-
-export interface ValueTagged<A extends Schema.Top>
-  extends Schema.declareConstructor<
-    Model.ValueTagged<A["Type"]>,
-    KdlValue,
-    readonly [A]
-  > {
-  readonly value: A
-}
-
-export const ValueTagged = <A extends Schema.Top>(inner: A): ValueTagged<A> => {
-  const schema = Schema.declareConstructor<
-    Model.ValueTagged<A["Type"]>,
-    KdlValue
-  >()(
-    [inner],
-    ([valueCodec]) =>
-      (component, ast, options) => {
-        if (!(component instanceof KdlValue)) {
-          return Effect.fail(
-            new SchemaIssue.InvalidType(ast, Option.some(component)),
           )
         }
         const value = component.getValue()
@@ -103,26 +62,22 @@ export const ValueTagged = <A extends Schema.Top>(inner: A): ValueTagged<A> => {
             tagName: tag?.getName(),
             tagSpan: span(tag),
           }),
-          // <- here
-          onFailure: (issue) => {
-            // console.log(issue)
-            return new SchemaIssue.InvalidValue(
+          onFailure: (issue) =>
+            new SchemaIssue.InvalidValue(
               Option.some(value),
               meta(component, findMessage(issue)),
-            )
-          },
+            ),
         })
       },
     { kdlComponent: "value" },
   )
-
   return Schema.make(schema.ast, { value: inner })
 }
 
-export type ValueCodec<T> = Schema.Codec<
-  Model.Value<T> | Model.ValueTagged<T>,
-  KdlValue
->
+export const allowTagged = <A extends Schema.Top>(self: Value<A>): Value<A> =>
+  self.pipe(Schema.annotate({ kdlAllowTag: true })) as Value<A>
+
+export type ValueCodec<T> = Schema.Codec<Model.Value<T>, KdlValue>
 
 export interface EntryArgument<
   I extends Schema.Top,

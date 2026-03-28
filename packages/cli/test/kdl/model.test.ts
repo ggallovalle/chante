@@ -112,7 +112,7 @@ describe("Value", () => {
 describe("ValueTagged", () => {
   describe("primitive string", () => {
     const inner = Schema.String
-    const schema = KdlSchema.ValueTagged(inner)
+    const schema = KdlSchema.Value(inner).pipe(KdlSchema.allowTagged)
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts string values", ({ expect }) => {
@@ -138,7 +138,7 @@ describe("ValueTagged", () => {
 
   describe("primitive number", () => {
     const inner = Schema.Number
-    const schema = KdlSchema.ValueTagged(inner)
+    const schema = KdlSchema.Value(inner).pipe(KdlSchema.allowTagged)
     const decode = Schema.decodeUnknownResult(schema)
 
     test("accepts number values", ({ expect }) => {
@@ -168,7 +168,7 @@ describe("ValueTagged", () => {
 
   describe("primitive boolean", () => {
     const inner = Schema.Boolean
-    const schema = KdlSchema.ValueTagged(inner)
+    const schema = KdlSchema.Value(inner).pipe(KdlSchema.allowTagged)
     const decode = Schema.decodeUnknownResult(schema)
 
     test("accepts boolean values", ({ expect }) => {
@@ -195,7 +195,7 @@ describe("ValueTagged", () => {
 
   describe("from string inner", () => {
     const inner = Schema.URLFromString
-    const schema = KdlSchema.ValueTagged(inner)
+    const schema = KdlSchema.Value(inner).pipe(KdlSchema.allowTagged)
     const decode = Schema.decodeUnknownResult(schema)
 
     test("accepts strings", ({ expect }) => {
@@ -284,7 +284,9 @@ describe("EntryProperty", () => {
 
 describe("EntryProperty with ValueTagged", () => {
   describe("with String", () => {
-    const valueSchema = KdlSchema.ValueTagged(Schema.String)
+    const valueSchema = KdlSchema.Value(Schema.String).pipe(
+      KdlSchema.allowTagged,
+    )
     const schema = KdlSchema.EntryProperty("name", valueSchema)
     const decode = KdlSchema.decodeSourceResult(schema)
 
@@ -301,7 +303,9 @@ describe("EntryProperty with ValueTagged", () => {
   })
 
   describe("with URLFromString", () => {
-    const valueSchema = KdlSchema.ValueTagged(Schema.URLFromString)
+    const valueSchema = KdlSchema.Value(Schema.URLFromString).pipe(
+      KdlSchema.allowTagged,
+    )
     const schema = KdlSchema.EntryProperty("url", valueSchema)
     const decode = KdlSchema.decodeSourceResult(schema)
 
