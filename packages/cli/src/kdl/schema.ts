@@ -77,27 +77,35 @@ export const Value = <A extends Schema.Top>(inner: A): Value<A> => {
 export const allowTagged = <A extends Schema.Top>(self: Value<A>): Value<A> =>
   self.pipe(Schema.annotate({ kdlAllowTag: true })) as Value<A>
 
-export type ValueCodec<T> = Schema.Codec<Model.Value<T>, KdlValue>
-
-export interface EntryArgument<
-  I extends Schema.Top,
-  C extends ValueCodec<I["Type"]>,
-> extends Schema.declareConstructor<
-    Model.EntryArgument<I["Type"]>,
-    KdlNode,
-    readonly [C]
-  > {
-  readonly index: number
-  readonly data: C
+export const resolveKdlSpan = (
+  schemaOrIssue: Schema.Schema<unknown> | SchemaIssue.Issue,
+): SourceSpan | undefined => {
+  if ("ast" in schemaOrIssue && "annotations" in schemaOrIssue.ast) {
+    return schemaOrIssue.ast.annotations?.["kdlSpan"] as SourceSpan | undefined
+  }
+  if ("annotations" in schemaOrIssue) {
+    return schemaOrIssue.annotations?.["kdlSpan"] as SourceSpan | undefined
+  }
+  return undefined
 }
 
-export const EntryArgument = <
-  I extends Schema.Top,
-  C extends ValueCodec<I["Type"]>,
->(
+// biome-ignore lint/suspicious/noExplicitAny: I know
+export type ValueCodec<T = any> = Schema.Codec<T, KdlValue>
+
+export interface EntryArgument<I extends ValueCodec>
+  extends Schema.declareConstructor<
+    Model.EntryArgument<I["Type"]>,
+    KdlNode,
+    readonly [I]
+  > {
+  readonly index: number
+  readonly data: I
+}
+
+export const EntryArgument = <I extends ValueCodec>(
   index: number,
-  data: C,
-): EntryArgument<I, C> => {
+  data: I,
+): EntryArgument<I> => {
   const schema = Schema.declareConstructor<
     Model.EntryArgument<I["Type"]>,
     KdlNode
@@ -148,25 +156,20 @@ export const EntryArgument = <
   return Schema.make(schema.ast, { data, index })
 }
 
-export interface EntryProperty<
-  I extends Schema.Top,
-  C extends ValueCodec<I["Type"]>,
-> extends Schema.declareConstructor<
+export interface EntryProperty<I extends ValueCodec>
+  extends Schema.declareConstructor<
     Model.EntryProperty<I["Type"]>,
     KdlNode,
-    readonly [C]
+    readonly [I]
   > {
   readonly name: string
-  readonly data: C
+  readonly data: I
 }
 
-export const EntryProperty = <
-  I extends Schema.Top,
-  C extends ValueCodec<I["Type"]>,
->(
+export const EntryProperty = <I extends ValueCodec>(
   name: string,
-  data: C,
-): EntryProperty<I, C> => {
+  data: I,
+): EntryProperty<I> => {
   const schema = Schema.declareConstructor<
     Model.EntryProperty<I["Type"]>,
     KdlNode

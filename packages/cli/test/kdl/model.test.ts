@@ -1,4 +1,3 @@
-import { Tag as ModelTag, Value as ModelValue } from "@bgotink/kdl"
 import { Result, Schema } from "effect"
 import { assert, describe } from "vitest"
 import { KdlSchema } from "~/kdl.js"
@@ -7,205 +6,237 @@ import { test } from "~test/fixtures.js"
 
 describe("Value", () => {
   describe("primitive string", () => {
-    const inner = Schema.String
-    const schema = KdlSchema.Value(inner)
-    const decode = Schema.decodeUnknownResult(schema)
+    const schema = KdlSchema.EntryArgument(0, KdlSchema.Value(Schema.String))
+    const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts string values", ({ expect }) => {
-      const result = decode(new ModelValue("john"))
-      expect(Result.getOrThrow(result)).toEqual({
-        value: "john",
-        span: undefined,
-      })
+      const result = decode(`arg "john"`)
+      expect(Result.getOrThrow(result).data.value).toEqual("john")
+    })
+
+    test("accepts string values - span", ({ expect }) => {
+      const result = decode(`arg "john"`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 6))
     })
 
     test("rejects tagged values", ({ expect }) => {
-      const value = new ModelValue("john")
-      value.tag = new ModelTag("name")
-      const r = decode(value)
+      const r = decode(`arg (name)"john"`)
       assert(r._tag === "Failure")
       expect(r.failure.toString()).toEqual(`Expected no tag name, got "name"`)
     })
 
     test("rejects any other value", ({ expect }) => {
-      const rNumber = decode(new ModelValue(10))
+      const rNumber = decode(`arg 10`)
       assert(rNumber._tag === "Failure")
       expect(rNumber.failure.toString()).toEqual("Expected string, got 10")
-      const rBool = decode(new ModelValue(true))
+      const rBool = decode(`arg #true`)
       assert(rBool._tag === "Failure")
       expect(rBool.failure.toString()).toEqual("Expected string, got true")
-      const rNull = decode(new ModelValue(null))
+      const rNull = decode(`arg #null`)
       assert(rNull._tag === "Failure")
       expect(rNull.failure.toString()).toEqual("Expected string, got null")
     })
   })
 
   describe("primitive number", () => {
-    const inner = Schema.Number
-    const schema = KdlSchema.Value(inner)
-    const decode = Schema.decodeUnknownResult(schema)
+    const schema = KdlSchema.EntryArgument(0, KdlSchema.Value(Schema.Number))
+    const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts number values", ({ expect }) => {
-      const result = decode(new ModelValue(42))
-      expect(Result.getOrThrow(result)).toEqual({
-        value: 42,
-        span: undefined,
-      })
+      const result = decode(`arg 42`)
+      expect(Result.getOrThrow(result).data.value).toEqual(42)
+    })
+
+    test("accepts number values - span", ({ expect }) => {
+      const result = decode(`arg 42`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 2))
     })
 
     test("rejects tagged values", ({ expect }) => {
-      const value = new ModelValue(42)
-      value.tag = new ModelTag("person")
-      const r = decode(value)
+      const r = decode(`arg (person)42`)
       assert(r._tag === "Failure")
       expect(r.failure.toString()).toEqual(`Expected no tag name, got "person"`)
     })
 
     test("rejects any other value", ({ expect }) => {
-      const rString = decode(new ModelValue("john"))
+      const rString = decode(`arg "john"`)
       assert(rString._tag === "Failure")
       expect(rString.failure.toString()).toEqual(`Expected number, got "john"`)
-      const rBool = decode(new ModelValue(true))
+      const rBool = decode(`arg #true`)
       assert(rBool._tag === "Failure")
       expect(rBool.failure.toString()).toEqual("Expected number, got true")
-      const rNull = decode(new ModelValue(null))
+      const rNull = decode(`arg #null`)
       assert(rNull._tag === "Failure")
       expect(rNull.failure.toString()).toEqual("Expected number, got null")
     })
   })
 
   describe("primitive boolean", () => {
-    const inner = Schema.Boolean
-    const schema = KdlSchema.Value(inner)
-    const decode = Schema.decodeUnknownResult(schema)
+    const schema = KdlSchema.EntryArgument(0, KdlSchema.Value(Schema.Boolean))
+    const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts boolean values", ({ expect }) => {
-      const result = decode(new ModelValue(true))
-      expect(Result.getOrThrow(result)).toEqual({
-        value: true,
-        span: undefined,
-      })
+      const result = decode(`arg #true`)
+      expect(Result.getOrThrow(result).data.value).toEqual(true)
+    })
+
+    test("accepts boolean values - span", ({ expect }) => {
+      const result = decode(`arg #true`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 5))
     })
 
     test("rejects tagged values", ({ expect }) => {
-      const value = new ModelValue(true)
-      value.tag = new ModelTag("float")
-      const r = decode(value)
+      const r = decode(`arg (float)#true`)
       assert(r._tag === "Failure")
       expect(r.failure.toString()).toEqual(`Expected no tag name, got "float"`)
     })
 
     test("rejects any other value", ({ expect }) => {
-      const rString = decode(new ModelValue("doe"))
+      const rString = decode(`arg "doe"`)
       assert(rString._tag === "Failure")
       expect(rString.failure.toString()).toEqual(`Expected boolean, got "doe"`)
-      const rNumber = decode(new ModelValue(67))
+      const rNumber = decode(`arg 67`)
       assert(rNumber._tag === "Failure")
       expect(rNumber.failure.toString()).toEqual("Expected boolean, got 67")
-      const rNull = decode(new ModelValue(null))
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected boolean, got null")
-    })
-  })
-})
-
-describe("ValueTagged", () => {
-  describe("primitive string", () => {
-    const inner = Schema.String
-    const schema = KdlSchema.Value(inner).pipe(KdlSchema.allowTagged)
-    const decode = KdlSchema.decodeSourceResult(schema)
-
-    test("accepts string values", ({ expect }) => {
-      const result = decode(`"john"`)
-      expect(Result.getOrThrow(result)).toEqual({
-        value: "john",
-        span: SourceSpan.from(0, 6),
-      })
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rNumber = decode("10")
-      assert(rNumber._tag === "Failure")
-      expect(rNumber.failure.toString()).toEqual("Expected string, got 10")
-      const rBool = decode("#true")
-      assert(rBool._tag === "Failure")
-      expect(rBool.failure.toString()).toEqual("Expected string, got true")
-      const rNull = decode("#null")
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected string, got null")
-    })
-  })
-
-  describe("primitive number", () => {
-    const inner = Schema.Number
-    const schema = KdlSchema.Value(inner).pipe(KdlSchema.allowTagged)
-    const decode = Schema.decodeUnknownResult(schema)
-
-    test("accepts number values", ({ expect }) => {
-      const value = new ModelValue(42)
-      value.tag = new ModelTag("person")
-      const result = decode(value)
-      expect(Result.getOrThrow(result)).toEqual({
-        value: 42,
-        tagName: "person",
-        tagSpan: undefined,
-        span: undefined,
-      })
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rString = decode(new ModelValue("john"))
-      assert(rString._tag === "Failure")
-      expect(rString.failure.toString()).toEqual(`Expected number, got "john"`)
-      const rBool = decode(new ModelValue(true))
-      assert(rBool._tag === "Failure")
-      expect(rBool.failure.toString()).toEqual("Expected number, got true")
-      const rNull = decode(new ModelValue(null))
-      assert(rNull._tag === "Failure")
-      expect(rNull.failure.toString()).toEqual("Expected number, got null")
-    })
-  })
-
-  describe("primitive boolean", () => {
-    const inner = Schema.Boolean
-    const schema = KdlSchema.Value(inner).pipe(KdlSchema.allowTagged)
-    const decode = Schema.decodeUnknownResult(schema)
-
-    test("accepts boolean values", ({ expect }) => {
-      const result = decode(new ModelValue(true))
-      expect(Result.getOrThrow(result)).toEqual({
-        value: true,
-        tag: undefined,
-        span: undefined,
-      })
-    })
-
-    test("rejects any other value", ({ expect }) => {
-      const rString = decode(new ModelValue("doe"))
-      assert(rString._tag === "Failure")
-      expect(rString.failure.toString()).toEqual(`Expected boolean, got "doe"`)
-      const rNumber = decode(new ModelValue(67))
-      assert(rNumber._tag === "Failure")
-      expect(rNumber.failure.toString()).toEqual("Expected boolean, got 67")
-      const rNull = decode(new ModelValue(null))
+      const rNull = decode(`arg #null`)
       assert(rNull._tag === "Failure")
       expect(rNull.failure.toString()).toEqual("Expected boolean, got null")
     })
   })
 
   describe("from string inner", () => {
-    const inner = Schema.URLFromString
-    const schema = KdlSchema.Value(inner).pipe(KdlSchema.allowTagged)
-    const decode = Schema.decodeUnknownResult(schema)
+    const schema = KdlSchema.EntryArgument(
+      0,
+      KdlSchema.Value(Schema.URLFromString),
+    )
+    const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts strings", ({ expect }) => {
-      const result = decode(new ModelValue("https://github.com"))
-      const value = Result.getOrThrow(result)
-      expect(value).toEqual({
-        value: new URL("https://github.com"),
-        tag: undefined,
-        span: undefined,
-      })
+      const result = decode(`arg "https://github.com"`)
+      expect(Result.getOrThrow(result).data.value).toEqual(
+        new URL("https://github.com"),
+      )
+    })
+
+    test("accepts strings - span", ({ expect }) => {
+      const result = decode(`arg "https://github.com"`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toEqual(
+        SourceSpan.from(4, 20),
+      )
+    })
+  })
+})
+
+describe("ValueTagged", () => {
+  describe("primitive string", () => {
+    const schema = KdlSchema.EntryArgument(
+      0,
+      KdlSchema.Value(Schema.String).pipe(KdlSchema.allowTagged),
+    )
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts string values", ({ expect }) => {
+      const result = decode(`arg "john"`)
+      expect(Result.getOrThrow(result).data.value).toEqual("john")
+      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
+    })
+
+    test("accepts string values - span", ({ expect }) => {
+      const result = decode(`arg "john"`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 6))
+      expect(Result.getOrThrow(result).data.tagSpan).toBeUndefined()
+    })
+
+    test("rejects any other value", ({ expect }) => {
+      const rNumber = decode(`arg 10`)
+      assert(rNumber._tag === "Failure")
+      expect(rNumber.failure.toString()).toEqual("Expected string, got 10")
+      const rBool = decode(`arg #true`)
+      assert(rBool._tag === "Failure")
+      expect(rBool.failure.toString()).toEqual("Expected string, got true")
+      const rNull = decode(`arg #null`)
+      assert(rNull._tag === "Failure")
+      expect(rNull.failure.toString()).toEqual("Expected string, got null")
+    })
+  })
+
+  describe("primitive number", () => {
+    const schema = KdlSchema.EntryArgument(
+      0,
+      KdlSchema.Value(Schema.Number).pipe(KdlSchema.allowTagged),
+    )
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test.for([
+      ["untagged", "42", undefined],
+      ["tagged", "(person)42", "person"],
+    ])("accepts number values (%s)", (testCase, { expect }) => {
+      const input = testCase[1]
+      const tagName = testCase[2]
+      const result = decode(`arg ${input}`)
+      expect(Result.getOrThrow(result).data.value).toEqual(42)
+      expect(Result.getOrThrow(result).data.tagName).toEqual(tagName)
+    })
+
+    test("accepts number values - span", ({ expect }) => {
+      const result = decode(`arg (person)42`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toEqual(
+        SourceSpan.from(4, 10),
+      )
+      expect(Result.getOrThrow(result).data.tagSpan).toEqual(
+        SourceSpan.from(4, 8),
+      )
+    })
+
+    test("rejects any other value", ({ expect }) => {
+      const rString = decode(`arg "john"`)
+      assert(rString._tag === "Failure")
+      expect(rString.failure.toString()).toEqual(`Expected number, got "john"`)
+      const rBool = decode(`arg #true`)
+      assert(rBool._tag === "Failure")
+      expect(rBool.failure.toString()).toEqual("Expected number, got true")
+      const rNull = decode(`arg #null`)
+      assert(rNull._tag === "Failure")
+      expect(rNull.failure.toString()).toEqual("Expected number, got null")
+    })
+  })
+
+  describe("primitive boolean", () => {
+    const schema = KdlSchema.EntryArgument(
+      0,
+      KdlSchema.Value(Schema.Boolean).pipe(KdlSchema.allowTagged),
+    )
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts boolean values", ({ expect }) => {
+      const result = decode(`arg #true`)
+      expect(Result.getOrThrow(result).data.value).toEqual(true)
+      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
+    })
+
+    test("accepts boolean values - span", ({ expect }) => {
+      const result = decode(`arg #true`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toEqual(SourceSpan.from(4, 5))
+      expect(Result.getOrThrow(result).data.tagSpan).toBeUndefined()
+    })
+
+    test("rejects any other value", ({ expect }) => {
+      const rString = decode(`arg "doe"`)
+      assert(rString._tag === "Failure")
+      expect(rString.failure.toString()).toEqual(`Expected boolean, got "doe"`)
+      const rNumber = decode(`arg 67`)
+      assert(rNumber._tag === "Failure")
+      expect(rNumber.failure.toString()).toEqual("Expected boolean, got 67")
+      const rNull = decode(`arg #null`)
+      assert(rNull._tag === "Failure")
+      expect(rNull.failure.toString()).toEqual("Expected boolean, got null")
     })
   })
 })
@@ -217,10 +248,14 @@ describe("EntryArgument", () => {
 
   test("accepts string argument at index", ({ expect }) => {
     const result = decode(`format "kdl"`)
-    const value = Result.getOrThrow(result)
-    expect(value.index).toEqual(0)
-    expect(value.data.value).toEqual("kdl")
-    expect(value.data.span).toBeDefined()
+    expect(Result.getOrThrow(result).index).toEqual(0)
+    expect(Result.getOrThrow(result).data.value).toEqual("kdl")
+  })
+
+  test("accepts string argument at index - span", ({ expect }) => {
+    const result = decode(`format "kdl"`)
+    expect(result._tag).toEqual("Success")
+    expect(Result.getOrThrow(result).data.span).toBeDefined()
   })
 
   test("rejects when argument missing", ({ expect }) => {
@@ -245,14 +280,16 @@ describe("EntryProperty", () => {
 
   test("accepts string property", ({ expect }) => {
     const result = decode(`bundle name="mylib"`)
+    expect(Result.getOrThrow(result).name).toEqual("name")
+    expect(Result.getOrThrow(result).data.value).toEqual("mylib")
+  })
+
+  test("accepts string property - span", ({ expect }) => {
+    const result = decode(`bundle name="mylib"`)
+    expect(result._tag).toEqual("Success")
     const value = Result.getOrThrow(result)
-    expect(value.name).toEqual("name")
-    expect(value.data.value).toEqual("mylib")
-    expect(value.data.span).toBeDefined()
     expect(value.data.span?.offset).toEqual(12)
     expect(value.data.span?.length).toEqual(7)
-    expect(value.span).toBeDefined()
-    expect(value.nameSpan).toBeDefined()
     expect(value.span?.offset).toEqual(7)
     expect(value.span?.length).toEqual(12)
     expect(value.nameSpan?.offset).toEqual(7)
@@ -265,20 +302,18 @@ describe("EntryProperty", () => {
     expect(r.failure.toString()).toEqual(
       `Expected node "bundle" to have property "name"`,
     )
-    const failure = r.failure as {
-      annotations: { kdlSpan?: { offset: number; length: number } }
-    }
-    expect(failure.annotations.kdlSpan).toBeDefined()
-    expect(failure.annotations.kdlSpan?.offset).toEqual(0)
-    expect(failure.annotations.kdlSpan?.length).toEqual(6)
+    const kdlSpan = KdlSchema.resolveKdlSpan(r.failure)
+    expect(kdlSpan).toBeDefined()
+    expect(kdlSpan?.offset).toEqual(0)
+    expect(kdlSpan?.length).toEqual(6)
   })
 
   test("rejects wrong type", ({ expect }) => {
     const r = decode(`bundle name=42`)
     assert(r._tag === "Failure")
     expect(r.failure.toString()).toEqual("Expected string, got 42")
-    const failure = r.failure as { annotations: { kdlSpan?: unknown } }
-    expect(failure.annotations.kdlSpan).toBeDefined()
+    const kdlSpan = KdlSchema.resolveKdlSpan(r.failure)
+    expect(kdlSpan).toBeDefined()
   })
 })
 
@@ -290,12 +325,17 @@ describe("EntryProperty with ValueTagged", () => {
     const schema = KdlSchema.EntryProperty("name", valueSchema)
     const decode = KdlSchema.decodeSourceResult(schema)
 
-    test("accepts property without tag", ({ expect }) => {
+    test("accepts property", ({ expect }) => {
       const result = decode(`bundle name="mylib"`)
+      expect(Result.getOrThrow(result).name).toEqual("name")
+      expect(Result.getOrThrow(result).data.value).toEqual("mylib")
+      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
+    })
+
+    test("accepts property - span", ({ expect }) => {
+      const result = decode(`bundle name="mylib"`)
+      expect(result._tag).toEqual("Success")
       const value = Result.getOrThrow(result)
-      expect(value.name).toEqual("name")
-      expect(value.data.value).toEqual("mylib")
-      expect(value.data.tagName).toBeUndefined()
       expect(value.data.span).toBeDefined()
       expect(value.span).toBeDefined()
       expect(value.nameSpan).toBeDefined()
@@ -311,13 +351,17 @@ describe("EntryProperty with ValueTagged", () => {
 
     test("accepts URL property", ({ expect }) => {
       const result = decode(`bundle url="https://github.com"`)
-      const value = Result.getOrThrow(result) as {
-        name: string
-        data: { value: URL; tagName: string | undefined }
-      }
-      expect(value.name).toEqual("url")
-      expect(value.data.value).toEqual(new URL("https://github.com"))
-      expect(value.data.tagName).toBeUndefined()
+      expect(Result.getOrThrow(result).name).toEqual("url")
+      expect(Result.getOrThrow(result).data.value).toEqual(
+        new URL("https://github.com"),
+      )
+      expect(Result.getOrThrow(result).data.tagName).toBeUndefined()
+    })
+
+    test("accepts URL property - span", ({ expect }) => {
+      const result = decode(`bundle url="https://github.com"`)
+      expect(result._tag).toEqual("Success")
+      expect(Result.getOrThrow(result).data.span).toBeDefined()
     })
   })
 })

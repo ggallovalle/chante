@@ -26,12 +26,12 @@ export interface Value<T> {
 
 export interface EntryArgument<T> {
   readonly index: number
-  readonly data: Value<T>
+  readonly data: T
 }
 
 export interface EntryProperty<T> {
   readonly name: string
   readonly nameSpan: SourceSpan | undefined
-  readonly data: Value<T>
+  readonly data: T
   readonly span: SourceSpan | undefined
 }
