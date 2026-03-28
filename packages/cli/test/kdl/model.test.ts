@@ -211,7 +211,7 @@ describe("ValueTagged", () => {
 })
 
 describe("EntryArgument", () => {
-  const valueSchema = Schema.String
+  const valueSchema = KdlSchema.Value(Schema.String)
   const schema = KdlSchema.EntryArgument(0, valueSchema)
   const decode = KdlSchema.decodeSourceResult(schema)
 

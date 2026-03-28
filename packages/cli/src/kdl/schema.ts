@@ -22,10 +22,12 @@ export interface Value<A extends Schema.Top>
     Model.Value<A["Type"]>,
     KdlValue,
     readonly [A]
-  > {}
+  > {
+  readonly value: A
+}
 
-export const Value = <A extends Schema.Top>(inner: A): Value<A> =>
-  Schema.declareConstructor<Model.Value<A["Type"]>, KdlValue>()(
+export const Value = <A extends Schema.Top>(inner: A): Value<A> => {
+  const schema = Schema.declareConstructor<Model.Value<A["Type"]>, KdlValue>()(
     [inner],
     ([valueCodec]) =>
       (component, ast, options) => {
@@ -62,16 +64,23 @@ export const Value = <A extends Schema.Top>(inner: A): Value<A> =>
       },
     { kdlComponent: "value" },
   )
+  return Schema.make(schema.ast, { value: inner })
+}
 
 export interface ValueTagged<A extends Schema.Top>
   extends Schema.declareConstructor<
     Model.ValueTagged<A["Type"]>,
     KdlValue,
     readonly [A]
-  > {}
+  > {
+  readonly value: A
+}
 
-export const ValueTagged = <A extends Schema.Top>(inner: A): ValueTagged<A> =>
-  Schema.declareConstructor<Model.ValueTagged<A["Type"]>, KdlValue>()(
+export const ValueTagged = <A extends Schema.Top>(inner: A): ValueTagged<A> => {
+  const schema = Schema.declareConstructor<
+    Model.ValueTagged<A["Type"]>,
+    KdlValue
+  >()(
     [inner],
     ([valueCodec]) =>
       (component, ast, options) => {
@@ -107,20 +116,38 @@ export const ValueTagged = <A extends Schema.Top>(inner: A): ValueTagged<A> =>
     { kdlComponent: "value" },
   )
 
-export interface EntryArgument<I extends Schema.Top>
-  extends Schema.declareConstructor<
+  return Schema.make(schema.ast, { value: inner })
+}
+
+export type ValueCodec<T> = Schema.Codec<
+  Model.Value<T> | Model.ValueTagged<T>,
+  KdlValue
+>
+
+export interface EntryArgument<
+  I extends Schema.Top,
+  C extends ValueCodec<I["Type"]>,
+> extends Schema.declareConstructor<
     Model.EntryArgument<I["Type"]>,
     KdlNode,
-    readonly [Value<I>]
-  > {}
+    readonly [C]
+  > {
+  readonly data: C
+}
 
-export const EntryArgument = <I extends Schema.Top>(
+export const EntryArgument = <
+  I extends Schema.Top,
+  C extends ValueCodec<I["Type"]>,
+>(
   index: number,
-  value: I,
-): EntryArgument<I> =>
-  Schema.declareConstructor<Model.EntryArgument<I["Type"]>, KdlNode>()(
-    [Value(value)],
-    ([valueCodec]) =>
+  data: C,
+): EntryArgument<I, C> => {
+  const schema = Schema.declareConstructor<
+    Model.EntryArgument<I["Type"]>,
+    KdlNode
+  >()(
+    [data],
+    ([dataCodec]) =>
       (component, ast, options) => {
         if (!(component instanceof KdlNode)) {
           return Effect.fail(
@@ -140,7 +167,7 @@ export const EntryArgument = <I extends Schema.Top>(
           )
 
         const value = entry.value
-        const parser = SchemaParser.decodeUnknownEffect(valueCodec)(
+        const parser = SchemaParser.decodeUnknownEffect(dataCodec)(
           value,
           options,
         )
@@ -162,6 +189,8 @@ export const EntryArgument = <I extends Schema.Top>(
       },
     { kdlComponent: "node" },
   )
+  return Schema.make(schema.ast, { data })
+}
 
 export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(
   schema: S,
@@ -245,16 +274,16 @@ function meta(component: Model.KdlComponent, message?: string) {
 }
 
 /*
-const Workspace = Kdl.Node("workspace", {
-  name: Kdl.EntryArgument(0, String),
-  openOnOutput: Kdl.NodeOption("open-on-output", String)
+const Workspace = KdlSchema.Node("workspace", {
+  name: KdlSchema.EntryArgument(0, KdlSchema.Value(String)),
+  openOnOutput: KdlSchema.NodeOption("open-on-output", KdlSchema.Value(String))
 }).pipe(
   // inspired by ParseOptions.onExcessProperty
-  Kdl.checkOnExcessChildren("error")
+  KdlSchema.checkOnExcessChildren("error")
 )
 
-const Config = Kdl.Node(({
-  worspaces: Kdl.NodeChildren(Workspace)
-    .pipe(Kdl.checkUniqueBy((worspace) => worspace.name.value))
+const Config = KdlSchema.Document(({
+  worspaces: KdlSchema.NodeChildren(Workspace)
+    .pipe(KdlSchema.checkUniqueBy((worspace) => worspace.name.value))
 }))
 */
