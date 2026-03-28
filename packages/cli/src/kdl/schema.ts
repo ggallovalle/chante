@@ -315,10 +315,20 @@ export const Opt = <I extends ValueCodec>(name: string, data: I): Opt<I> => {
   return Schema.make(schema.ast, { data, name })
 }
 
+export interface Node<Fields extends Children>
+  extends Schema.declareConstructor<
+    Model.Node<Schema.Schema.Type<Schema.Struct<Fields>>>,
+    KdlNode,
+    readonly [Schema.Struct<Fields>]
+  > {
+  readonly name: string
+  readonly children: Fields
+}
+
 export const Node = <const Fields extends Children>(
   name: string,
   children: Fields,
-) => {
+): Node<Fields> => {
   const struct = Schema.Struct(children)
   const schema = Schema.declareConstructor<
     Model.Node<(typeof struct)["Type"]>,
@@ -366,11 +376,10 @@ export const Node = <const Fields extends Children>(
           nameSpan: span(component.name),
         }))
       },
-    { kdlComponent: "node" },
+    { kdlComponent: "node", kdlNodeName: name },
   )
 
-  return schema
-  // return Schema.make(schema.ast, { chindren: struct, name })
+  return Schema.make(schema.ast, { name, children: struct }) as Node<Fields>
 }
 
 export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(
