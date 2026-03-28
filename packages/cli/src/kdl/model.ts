@@ -42,3 +42,11 @@ export interface Node<T> {
   readonly children: T
   readonly span: SourceSpan | undefined
 }
+
+export interface Option<T> {
+  readonly name: string
+  readonly nameSpan: SourceSpan | undefined
+  readonly data: T
+  readonly span: SourceSpan | undefined
+  readonly source: "node" | "property"
+}

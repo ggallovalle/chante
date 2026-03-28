@@ -6,7 +6,7 @@ import {
 } from "@bgotink/kdl"
 import {
   Effect,
-  Option,
+  Option as EffectOption,
   Result,
   Schema,
   type SchemaAST,
@@ -45,14 +45,14 @@ export const V = <A extends ValueConstraint>(inner: A): V<A> => {
       (component, ast, options) => {
         if (!(component instanceof KdlValue)) {
           return Effect.fail(
-            new SchemaIssue.InvalidType(ast, Option.some(component)),
+            new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
           )
         }
         const allowTagged = ast.annotations?.["kdlAllowTag"] === true
         if (!allowTagged && component.tag != null) {
           return Effect.fail(
             new SchemaIssue.InvalidValue(
-              Option.some(component),
+              EffectOption.some(component),
               meta(
                 component,
                 `Expected no tag name, got "${component.getTag()}"`,
@@ -76,7 +76,7 @@ export const V = <A extends ValueConstraint>(inner: A): V<A> => {
           }),
           onFailure: (issue) =>
             new SchemaIssue.InvalidValue(
-              Option.some(value),
+              EffectOption.some(value),
               meta(component, findMessage(issue)),
             ),
         })
@@ -121,14 +121,14 @@ export const Arg = <I extends ValueCodec>(index: number, data: I): Arg<I> => {
       (component, ast, options) => {
         if (!(component instanceof KdlNode)) {
           return Effect.fail(
-            new SchemaIssue.InvalidType(ast, Option.some(component)),
+            new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
           )
         }
         const entry = component.getArgumentEntry(index)
         if (entry == null)
           return Effect.fail(
             new SchemaIssue.InvalidValue(
-              Option.some(entry),
+              EffectOption.some(entry),
               meta(
                 component,
                 `Expected node "${component.getName()}" to have argument at index ${index}`,
@@ -151,7 +151,7 @@ export const Arg = <I extends ValueCodec>(index: number, data: I): Arg<I> => {
           onFailure: (issue) => {
             // console.log(issue)
             return new SchemaIssue.InvalidValue(
-              Option.some(value),
+              EffectOption.some(value),
               meta(value, findMessage(issue)),
             )
           },
@@ -182,14 +182,14 @@ export const Prop = <I extends ValueCodec>(name: string, data: I): Prop<I> => {
       (component, ast, options) => {
         if (!(component instanceof KdlNode)) {
           return Effect.fail(
-            new SchemaIssue.InvalidType(ast, Option.some(component)),
+            new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
           )
         }
         const entry = component.getPropertyEntry(name)
         if (entry == null)
           return Effect.fail(
             new SchemaIssue.InvalidValue(
-              Option.some(entry),
+              EffectOption.some(entry),
               meta(
                 component,
                 `Expected node "${component.getName()}" to have property "${name}"`,
@@ -216,10 +216,98 @@ export const Prop = <I extends ValueCodec>(name: string, data: I): Prop<I> => {
           onFailure: (issue) => {
             // console.log(issue)
             return new SchemaIssue.InvalidValue(
-              Option.some(value),
+              EffectOption.some(value),
               meta(value, findMessage(issue)),
             )
           },
+        })
+      },
+    { kdlComponent: "node" },
+  )
+  return Schema.make(schema.ast, { data, name })
+}
+
+export interface Opt<I extends ValueCodec>
+  extends Schema.declareConstructor<
+    Model.Option<I["Type"]>,
+    KdlNode,
+    readonly [I]
+  > {
+  readonly name: string
+  readonly data: I
+}
+
+export const Opt = <I extends ValueCodec>(name: string, data: I): Opt<I> => {
+  const schema = Schema.declareConstructor<Model.Option<I["Type"]>, KdlNode>()(
+    [data],
+    ([dataCodec]) =>
+      (component, ast, options) => {
+        if (!(component instanceof KdlNode)) {
+          return Effect.fail(
+            new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
+          )
+        }
+
+        const child = component.findNodeByName(name)
+
+        let entry: { value: KdlValue; span: SourceSpan | undefined } | null =
+          null
+        let source: "node" | "property" = "node"
+        let nameSpan: SourceSpan | undefined
+
+        if (child != null) {
+          const childEntry = child.getArgumentEntry(0)
+          if (childEntry != null) {
+            entry = {
+              value: childEntry.value,
+              span: span(childEntry.value),
+            }
+            nameSpan = span(child.name)
+          }
+        }
+
+        if (entry == null) {
+          const propEntry = component.getPropertyEntry(name)
+          if (propEntry != null) {
+            entry = {
+              value: propEntry.value,
+              span: span(propEntry.value),
+            }
+            nameSpan = span(propEntry.name)
+            source = "property"
+          }
+        }
+
+        if (entry == null) {
+          return Effect.fail(
+            new SchemaIssue.InvalidValue(
+              EffectOption.some(undefined),
+              meta(
+                component,
+                `Expected node "${component.getName()}" to have either a child node named "${name}" or a property "${name}"`,
+              ),
+            ),
+          )
+        }
+
+        const parser = SchemaParser.decodeUnknownEffect(dataCodec)(
+          entry.value,
+          options,
+        )
+
+        return Effect.mapBothEager(parser, {
+          onSuccess: (value) => ({
+            name,
+            data: value,
+            span: entry?.span,
+            nameSpan,
+            source,
+          }),
+          onFailure: (issue) =>
+            new SchemaIssue.InvalidValue(
+              EffectOption.some(entry?.value),
+              meta(entry?.value, findMessage(issue)),
+            ),
         })
       },
     { kdlComponent: "node" },
@@ -241,7 +329,7 @@ export const Node = <const Fields extends Children>(
       (component, ast, options) => {
         if (!(component instanceof KdlNode)) {
           return Effect.fail(
-            new SchemaIssue.InvalidType(ast, Option.some(component)),
+            new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
           )
         }
 
@@ -249,7 +337,7 @@ export const Node = <const Fields extends Children>(
         if (componentName !== name) {
           return Effect.fail(
             new SchemaIssue.InvalidValue(
-              Option.some(component),
+              EffectOption.some(component),
               meta(
                 component.name,
                 `Expected node to have name "${name}", got "${componentName}"`,
@@ -310,7 +398,7 @@ export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(
       // biome-ignore lint/suspicious/noExplicitAny: I know
     } catch (error: any) {
       return Result.fail(
-        new SchemaIssue.InvalidValue(Option.some(source), {
+        new SchemaIssue.InvalidValue(EffectOption.some(source), {
           message: error.message,
         }),
       )
@@ -368,8 +456,8 @@ function meta(component: Model.KdlComponent, message?: string) {
 
 /*
 const Workspace = KdlSchema.Node("workspace", {
-  name: KdlSchema.EntryArgument(0, KdlSchema.Value(String)),
-  openOnOutput: KdlSchema.NodeOption("open-on-output", KdlSchema.Value(String))
+  name: KdlSchema.Arg(0, KdlSchema.V(String)),
+  openOnOutput: KdlSchema.Option("open-on-output", KdlSchema.V(String))
 }).pipe(
   // inspired by ParseOptions.onExcessProperty
   KdlSchema.checkOnExcessChildren("error")

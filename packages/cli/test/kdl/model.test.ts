@@ -230,3 +230,76 @@ describe("Node", () => {
     })
   })
 })
+
+describe("Option", () => {
+  describe("with string", () => {
+    const schema = KdlSchema.Node("bundle", {
+      output: KdlSchema.Opt("output", KdlSchema.V(Schema.String)),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts child node", ({ expect }) => {
+      const result = decode(`bundle { output "dist" }`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.output.data.value).toEqual("dist")
+      expect(value.children.output.source).toEqual("node")
+    })
+
+    test("accepts child node - span", ({ expect }) => {
+      const result = decode(`bundle { output "lib" }`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.output.span).toEqual(SourceSpan.from(16, 5))
+      expect(value.children.output.nameSpan).toEqual(SourceSpan.from(9, 6))
+    })
+
+    test("accepts property", ({ expect }) => {
+      const result = decode(`bundle output="bin"`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.output.data.value).toEqual("bin")
+      expect(value.children.output.source).toEqual("property")
+    })
+
+    test("accepts property - span", ({ expect }) => {
+      const result = decode(`bundle output="src"`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.output.span).toEqual(SourceSpan.from(14, 5))
+      expect(value.children.output.nameSpan).toEqual(SourceSpan.from(7, 6))
+    })
+
+    test("prefers child over property", ({ expect }) => {
+      const result = decode(`bundle output="fallback" { output "primary" }`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.output.data.value).toEqual("primary")
+      expect(value.children.output.source).toEqual("node")
+    })
+
+    test("rejects when neither exists", ({ expect }) => {
+      const r = decode(`bundle`)
+      assert(r._tag === "Failure")
+      expect(r.failure.toString()).toEqual(
+        'Expected node "bundle" to have either a child node named "output" or a property "output"\n  at ["output"]',
+      )
+    })
+  })
+
+  describe("with number", () => {
+    const schema = KdlSchema.Node("config", {
+      port: KdlSchema.Opt("port", KdlSchema.V(Schema.Number)),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts child node", ({ expect }) => {
+      const result = decode(`config { port 3000 }`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.port.data.value).toEqual(3000)
+      expect(value.children.port.source).toEqual("node")
+    })
+
+    test("accepts property", ({ expect }) => {
+      const result = decode(`config port=8080`)
+      const value = Result.getOrThrow(result)
+      expect(value.children.port.data.value).toEqual(8080)
+      expect(value.children.port.source).toEqual("property")
+    })
+  })
+})
