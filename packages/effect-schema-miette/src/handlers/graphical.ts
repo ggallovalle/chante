@@ -1,6 +1,6 @@
 import { type Cause, Effect, Queue, Schema, Stream } from "effect"
 import wrapAnsi from "wrap-ansi"
-import type { Styled } from "../colors.js"
+import type { IStyler, Styled } from "../colors.js"
 import type { Diagnostic } from "../diagnostic.js"
 import type { SourceCode } from "../source-code.js"
 import { GraphicalTheme } from "./theme.js"
@@ -24,11 +24,11 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   linkDisplayText: Schema.optional(Schema.String),
   showRelatedAsNested: Schema.Boolean,
 }) {
-  public static default() {
+  public static default(styler: IStyler) {
     return new GraphicalReportHandler({
       links: "text",
       termwidth: 200,
-      theme: GraphicalTheme.default(),
+      theme: GraphicalTheme.default(styler),
       footer: undefined,
       contextLines: 3,
       tabWidth: 3,

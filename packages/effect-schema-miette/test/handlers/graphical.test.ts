@@ -5,6 +5,7 @@ import {
 } from "@kbroom/effect-schema-miette"
 import { Effect, Stream } from "effect"
 import { assert, describe } from "vitest"
+import { NoopStyler } from "~/colors.js"
 import { test } from "~test/fixtures.js"
 
 const getReport = Effect.fnUntraced(function* (
@@ -30,7 +31,7 @@ const getReport = Effect.fnUntraced(function* (
 })
 
 const baseHandler = GraphicalReportHandler.themed(
-  GraphicalTheme.unicodeNoColor(),
+  GraphicalTheme.unicodeNoColor(new NoopStyler()),
 )
 
 describe("GraphicalReportHandler", () => {

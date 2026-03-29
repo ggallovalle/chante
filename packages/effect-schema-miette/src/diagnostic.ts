@@ -9,6 +9,7 @@ export const isDiagnostic = (u: unknown): u is Diagnostic =>
 export class Diagnostic extends Schema.ErrorClass(TypeId)({
   _tag: Schema.tag("Diagnostic"),
   info: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
   template: Schema.optional(Schema.String),
   meta: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   code: Schema.optional(Schema.String).annotate({
