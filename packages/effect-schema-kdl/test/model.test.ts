@@ -277,7 +277,7 @@ describe("Option", () => {
       const r = decode(`bundle`)
       assert(r._tag === "Failure")
       expect(r.failure.toString()).toEqual(
-        'Expected node "bundle" to have either a child node named "output" or a property "output"\n  at ["output"]',
+        'Expected node "bundle" to have either a child node or a property named "output"\n  at ["output"]',
       )
     })
   })

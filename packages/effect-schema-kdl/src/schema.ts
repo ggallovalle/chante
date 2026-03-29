@@ -1,6 +1,6 @@
 import {
-  Document as KdlDocument,
   getLocation,
+  Document as KdlDocument,
   Node as KdlNode,
   Value as KdlValue,
   parse,
@@ -242,7 +242,9 @@ export const Opt = <I extends ValueCodec>(name: string, data: I): Opt<I> => {
     [data],
     ([dataCodec]) =>
       (component, ast, options) => {
-        if (!(component instanceof KdlNode)) {
+        if (
+          !(component instanceof KdlNode || component instanceof KdlDocument)
+        ) {
           return Effect.fail(
             new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
           )
@@ -266,8 +268,21 @@ export const Opt = <I extends ValueCodec>(name: string, data: I): Opt<I> => {
           }
         }
 
+        if (component instanceof KdlDocument && entry == null) {
+          return Effect.fail(
+            new SchemaIssue.InvalidValue(
+              EffectOption.some(undefined),
+              meta(
+                component,
+                `Expected node "${name}" to have argument at index 0`,
+              ),
+            ),
+          )
+        }
+        const node = component as KdlNode
+
         if (entry == null) {
-          const propEntry = component.getPropertyEntry(name)
+          const propEntry = node.getPropertyEntry(name)
           if (propEntry != null) {
             entry = {
               value: propEntry.value,
@@ -284,7 +299,7 @@ export const Opt = <I extends ValueCodec>(name: string, data: I): Opt<I> => {
               EffectOption.some(undefined),
               meta(
                 component,
-                `Expected node "${component.getName()}" to have either a child node named "${name}" or a property "${name}"`,
+                `Expected node "${node.getName()}" to have either a child node or a property named "${name}"`,
               ),
             ),
           )
@@ -318,7 +333,7 @@ export const Opt = <I extends ValueCodec>(name: string, data: I): Opt<I> => {
 export interface Node<Fields extends Children>
   extends Schema.declareConstructor<
     Model.Node<Schema.Schema.Type<Schema.Struct<Fields>>>,
-    KdlNode,
+    KdlNode | KdlDocument,
     readonly [Schema.Struct<Fields>]
   > {
   readonly name: string
