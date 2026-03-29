@@ -1,5 +1,5 @@
 {
-  "name": "@chante/root",
+  "name": "@kbroom/root",
   "private": true,
   "version": "0.0.1",
   "workspaces": {
@@ -20,6 +20,9 @@
         "typescript": "5.9.3",
         "@types/bun": "latest",
         "@types/node": "^22.5.4"
+      },
+      "tsup": {
+        "tsup": "^8.5.1"
       }
     }
   },

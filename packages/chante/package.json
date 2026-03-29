@@ -17,9 +17,12 @@
   "bin": {
     "chante": "./dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "check": "tsc --noEmit -p tsconfig.build.json",
-    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc --noEmit",
+    "build": "tsup",
     "test": "bunx --bun vitest run"
   },
   "dependencies": {
@@ -34,6 +37,7 @@
     "@kbroom/effect-vitest": "workspace:*",
     "@types/bun": "catalog:typescript",
     "@types/node": "catalog:typescript",
+    "tsup": "catalog:tsup",
     "vitest": "catalog:vite"
   },
   "engines": {

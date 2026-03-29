@@ -14,14 +14,21 @@
     "url": "https://github.com/ggallovalle/chante/issues",
     "email": "ggallovalle@gmail.com"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "check": "tsc --noEmit -p tsconfig.build.json",
-    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc --noEmit",
+    "build": "tsup",
     "test": "bunx --bun vitest run"
   },
   "peerDependencies": {
@@ -30,6 +37,7 @@
   },
   "devDependencies": {
     "@types/bun": "catalog:typescript",
+    "tsup": "catalog:tsup",
     "typescript": "catalog:typescript",
     "vitest": "catalog:vite"
   },

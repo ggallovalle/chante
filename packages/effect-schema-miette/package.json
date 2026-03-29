@@ -14,30 +14,39 @@
     "url": "https://github.com/ggallovalle/chante/issues",
     "email": "ggallovalle@gmail.com"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./colors": {
-      "import": "./src/colors.ts"
+      "types": "./dist/colors.d.ts",
+      "import": "./dist/colors.js"
     }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "check": "tsc --noEmit -p tsconfig.build.json",
-    "build": "tsc -p tsconfig.build.json",
+    "check": "tsc --noEmit",
+    "build": "tsup",
     "test": "bunx --bun vitest run"
+  },
+  "devDependencies": {
+    "@kbroom/effect-vitest": "workspace:*",
+    "@types/bun": "catalog:typescript",
+    "tsup": "catalog:tsup",
+    "typescript": "catalog:typescript",
+    "vitest": "catalog:vite"
   },
   "peerDependencies": {
     "effect": "catalog:effect"
   },
   "dependencies": {
     "wrap-ansi": "^9.0.0"
-  },
-  "devDependencies": {
-    "@kbroom/effect-vitest": "workspace:*",
-    "@types/bun": "catalog:typescript",
-    "typescript": "catalog:typescript",
-    "vitest": "catalog:vite"
   },
   "engines": {
     "bun": ">=1.2.14",

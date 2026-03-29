@@ -33,7 +33,7 @@ export interface IOutput {
 }
 
 export class Output extends ServiceMap.Service<Output, IOutput>()(
-  "@chante/cli/renderer",
+  "@kbroom/chante/renderer",
 ) {}
 
 export const OutputLayer = Layer.effect(

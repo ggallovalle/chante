@@ -40,10 +40,13 @@ fi
 ```
 
 ## build
-> Build all the packages
+> Build all the packages in dependency order
 
 ```bash
-bun run --workspaces build
+bun run --filter @kbroom/effect-schema-miette build
+bun run --filter @kbroom/effect-schema-kdl build
+bun run --filter @kbroom/effect-vitest build
+bun run --filter @kbroom/chante build
 ```
 
 ## test
