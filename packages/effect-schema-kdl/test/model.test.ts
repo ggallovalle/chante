@@ -318,3 +318,47 @@ describe("Many", () => {
     expect(r.issues).toHaveLength(3)
   })
 })
+
+describe("Document", () => {
+  const PackageNode = KdlSchema.Node("package", {
+    name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+  })
+  const BundleNode = KdlSchema.Node("bundle", {
+    name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+  })
+
+  const schema = KdlSchema.Document({
+    packages: KdlSchema.Many(PackageNode),
+    bundle: BundleNode,
+    setting: KdlSchema.Opt("setting", KdlSchema.V(Schema.String)),
+  })
+  const decode = KdlSchema.decodeSourceResult(schema)
+
+  test("parses Many, Node, and Opt fields", ({ expect }) => {
+    const value = ok(
+      decode(`
+      package "pkg1"
+      package "pkg2"
+      bundle "mybundle"
+      setting "debug"
+    `),
+    )
+    expect(value.packages).toHaveLength(2)
+    expect(value.packages[0]?.children.name.data.value).toEqual("pkg1")
+    expect(value.packages[1]?.children.name.data.value).toEqual("pkg2")
+    expect(value.bundle.children.name.data.value).toEqual("mybundle")
+    expect(value.setting.data.value).toEqual("debug")
+  })
+
+  test("Node fails when missing", ({ expect }) => {
+    const issue = err(decode(`package "pkg1"`))
+    expect(issue.toString()).toContain(
+      'Expected document to have node "bundle"',
+    )
+  })
+
+  test("Opt fails when missing in document", ({ expect }) => {
+    const issue = err(decode(`package "pkg1" bundle "b"`))
+    expect(issue.toString()).toContain("bundle")
+  })
+})

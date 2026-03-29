@@ -333,7 +333,7 @@ export const Opt = <I extends ValueCodec>(name: string, data: I): Opt<I> => {
 export interface Node<Fields extends Children>
   extends Schema.declareConstructor<
     Model.Node<Schema.Schema.Type<Schema.Struct<Fields>>>,
-    KdlNode | KdlDocument,
+    KdlNode,
     readonly [Schema.Struct<Fields>]
   > {
   readonly name: string
@@ -352,19 +352,33 @@ export const Node = <const Fields extends Children>(
     [struct],
     ([structCodec]) =>
       (component, ast, options) => {
-        if (!(component instanceof KdlNode)) {
+        let node: KdlNode
+        if (component instanceof KdlDocument) {
+          const found = component.findNodeByName(name)
+          if (found === undefined) {
+            return Effect.fail(
+              new SchemaIssue.InvalidValue(
+                EffectOption.some(component),
+                meta(component, `Expected document to have node "${name}"`),
+              ),
+            )
+          }
+          node = found
+        } else if (component instanceof KdlNode) {
+          node = component
+        } else {
           return Effect.fail(
             new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
           )
         }
 
-        const componentName = component.getName()
+        const componentName = node.getName()
         if (componentName !== name) {
           return Effect.fail(
             new SchemaIssue.InvalidValue(
-              EffectOption.some(component),
+              EffectOption.some(node),
               meta(
-                component.name,
+                node.name,
                 `Expected node to have name "${name}", got "${componentName}"`,
               ),
             ),
@@ -373,7 +387,7 @@ export const Node = <const Fields extends Children>(
 
         const inner = Object.keys(children).reduce(
           (acc, key) => {
-            acc[key] = component
+            acc[key] = node
             return acc
           },
           {} as Record<PropertyKey, KdlNode>,
@@ -387,14 +401,61 @@ export const Node = <const Fields extends Children>(
         return Effect.mapEager(parser, (value) => ({
           name,
           children: value,
-          span: span(component),
-          nameSpan: span(component.name),
+          span: span(node),
+          nameSpan: span(node.name),
         }))
       },
     { kdlComponent: "node", kdlNodeName: name },
   )
 
   return Schema.make(schema.ast, { name, children: struct }) as Node<Fields>
+}
+
+export interface Document<Fields extends Children>
+  extends Schema.declareConstructor<
+    Schema.Schema.Type<Schema.Struct<Fields>>,
+    KdlDocument,
+    readonly [Schema.Struct<Fields>]
+  > {
+  readonly fields: Fields
+}
+
+export const Document = <const Fields extends Children>(
+  fields: Fields,
+): Document<Fields> => {
+  const struct = Schema.Struct(fields)
+  const schema = Schema.declareConstructor<
+    Schema.Schema.Type<typeof struct>,
+    KdlDocument
+  >()(
+    [struct],
+    ([structCodec]) =>
+      (component, ast, options) => {
+        if (!(component instanceof KdlDocument)) {
+          return Effect.fail(
+            new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
+          )
+        }
+
+        const inner = Object.keys(fields).reduce(
+          (acc, key) => {
+            acc[key] = component
+            return acc
+          },
+          {} as Record<PropertyKey, KdlDocument>,
+        )
+
+        const parser = SchemaParser.decodeUnknownEffect(structCodec)(
+          inner,
+          options,
+        )
+
+        return parser
+      },
+    { kdlComponent: "document" },
+  )
+
+  return Schema.make(schema.ast, { fields }) as Document<Fields>
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: I know
