@@ -30,14 +30,14 @@ export const hex = (code: number): Color =>
 
 export type Color = Schema.Schema.Type<typeof Color>
 
-export class Style extends Schema.Class<Style>("colors/Style")({
+export class Style extends Schema.Class<Style>("uwu/Style")({
   fg: Schema.optional(Color),
   bg: Schema.optional(Color),
   bold: Schema.Boolean,
   effects: Schema.HashSet(TextEffect),
 }) {}
 
-export class Styled extends Schema.Class<Styled>("colors/Styled")({
+export class Styled extends Schema.Class<Styled>("uwu/Styled")({
   style: Style,
   prefix: Schema.String,
   sufix: Schema.String,
@@ -52,7 +52,7 @@ export interface IStyler {
 }
 
 export class Styler extends ServiceMap.Service<Styler, IStyler>()(
-  "@kbroom/effect-schema-miette/Styler",
+  "@kbroom/uwu/Styler",
 ) {}
 
 export class NoopStyler implements IStyler {
@@ -99,12 +99,7 @@ export class AnsiBunStyler implements IStyler {
   }
 }
 
-export const AnsiBunStylerLayer = Layer.effect(
-  Styler,
-  Effect.sync(() => new AnsiBunStyler()),
-)
-
-function effectToAnsi(effect: TextEffect): string | null {
+function effectToAnsi(effect: string): string | null {
   switch (effect) {
     case "bold":
       return "\x1b[1m"
@@ -124,11 +119,13 @@ function effectToAnsi(effect: TextEffect): string | null {
       return "\x1b[8m"
     case "strikethrough":
       return "\x1b[9m"
+    default:
+      return null
   }
 }
 
 function colorToAnsi(color: Color, type: "fg" | "bg"): string | null {
-  const ansi = Bun.color(color.value, "ansi")
+  const ansi = Bun.color(color.value as string, "ansi")
 
   if (ansi == null) return null
 

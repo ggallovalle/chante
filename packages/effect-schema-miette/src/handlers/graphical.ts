@@ -1,6 +1,6 @@
+import type { IStyler, Styled } from "@kbroom/uwu"
 import { type Cause, Effect, Queue, Schema, Stream } from "effect"
 import wrapAnsi from "wrap-ansi"
-import type { IStyler, Styled } from "../colors.js"
 import type { Diagnostic } from "../diagnostic.js"
 import type { SourceCode } from "../source-code.js"
 import { GraphicalTheme } from "./theme.js"

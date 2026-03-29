@@ -1,5 +1,5 @@
+import { ansi, type IStyler, Style, Styled } from "@kbroom/uwu"
 import { HashSet, Schema } from "effect"
-import { ansi, type IStyler, Style, Styled } from "../colors.js"
 
 export class ThemeCharacters extends Schema.Class<ThemeCharacters>(
   "miette/ThemeCharacters",

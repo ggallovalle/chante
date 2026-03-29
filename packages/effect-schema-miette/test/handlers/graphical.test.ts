@@ -3,8 +3,8 @@ import {
   GraphicalReportHandler,
   GraphicalTheme,
 } from "@kbroom/effect-schema-miette"
+import { NoopStyler } from "@kbroom/uwu"
 import { Effect, Schema, Stream } from "effect"
-import { NoopStyler } from "~/colors.js"
 import { assert, describe, fc, test } from "~test/fixtures.js"
 
 const getReport = Effect.fnUntraced(function* (

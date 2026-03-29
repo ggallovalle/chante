@@ -1,14 +1,14 @@
 {
-  "name": "@kbroom/effect-schema-miette",
+  "name": "@kbroom/uwu",
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
   "author": "Gerson Gallo <ggallovalle@gmail.com>",
-  "description": "Fancy error reporting for Effect, inspired by the Rust miette (https://github.com/zkat/miette) library. Provides Diagnostic, SourceCode, and GraphicalReportHandler for pretty terminal error output with source spans, labels, and severity levels, with Effect Schema integration.",
+  "description": "A purrfect styling library for terminal output with Effect Schema integration. Makes your text look adorable!",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/ggallovalle/chante.git",
-    "directory": "packages/effect-schema-miette"
+    "directory": "packages/uwu"
   },
   "bugs": {
     "url": "https://github.com/ggallovalle/chante/issues",
@@ -21,6 +21,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./bun": {
+      "types": "./dist/bun.d.ts",
+      "import": "./dist/bun.js"
     }
   },
   "files": [
@@ -31,19 +35,13 @@
     "build": "tsup",
     "test": "bunx --bun vitest run"
   },
-  "devDependencies": {
-    "@kbroom/effect-vitest": "workspace:*",
-    "@types/bun": "catalog:typescript",
-    "tsup": "catalog:tsup",
-    "typescript": "catalog:typescript",
-    "vitest": "catalog:vite"
-  },
   "peerDependencies": {
     "effect": "catalog:effect"
   },
-  "dependencies": {
-    "@kbroom/uwu": "workspace:*",
-    "wrap-ansi": "^9.0.0"
+  "devDependencies": {
+    "@types/bun": "catalog:typescript",
+    "tsup": "catalog:tsup",
+    "typescript": "catalog:typescript"
   },
   "engines": {
     "bun": ">=1.2.14",

@@ -54,6 +54,7 @@
       "name": "@kbroom/effect-schema-miette",
       "version": "0.0.1",
       "dependencies": {
+        "@kbroom/uwu": "workspace:*",
         "wrap-ansi": "^9.0.0",
       },
       "devDependencies": {
@@ -79,6 +80,18 @@
       "peerDependencies": {
         "effect": "catalog:effect",
         "vitest": "catalog:vite",
+      },
+    },
+    "packages/uwu": {
+      "name": "@kbroom/uwu",
+      "version": "0.0.1",
+      "devDependencies": {
+        "@types/bun": "catalog:typescript",
+        "tsup": "catalog:tsup",
+        "typescript": "catalog:typescript",
+      },
+      "peerDependencies": {
+        "effect": "catalog:effect",
       },
     },
   },
@@ -203,6 +216,8 @@
     "@kbroom/effect-schema-miette": ["@kbroom/effect-schema-miette@workspace:packages/effect-schema-miette"],
 
     "@kbroom/effect-vitest": ["@kbroom/effect-vitest@workspace:packages/effect-vitest"],
+
+    "@kbroom/uwu": ["@kbroom/uwu@workspace:packages/uwu"],
 
     "@msgpackr-extract/msgpackr-extract-darwin-arm64": ["@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw=="],
 

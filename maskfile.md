@@ -43,6 +43,7 @@ fi
 > Build all the packages in dependency order
 
 ```bash
+bun run --filter @kbroom/uwu build
 bun run --filter @kbroom/effect-schema-miette build
 bun run --filter @kbroom/effect-schema-kdl build
 bun run --filter @kbroom/effect-vitest build
