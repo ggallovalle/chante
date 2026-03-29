@@ -319,6 +319,32 @@ describe("Many", () => {
   })
 })
 
+describe("Literal", () => {
+  describe("with Schema.Literal", () => {
+    const schema = KdlSchema.Node("language", {
+      code: KdlSchema.Arg(0, KdlSchema.V(Schema.Literals(["en", "es"]))),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts valid literal 'en'", ({ expect }) => {
+      const value = ok(decode(`language "en"`))
+      expect(value.children.code.data.value).toEqual("en")
+    })
+
+    test("accepts valid literal 'es'", ({ expect }) => {
+      const value = ok(decode(`language "es"`))
+      expect(value.children.code.data.value).toEqual("es")
+    })
+
+    test("rejects invalid literal 'ch'", ({ expect }) => {
+      const r = err(decode(`language "ch"`))
+      expect(r.toString()).toEqual(
+        'Expected "en" | "es", got "ch"\n  at ["code"]',
+      )
+    })
+  })
+})
+
 describe("Document", () => {
   const PackageNode = KdlSchema.Node("package", {
     name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
