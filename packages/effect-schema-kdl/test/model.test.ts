@@ -309,7 +309,7 @@ describe("Many", () => {
 
   test("errors: first (default)", ({ expect }) => {
     const r = err(decode(`item "good"\nitem 42`))
-    expect(r.toString()).toContain("Expected string, got 42")
+    expect(r.toString()).toEqual('Expected string, got 42\n  at [1]["value"]')
   })
 
   test("errors: all - accumulates all errors", ({ expect }) => {
@@ -352,13 +352,181 @@ describe("Document", () => {
 
   test("Node fails when missing", ({ expect }) => {
     const issue = err(decode(`package "pkg1"`))
-    expect(issue.toString()).toContain(
-      'Expected document to have node "bundle"',
+    expect(issue.toString()).toEqual(
+      'Expected document to have node "bundle"\n  at ["bundle"]',
     )
   })
 
   test("Opt fails when missing in document", ({ expect }) => {
     const issue = err(decode(`package "pkg1" bundle "b"`))
-    expect(issue.toString()).toContain("bundle")
+    expect(issue.toString()).toEqual(
+      'Expected document to have node "bundle"\n  at ["bundle"]',
+    )
+  })
+})
+
+describe("optional", () => {
+  describe("optional Arg - package with optional version", () => {
+    const schema = KdlSchema.Node("package", {
+      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+      version: KdlSchema.optional(KdlSchema.Arg(1, KdlSchema.V(Schema.String))),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts package with version", ({ expect }) => {
+      const value = ok(decode(`package "mylib" "1.0.0"`))
+      expect(value.children.name.data.value).toEqual("mylib")
+      expect(value.children.version?.data.value).toEqual("1.0.0")
+    })
+
+    test("accepts package without version", ({ expect }) => {
+      const value = ok(decode(`package "mylib"`))
+      expect(value.children.name.data.value).toEqual("mylib")
+      expect(value.children.version).toBeUndefined()
+    })
+
+    test("rejects invalid version type", ({ expect }) => {
+      const r = err(decode(`package "mylib" 42`))
+      expect(r.toString()).toEqual('Expected string, got 42\n  at ["version"]')
+    })
+  })
+
+  describe("optional Prop - server with optional port", () => {
+    const schema = KdlSchema.Node("server", {
+      host: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+      port: KdlSchema.optional(
+        KdlSchema.Prop("port", KdlSchema.V(Schema.Number)),
+      ),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts server with port property", ({ expect }) => {
+      const value = ok(decode(`server "localhost" port=3000`))
+      expect(value.children.host.data.value).toEqual("localhost")
+      expect(value.children.port?.data.value).toEqual(3000)
+    })
+
+    test("accepts server without port property", ({ expect }) => {
+      const value = ok(decode(`server "localhost"`))
+      expect(value.children.host.data.value).toEqual("localhost")
+      expect(value.children.port).toBeUndefined()
+    })
+  })
+
+  describe("optional Opt - git remote with optional url", () => {
+    const schema = KdlSchema.Node("repo", {
+      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+      remote: KdlSchema.optional(
+        KdlSchema.Opt("remote", KdlSchema.V(Schema.String)),
+      ),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts remote as child node", ({ expect }) => {
+      const value = ok(decode(`repo "myapp" { remote "origin" }`))
+      expect(value.children.remote?.data.value).toEqual("origin")
+      expect(value.children.remote?.source).toEqual("node")
+    })
+
+    test("accepts remote as property", ({ expect }) => {
+      const value = ok(decode(`repo "myapp" remote="origin"`))
+      expect(value.children.remote?.data.value).toEqual("origin")
+      expect(value.children.remote?.source).toEqual("property")
+    })
+
+    test("prefers child over property", ({ expect }) => {
+      const value = ok(
+        decode(`repo "myapp" remote="fallback" { remote "primary" }`),
+      )
+      expect(value.children.remote?.data.value).toEqual("primary")
+    })
+
+    test("accepts repo without remote", ({ expect }) => {
+      const value = ok(decode(`repo "myapp"`))
+      expect(value.children.remote).toBeUndefined()
+    })
+  })
+
+  describe("optional Node - project with optional build config", () => {
+    const BuildNode = KdlSchema.Node("build", {
+      command: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+    })
+    const TestNode = KdlSchema.Node("test", {
+      command: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+    })
+
+    const schema = KdlSchema.Document({
+      project: KdlSchema.Node("project", {
+        name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+      }),
+      build: KdlSchema.optional(BuildNode),
+      test: KdlSchema.optional(TestNode),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("accepts project with build and test", ({ expect }) => {
+      const value = ok(decode(`project "myapp" \nbuild "tsc" \ntest "vitest"`))
+      expect(value.project.children.name.data.value).toEqual("myapp")
+      expect(value.build?.children.command.data.value).toEqual("tsc")
+      expect(value.test?.children.command.data.value).toEqual("vitest")
+    })
+
+    test("accepts project with only build", ({ expect }) => {
+      const value = ok(decode(`project "myapp" \nbuild "esbuild"`))
+      expect(value.build?.children.command.data.value).toEqual("esbuild")
+      expect(value.test).toBeUndefined()
+    })
+
+    test("accepts project without optional nodes", ({ expect }) => {
+      const value = ok(decode(`project "myapp"`))
+      expect(value.project.children.name.data.value).toEqual("myapp")
+      expect(value.build).toBeUndefined()
+      expect(value.test).toBeUndefined()
+    })
+
+    test("rejects when required project missing", ({ expect }) => {
+      const r = err(decode(`build "tsc"`))
+      expect(r.toString()).toEqual(
+        'Expected document to have node "project"\n  at ["project"]',
+      )
+    })
+  })
+
+  describe("mixed required and optional - deployment config", () => {
+    const schema = KdlSchema.Node("deployment", {
+      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+      image: KdlSchema.Prop("image", KdlSchema.V(Schema.String)),
+      replicas: KdlSchema.optional(
+        KdlSchema.Prop("replicas", KdlSchema.V(Schema.Number)),
+      ),
+      env: KdlSchema.optional(KdlSchema.Opt("env", KdlSchema.V(Schema.String))),
+    })
+    const decode = KdlSchema.decodeSourceResult(schema)
+
+    test("full deployment with all fields", ({ expect }) => {
+      const value = ok(
+        decode(`deployment "api" image="nginx:latest" replicas=3 env="prod"`),
+      )
+      expect(value.children.name.data.value).toEqual("api")
+      expect(value.children.image.data.value).toEqual("nginx:latest")
+      expect(value.children.replicas?.data.value).toEqual(3)
+      expect(value.children.env?.data.value).toEqual("prod")
+    })
+
+    test("minimal deployment with only required", ({ expect }) => {
+      const value = ok(decode(`deployment "api" image="nginx:latest"`))
+      expect(value.children.name.data.value).toEqual("api")
+      expect(value.children.image.data.value).toEqual("nginx:latest")
+      expect(value.children.replicas).toBeUndefined()
+      expect(value.children.env).toBeUndefined()
+    })
+
+    test("deployment with optional env as child node", ({ expect }) => {
+      const value = ok(
+        decode(`deployment "api" image="nginx:latest" { env "staging" }`),
+      )
+      expect(value.children.env?.data.value).toEqual("staging")
+      expect(value.children.env?.source).toEqual("node")
+    })
   })
 })

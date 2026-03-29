@@ -86,8 +86,15 @@ export const V = <A extends ValueConstraint>(inner: A): V<A> => {
   return Schema.make(schema.ast, { value: inner })
 }
 
-export const allowTagged = <A extends Schema.Top>(self: V<A>): V<A> =>
-  self.pipe(Schema.annotate({ kdlAllowTag: true })) as V<A>
+export const allowTagged = <A extends ValueCodec>(self: A): A =>
+  self.pipe(Schema.annotate({ kdlAllowTag: true })) as A
+
+export const optional = <I extends NodeCodec>(
+  self: I,
+): NodeCodec<Schema.Schema.Type<I> | undefined> => {
+  // biome-ignore lint/suspicious/noExplicitAny: I know
+  return self.pipe(Schema.annotate({ kdlOptional: true })) as any
+}
 
 export const resolveKdlSpan = (
   schemaOrIssue: Schema.Schema<unknown> | SchemaIssue.Issue,
@@ -125,7 +132,12 @@ export const Arg = <I extends ValueCodec>(index: number, data: I): Arg<I> => {
           )
         }
         const entry = component.getArgumentEntry(index)
-        if (entry == null)
+        if (entry == null) {
+          const isOptional = ast.annotations?.["kdlOptional"] === true
+          if (isOptional) {
+            // biome-ignore lint/suspicious/noExplicitAny: I know
+            return Effect.void as any
+          }
           return Effect.fail(
             new SchemaIssue.InvalidValue(
               EffectOption.some(entry),
@@ -135,6 +147,7 @@ export const Arg = <I extends ValueCodec>(index: number, data: I): Arg<I> => {
               ),
             ),
           )
+        }
 
         const value = entry.value
         const parser = SchemaParser.decodeUnknownEffect(dataCodec)(
@@ -186,7 +199,12 @@ export const Prop = <I extends ValueCodec>(name: string, data: I): Prop<I> => {
           )
         }
         const entry = component.getPropertyEntry(name)
-        if (entry == null)
+        if (entry == null) {
+          const isOptional = ast.annotations?.["kdlOptional"] === true
+          if (isOptional) {
+            // biome-ignore lint/suspicious/noExplicitAny: I know
+            return Effect.void as any
+          }
           return Effect.fail(
             new SchemaIssue.InvalidValue(
               EffectOption.some(entry),
@@ -196,6 +214,7 @@ export const Prop = <I extends ValueCodec>(name: string, data: I): Prop<I> => {
               ),
             ),
           )
+        }
 
         // biome-ignore lint/style/noNonNullAssertion: I know because is a property
         const identifier = entry.name!
@@ -294,6 +313,11 @@ export const Opt = <I extends ValueCodec>(name: string, data: I): Opt<I> => {
         }
 
         if (entry == null) {
+          const isOptional = ast.annotations?.["kdlOptional"] === true
+          if (isOptional) {
+            // biome-ignore lint/suspicious/noExplicitAny: I know
+            return Effect.void as any
+          }
           return Effect.fail(
             new SchemaIssue.InvalidValue(
               EffectOption.some(undefined),
@@ -356,6 +380,14 @@ export const Node = <const Fields extends Children>(
         if (component instanceof KdlDocument) {
           const found = component.findNodeByName(name)
           if (found === undefined) {
+            const isOptional = ast.annotations?.["kdlOptional"] === true
+            if (isOptional) {
+              const isOptional = ast.annotations?.["kdlOptional"] === true
+              if (isOptional) {
+                // biome-ignore lint/suspicious/noExplicitAny: I know
+                return Effect.void as any
+              }
+            }
             return Effect.fail(
               new SchemaIssue.InvalidValue(
                 EffectOption.some(component),
