@@ -3,10 +3,16 @@
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
-  "author": "Gerson Gallo",
+  "author": "Gerson Gallo <ggallovalle@gmail.com>",
+  "description": "A Vitest fixture for testing Effect-based code with proper scope management. Automatically creates scopes, handles cleanup, and reports defects as test failures.",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/ggallovalle/chante.git"
+    "url": "git+ssh://git@github.com/ggallovalle/chante.git",
+    "directory": "packages/effect-vitest"
+  },
+  "bugs": {
+    "url": "https://github.com/ggallovalle/chante/issues",
+    "email": "ggallovalle@gmail.com"
   },
   "exports": {
     ".": {

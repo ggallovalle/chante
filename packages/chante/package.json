@@ -1,12 +1,18 @@
 {
-  "name": "@chante/cli",
+  "name": "@kbroom/chante",
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
-  "author": "Gerson Gallo",
+  "author": "Gerson Gallo <ggallovalle@gmail.com>",
+  "description": "A dotfiles manager.",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/ggallovalle/chante.git"
+    "url": "git+ssh://git@github.com/ggallovalle/chante.git",
+    "directory": "packages/chante"
+  },
+  "bugs": {
+    "url": "https://github.com/ggallovalle/chante/issues",
+    "email": "ggallovalle@gmail.com"
   },
   "bin": {
     "chante": "./dist/cli.js"

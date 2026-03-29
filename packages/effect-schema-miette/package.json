@@ -3,10 +3,16 @@
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
-  "author": "Gerson Gallo",
+  "author": "Gerson Gallo <ggallovalle@gmail.com>",
+  "description": "Fancy error reporting for Effect, inspired by the Rust miette (https://github.com/zkat/miette) library. Provides Diagnostic, SourceCode, and GraphicalReportHandler for pretty terminal error output with source spans, labels, and severity levels, with Effect Schema integration.",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/ggallovalle/chante.git"
+    "url": "git+ssh://git@github.com/ggallovalle/chante.git",
+    "directory": "packages/effect-schema-miette"
+  },
+  "bugs": {
+    "url": "https://github.com/ggallovalle/chante/issues",
+    "email": "ggallovalle@gmail.com"
   },
   "exports": {
     ".": {

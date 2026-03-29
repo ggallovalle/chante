@@ -5,17 +5,13 @@ A Vitest fixture for testing Effect-based code with proper scope management.
 ## Installation
 
 ```bash
-npm install @kbroom/effect-vitest
-# or
-pnpm add @kbroom/effect-vitest
-# or
-yarn add @kbroom/effect-vitest
+bun add -D @kbroom/effect-vitest
 ```
 
 Requires `effect` and `vitest` as peer dependencies:
 
 ```bash
-npm install effect vitest
+bun add -D effect@beta vitest
 ```
 
 ## Usage

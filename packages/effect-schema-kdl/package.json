@@ -3,10 +3,16 @@
   "version": "0.0.1",
   "type": "module",
   "license": "MIT",
-  "author": "Gerson Gallo",
+  "author": "Gerson Gallo <ggallovalle@gmail.com>",
+  "description": "Effect Schema integration for KDL (kdl.dev). Provides bidirectional conversion between KDL documents and Effect Schema, with Miette integration for pretty error reporting.",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/ggallovalle/chante.git"
+    "url": "git+ssh://git@github.com/ggallovalle/chante.git",
+    "directory": "packages/effect-schema-kdl"
+  },
+  "bugs": {
+    "url": "https://github.com/ggallovalle/chante/issues",
+    "email": "ggallovalle@gmail.com"
   },
   "exports": {
     ".": {

@@ -1,21 +1,17 @@
 # @kbroom/effect-schema-miette
 
-A TypeScript implementation of [miette](https://github.com/zkat/miette) error handling for Effect, with Schema integration.
+Fancy error reporting for Effect, inspired by the Rust [miette](https://github.com/zkat/miette) library, with Effect Schema integration.
 
 ## Installation
 
 ```bash
-npm install @kbroom/effect-schema-miette
-# or
-pnpm add @kbroom/effect-schema-miette
-# or
-yarn add @kbroom/effect-schema-miette
+bun add @kbroom/effect-schema-miette
 ```
 
 Requires `effect` as a peer dependency:
 
 ```bash
-npm install effect
+bun add effect@beta
 ```
 
 ## Features
