@@ -15,6 +15,7 @@
 !.yarn/patches
 .eslintcache
 .attest
+.turbo
 
 # References
 .reference

@@ -37,7 +37,7 @@
     "@kbroom/effect-vitest": "workspace:*",
     "@types/bun": "catalog:typescript",
     "@types/node": "catalog:typescript",
-    "tsup": "catalog:tsup",
+    "tsup": "catalog:typescript",
     "vitest": "catalog:vite"
   },
   "engines": {

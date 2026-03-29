@@ -40,21 +40,24 @@ fi
 ```
 
 ## build
-> Build all the packages in dependency order
+> Build all packages with turbo
 
 ```bash
-bun run --filter @kbroom/uwu build
-bun run --filter @kbroom/effect-schema-miette build
-bun run --filter @kbroom/effect-schema-kdl build
-bun run --filter @kbroom/effect-vitest build
-bun run --filter @kbroom/chante build
+bunx turbo run build
+```
+
+## check
+> Type check all packages with turbo
+
+```bash
+bunx turbo run check
 ```
 
 ## test
-> Run tests in all packages
+> Test all packages with turbo
 
 ```bash
-bun run --workspaces test
+bunx turbo run test
 ```
 
 ## lint

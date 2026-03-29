@@ -39,9 +39,11 @@
     "effect": "catalog:effect"
   },
   "devDependencies": {
+    "@kbroom/effect-vitest": "workspace:*",
     "@types/bun": "catalog:typescript",
-    "tsup": "catalog:tsup",
-    "typescript": "catalog:typescript"
+    "tsup": "catalog:typescript",
+    "typescript": "catalog:typescript",
+    "vitest": "catalog:vite"
   },
   "engines": {
     "bun": ">=1.2.14",

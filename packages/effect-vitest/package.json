@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@types/bun": "catalog:typescript",
-    "tsup": "catalog:tsup",
+    "tsup": "catalog:typescript",
     "typescript": "catalog:typescript",
     "vitest": "catalog:vite"
   },
