@@ -6,8 +6,8 @@ import {
   StringSourceCode,
 } from "@kbroom/effect-schema-miette"
 import { Effect } from "effect"
-import { describe } from "vitest"
-import { test } from "~test/fixtures.js"
+
+import { describe, test } from "~test/fixtures.js"
 
 export function runSourceCodeTests(
   name: string,

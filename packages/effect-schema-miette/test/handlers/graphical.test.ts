@@ -3,10 +3,9 @@ import {
   GraphicalReportHandler,
   GraphicalTheme,
 } from "@kbroom/effect-schema-miette"
-import { Effect, Stream } from "effect"
-import { assert, describe } from "vitest"
+import { Effect, Schema, Stream } from "effect"
 import { NoopStyler } from "~/colors.js"
-import { test } from "~test/fixtures.js"
+import { assert, describe, fc, test } from "~test/fixtures.js"
 
 const getReport = Effect.fnUntraced(function* (
   handler: GraphicalReportHandler,
@@ -35,39 +34,45 @@ const baseHandler = GraphicalReportHandler.themed(
 )
 
 describe("GraphicalReportHandler", () => {
-  test("header includes the code and the url", ({ expect, effect }) =>
-    effect(
-      Effect.gen(function* () {
-        const diagnostic = new Diagnostic({
-          info: "root",
-          code: "E0001",
-          url: "https://example.com",
-          severity: "error",
-        })
-        const report = yield* getReport(baseHandler, diagnostic)
+  test("header includes the code and the url", ({ expect, prop }) =>
+    fc.assert(
+      prop(
+        { url: Schema.URLFromString },
+        Effect.fnUntraced(function* (props) {
+          const diagnostic = new Diagnostic({
+            info: "root",
+            code: "E0001",
+            url: props.url.toString(),
+            severity: "error",
+          })
+          const report = yield* getReport(baseHandler, diagnostic)
 
-        expect(report.next()).toEqual("E0001 (https://example.com)")
-      }),
+          expect(report.next()).toEqual(`E0001 (${props.url})`)
+        }),
+      ),
     ))
 
-  test("when options.link == none dont show the url", ({ expect, effect }) =>
-    effect(
-      Effect.gen(function* () {
-        const handler = new GraphicalReportHandler({
-          ...baseHandler,
-          links: "none",
-        })
+  test("when options.link == none dont show the url", ({ expect, prop }) =>
+    fc.assert(
+      prop(
+        [fc.string({ minLength: 4, maxLength: 15 })],
+        Effect.fnUntraced(function* ([code]) {
+          const handler = new GraphicalReportHandler({
+            ...baseHandler,
+            links: "none",
+          })
 
-        const diagnostic = new Diagnostic({
-          info: "root hidden",
-          code: "E0002",
-          url: "https://example.com/hidden",
-          severity: "warning",
-        })
-        const report = yield* getReport(handler, diagnostic)
+          const diagnostic = new Diagnostic({
+            info: "root hidden",
+            code,
+            url: "https://example.com/hidden",
+            severity: "warning",
+          })
+          const report = yield* getReport(handler, diagnostic)
 
-        expect(report.next()).toEqual("E0002")
-      }),
+          expect(report.next()).toEqual(code)
+        }),
+      ),
     ))
 
   test.for([

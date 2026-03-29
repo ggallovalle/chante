@@ -3,8 +3,8 @@ import {
   SourceSpan,
   SpanContents,
 } from "@kbroom/effect-schema-miette"
-import { describe } from "vitest"
-import { test } from "~test/fixtures.js"
+
+import { describe, test } from "~test/fixtures.js"
 
 describe("SourceSpan", () => {
   test(".from creates a span correctly", ({ expect }) => {
