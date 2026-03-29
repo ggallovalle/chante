@@ -1,4 +1,5 @@
 import {
+  Document as KdlDocument,
   getLocation,
   Node as KdlNode,
   Value as KdlValue,
@@ -379,6 +380,56 @@ export const Node = <const Fields extends Children>(
   )
 
   return Schema.make(schema.ast, { name, children: struct }) as Node<Fields>
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: I know
+export interface Many<Items extends Node<any>>
+  extends Schema.declareConstructor<
+    Model.Many<Items["Type"]>,
+    KdlNode,
+    readonly [Items]
+  > {
+  readonly node: Items
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: I know
+export const Many = <const Items extends Node<any>>(
+  node: Items,
+): Many<Items> => {
+  const nodeName = node.name
+
+  const schema = Schema.declareConstructor<
+    Model.Many<Schema.Schema.Type<Items["children"]>>,
+    KdlNode | KdlDocument
+  >()(
+    [Schema.Array(node)],
+    ([arrayCodec]) =>
+      (component, ast, options) => {
+        if (
+          !(component instanceof KdlNode || component instanceof KdlDocument)
+        ) {
+          return Effect.fail(
+            new SchemaIssue.InvalidType(ast, EffectOption.some(component)),
+          )
+        }
+
+        const children = component.findNodesByName(nodeName)
+
+        const parser = SchemaParser.decodeUnknownEffect(arrayCodec)(
+          children,
+          options,
+        )
+
+        return Effect.mapEager(parser, (value) => ({
+          // biome-ignore lint/suspicious/noExplicitAny: I know
+          items: value as any,
+          span: span(component),
+        }))
+      },
+    { kdlComponent: "document", kdlNodeName: node.name },
+  )
+
+  return Schema.make(schema.ast, { node }) as Many<Items>
 }
 
 export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(
