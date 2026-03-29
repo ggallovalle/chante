@@ -1,8 +1,11 @@
 import { KdlSchema } from "@kbroom/effect-schema-kdl"
 import { SourceSpan } from "@kbroom/effect-schema-miette"
-import { Result, Schema } from "effect"
+import { Function as EffectFunction, Result, Schema } from "effect"
 import { assert, describe } from "vitest"
 import { test } from "~test/fixtures.js"
+
+const ok = Result.getOrThrow
+const err = EffectFunction.flow(Result.flip, Result.getOrThrow)
 
 describe("Node", () => {
   describe("with string arg and prop", () => {
@@ -13,17 +16,14 @@ describe("Node", () => {
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts node with arg and prop", ({ expect }) => {
-      const result = decode(`bundle "mylib" version="1.0.0"`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`bundle "mylib" version="1.0.0"`))
       expect(value.name).toEqual("bundle")
       expect(value.children.name.data.value).toEqual("mylib")
       expect(value.children.version.data.value).toEqual("1.0.0")
     })
 
     test("accepts node with arg and prop - span", ({ expect }) => {
-      const result = decode(`bundle "mylib" version="1.0.0"`)
-      expect(result._tag).toEqual("Success")
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`bundle "mylib" version="1.0.0"`))
       expect(value.span).toEqual(SourceSpan.from(0, 30))
       expect(value.nameSpan).toEqual(SourceSpan.from(0, 6))
       expect(value.children.name.data.span).toEqual(SourceSpan.from(7, 7))
@@ -32,43 +32,34 @@ describe("Node", () => {
     })
 
     test("rejects wrong name", ({ expect }) => {
-      const r = decode(`package "mylib" version="1.0.0"`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(
+      const r = err(decode(`package "mylib" version="1.0.0"`))
+      expect(r.toString()).toEqual(
         `Expected node to have name "bundle", got "package"`,
       )
     })
 
     test("rejects missing arg", ({ expect }) => {
-      const r = decode(`bundle version="1.0.0"`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(
+      const r = err(decode(`bundle version="1.0.0"`))
+      expect(r.toString()).toEqual(
         'Expected node "bundle" to have argument at index 0\n  at ["name"]',
       )
     })
 
     test("rejects missing prop", ({ expect }) => {
-      const r = decode(`bundle "mylib"`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(
+      const r = err(decode(`bundle "mylib"`))
+      expect(r.toString()).toEqual(
         'Expected node "bundle" to have property "version"\n  at ["version"]',
       )
     })
 
     test("rejects wrong arg type", ({ expect }) => {
-      const r = decode(`bundle 42 version="1.0.0"`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(
-        'Expected string, got 42\n  at ["name"]',
-      )
+      const r = err(decode(`bundle 42 version="1.0.0"`))
+      expect(r.toString()).toEqual('Expected string, got 42\n  at ["name"]')
     })
 
     test("rejects wrong prop type", ({ expect }) => {
-      const r = decode(`bundle "mylib" version=42`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(
-        'Expected string, got 42\n  at ["version"]',
-      )
+      const r = err(decode(`bundle "mylib" version=42`))
+      expect(r.toString()).toEqual('Expected string, got 42\n  at ["version"]')
     })
   })
 
@@ -80,16 +71,13 @@ describe("Node", () => {
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts node with number args", ({ expect }) => {
-      const result = decode(`add 5 b=10`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`add 5 b=10`))
       expect(value.children.a.data.value).toEqual(5)
       expect(value.children.b.data.value).toEqual(10)
     })
 
     test("accepts node with number args - span", ({ expect }) => {
-      const result = decode(`add 5 b=10`)
-      expect(result._tag).toEqual("Success")
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`add 5 b=10`))
       expect(value.children.a.data.span).toEqual(SourceSpan.from(4, 1))
       expect(value.children.b.data.span).toEqual(SourceSpan.from(8, 2))
     })
@@ -103,8 +91,7 @@ describe("Node", () => {
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts node with boolean args", ({ expect }) => {
-      const result = decode(`config #true verbose=#false`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`config #true verbose=#false`))
       expect(value.children.enabled.data.value).toEqual(true)
       expect(value.children.verbose.data.value).toEqual(false)
     })
@@ -117,19 +104,15 @@ describe("Node", () => {
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts URL arg", ({ expect }) => {
-      const result = decode(`link "https://github.com"`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`link "https://github.com"`))
       expect(value.children.url.data.value).toEqual(
         new URL("https://github.com"),
       )
     })
 
     test("accepts URL arg - span", ({ expect }) => {
-      const result = decode(`link "https://github.com"`)
-      expect(result._tag).toEqual("Success")
-      expect(Result.getOrThrow(result).children.url.data.span).toEqual(
-        SourceSpan.from(5, 20),
-      )
+      const value = ok(decode(`link "https://github.com"`))
+      expect(value.children.url.data.span).toEqual(SourceSpan.from(5, 20))
     })
   })
 
@@ -143,23 +126,20 @@ describe("Node", () => {
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts tagged value", ({ expect }) => {
-      const result = decode(`value (type)"hello"`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`value (type)"hello"`))
       expect(value.children.data.data.value).toEqual("hello")
       expect(value.children.data.data.tagName).toEqual("type")
     })
 
     test("accepts untagged value", ({ expect }) => {
-      const result = decode(`value "hello"`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`value "hello"`))
       expect(value.children.data.data.value).toEqual("hello")
       expect(value.children.data.data.tagName).toBeUndefined()
     })
 
     test("accepts tagged value - span", ({ expect }) => {
-      const result = decode(`value (type)"hello"`)
-      expect(result._tag).toEqual("Success")
-      const data = Result.getOrThrow(result).children.data.data
+      const value = ok(decode(`value (type)"hello"`))
+      const data = value.children.data.data
       expect(data.span).toEqual(SourceSpan.from(6, 13))
       expect(data.tagSpan).toEqual(SourceSpan.from(6, 6))
     })
@@ -173,16 +153,14 @@ describe("Node", () => {
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts multiple args at different indices", ({ expect }) => {
-      const result = decode(`add 5 10`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`add 5 10`))
       expect(value.children.a.data.value).toEqual(5)
       expect(value.children.b.data.value).toEqual(10)
     })
 
     test("rejects missing second arg", ({ expect }) => {
-      const r = decode(`add 5`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(
+      const r = err(decode(`add 5`))
+      expect(r.toString()).toEqual(
         'Expected node "add" to have argument at index 1\n  at ["b"]',
       )
     })
@@ -224,9 +202,8 @@ describe("Node", () => {
     ] as [string, string, string][])("rejects %s", ([_, source, expected], {
       expect,
     }) => {
-      const r = decode(source)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(expected)
+      const r = err(decode(source))
+      expect(r.toString()).toEqual(expected)
     })
   })
 })
@@ -239,44 +216,38 @@ describe("Option", () => {
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts child node", ({ expect }) => {
-      const result = decode(`bundle { output "dist" }`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`bundle { output "dist" }`))
       expect(value.children.output.data.value).toEqual("dist")
       expect(value.children.output.source).toEqual("node")
     })
 
     test("accepts child node - span", ({ expect }) => {
-      const result = decode(`bundle { output "lib" }`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`bundle { output "lib" }`))
       expect(value.children.output.span).toEqual(SourceSpan.from(16, 5))
       expect(value.children.output.nameSpan).toEqual(SourceSpan.from(9, 6))
     })
 
     test("accepts property", ({ expect }) => {
-      const result = decode(`bundle output="bin"`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`bundle output="bin"`))
       expect(value.children.output.data.value).toEqual("bin")
       expect(value.children.output.source).toEqual("property")
     })
 
     test("accepts property - span", ({ expect }) => {
-      const result = decode(`bundle output="src"`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`bundle output="src"`))
       expect(value.children.output.span).toEqual(SourceSpan.from(14, 5))
       expect(value.children.output.nameSpan).toEqual(SourceSpan.from(7, 6))
     })
 
     test("prefers child over property", ({ expect }) => {
-      const result = decode(`bundle output="fallback" { output "primary" }`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`bundle output="fallback" { output "primary" }`))
       expect(value.children.output.data.value).toEqual("primary")
       expect(value.children.output.source).toEqual("node")
     })
 
     test("rejects when neither exists", ({ expect }) => {
-      const r = decode(`bundle`)
-      assert(r._tag === "Failure")
-      expect(r.failure.toString()).toEqual(
+      const r = err(decode(`bundle`))
+      expect(r.toString()).toEqual(
         'Expected node "bundle" to have either a child node or a property named "output"\n  at ["output"]',
       )
     })
@@ -289,15 +260,13 @@ describe("Option", () => {
     const decode = KdlSchema.decodeSourceResult(schema)
 
     test("accepts child node", ({ expect }) => {
-      const result = decode(`config { port 3000 }`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`config { port 3000 }`))
       expect(value.children.port.data.value).toEqual(3000)
       expect(value.children.port.source).toEqual("node")
     })
 
     test("accepts property", ({ expect }) => {
-      const result = decode(`config port=8080`)
-      const value = Result.getOrThrow(result)
+      const value = ok(decode(`config port=8080`))
       expect(value.children.port.data.value).toEqual(8080)
       expect(value.children.port.source).toEqual("property")
     })
@@ -312,8 +281,7 @@ describe("Many", () => {
   const decode = KdlSchema.decodeSourceResult(schema)
 
   test("accepts multiple nodes on separate lines", ({ expect }) => {
-    const result = decode(`item "a"\nitem "b"\nitem "c"`)
-    const value = Result.getOrThrow(result)
+    const value = ok(decode(`item "a"\nitem "b"\nitem "c"`))
     expect(value).toHaveLength(3)
     expect(value[0]?.children.value.data.value).toEqual("a")
     expect(value[1]?.children.value.data.value).toEqual("b")
@@ -321,8 +289,7 @@ describe("Many", () => {
   })
 
   test("accepts multiple nodes on same line with semicolons", ({ expect }) => {
-    const result = decode(`item "a"; item "b"; item "c"`)
-    const value = Result.getOrThrow(result)
+    const value = ok(decode(`item "a"; item "b"; item "c"`))
     expect(value).toHaveLength(3)
     expect(value[0]?.children.value.data.value).toEqual("a")
     expect(value[1]?.children.value.data.value).toEqual("b")
@@ -330,27 +297,24 @@ describe("Many", () => {
   })
 
   test("accepts single node", ({ expect }) => {
-    const result = decode(`item "only"`)
-    const value = Result.getOrThrow(result)
+    const value = ok(decode(`item "only"`))
     expect(value).toHaveLength(1)
     expect(value[0]?.children.value.data.value).toEqual("only")
   })
 
   test("accepts zero nodes", ({ expect }) => {
-    const result = decode(`other "something"`)
-    const value = Result.getOrThrow(result)
+    const value = ok(decode(`other "something"`))
     expect(value).toHaveLength(0)
   })
 
   test("errors: first (default)", ({ expect }) => {
-    const r = decode(`item "good"\nitem 42`)
+    const r = err(decode(`item "good"\nitem 42`))
     expect(r.toString()).toContain("Expected string, got 42")
   })
 
   test("errors: all - accumulates all errors", ({ expect }) => {
-    const r = decode(`item 1\nitem 2\nitem 3`, { errors: "all" })
-    assert(r._tag === "Failure")
-    assert(r.failure._tag === "Composite")
-    expect(r.failure.issues).toHaveLength(3)
+    const r = err(decode(`item 1\nitem 2\nitem 3`, { errors: "all" }))
+    assert(r._tag === "Composite")
+    expect(r.issues).toHaveLength(3)
   })
 })

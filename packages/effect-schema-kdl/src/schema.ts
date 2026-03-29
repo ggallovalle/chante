@@ -400,7 +400,7 @@ export const Node = <const Fields extends Children>(
 // biome-ignore lint/suspicious/noExplicitAny: I know
 export interface Many<Items extends Node<any>>
   extends Schema.declareConstructor<
-    Items["Type"][],
+    Array<Items["Type"]>,
     KdlNode,
     readonly [Items]
   > {
