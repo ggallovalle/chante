@@ -314,46 +314,40 @@ describe("Many", () => {
   test("accepts multiple nodes on separate lines", ({ expect }) => {
     const result = decode(`item "a"\nitem "b"\nitem "c"`)
     const value = Result.getOrThrow(result)
-    expect(value.items).toHaveLength(3)
-    expect(value.items[0]?.children.value.data.value).toEqual("a")
-    expect(value.items[1]?.children.value.data.value).toEqual("b")
-    expect(value.items[2]?.children.value.data.value).toEqual("c")
+    expect(value).toHaveLength(3)
+    expect(value[0]?.children.value.data.value).toEqual("a")
+    expect(value[1]?.children.value.data.value).toEqual("b")
+    expect(value[2]?.children.value.data.value).toEqual("c")
   })
 
   test("accepts multiple nodes on same line with semicolons", ({ expect }) => {
     const result = decode(`item "a"; item "b"; item "c"`)
     const value = Result.getOrThrow(result)
-    expect(value.items).toHaveLength(3)
-    expect(value.items[0]?.children.value.data.value).toEqual("a")
-    expect(value.items[1]?.children.value.data.value).toEqual("b")
-    expect(value.items[2]?.children.value.data.value).toEqual("c")
+    expect(value).toHaveLength(3)
+    expect(value[0]?.children.value.data.value).toEqual("a")
+    expect(value[1]?.children.value.data.value).toEqual("b")
+    expect(value[2]?.children.value.data.value).toEqual("c")
   })
 
   test("accepts single node", ({ expect }) => {
     const result = decode(`item "only"`)
     const value = Result.getOrThrow(result)
-    expect(value.items).toHaveLength(1)
-    expect(value.items[0]?.children.value.data.value).toEqual("only")
+    expect(value).toHaveLength(1)
+    expect(value[0]?.children.value.data.value).toEqual("only")
   })
 
   test("accepts zero nodes", ({ expect }) => {
     const result = decode(`other "something"`)
     const value = Result.getOrThrow(result)
-    expect(value.items).toHaveLength(0)
+    expect(value).toHaveLength(0)
   })
 
-  test("returns span of parent component", ({ expect }) => {
-    const result = decode(`item "a"\nitem "b"`)
-    const value = Result.getOrThrow(result)
-    expect(value.span).toEqual(SourceSpan.from(0, 17))
-  })
-
-  test.skip("errors: first (default)", ({ expect }) => {
+  test("errors: first (default)", ({ expect }) => {
     const r = decode(`item "good"\nitem 42`)
-    expect(r.toString()).toContain("Expected string")
+    expect(r.toString()).toContain("Expected string, got 42")
   })
 
-  test.skip("errors: all - accumulates all errors", ({ expect }) => {
+  test("errors: all - accumulates all errors", ({ expect }) => {
     const r = decode(`item 1\nitem 2\nitem 3`, { errors: "all" })
     assert(r._tag === "Failure")
     assert(r.failure._tag === "Composite")

@@ -385,7 +385,7 @@ export const Node = <const Fields extends Children>(
 // biome-ignore lint/suspicious/noExplicitAny: I know
 export interface Many<Items extends Node<any>>
   extends Schema.declareConstructor<
-    Model.Many<Items["Type"]>,
+    Items["Type"][],
     KdlNode,
     readonly [Items]
   > {
@@ -399,7 +399,7 @@ export const Many = <const Items extends Node<any>>(
   const nodeName = node.name
 
   const schema = Schema.declareConstructor<
-    Model.Many<Schema.Schema.Type<Items["children"]>>,
+    Schema.Schema.Type<Items["children"][]>,
     KdlNode | KdlDocument
   >()(
     [Schema.Array(node)],
@@ -420,11 +420,8 @@ export const Many = <const Items extends Node<any>>(
           options,
         )
 
-        return Effect.mapEager(parser, (value) => ({
-          // biome-ignore lint/suspicious/noExplicitAny: I know
-          items: value as any,
-          span: span(component),
-        }))
+        // biome-ignore lint/suspicious/noExplicitAny: I Know
+        return parser as any
       },
     { kdlComponent: "document", kdlNodeName: node.name },
   )

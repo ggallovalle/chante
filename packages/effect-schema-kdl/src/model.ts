@@ -50,8 +50,3 @@ export interface Option<T> {
   readonly span: SourceSpan | undefined
   readonly source: "node" | "property"
 }
-
-export interface Many<T> {
-  readonly items: readonly T[]
-  readonly span: SourceSpan | undefined
-}
