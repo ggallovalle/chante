@@ -62,8 +62,10 @@ export function Tabs({
   const [value, setValue] =
     _value === undefined
       ? // eslint-disable-next-line react-hooks/rules-of-hooks -- not supposed to change controlled/uncontrolled
+        // biome-ignore lint/correctness/useHookAtTopLevel: generated
         useState(defaultValue)
       : // eslint-disable-next-line react-hooks/rules-of-hooks -- not supposed to change controlled/uncontrolled
+        // biome-ignore lint/correctness/useHookAtTopLevel: generated
         [_value, useEffectEvent((v: string) => _onValueChange?.(v))]
 
   useLayoutEffect(() => {

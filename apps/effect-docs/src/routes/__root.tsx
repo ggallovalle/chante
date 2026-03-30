@@ -3,9 +3,9 @@ import {
   HeadContent,
   Outlet,
   Scripts,
-} from "@tanstack/react-router";
-import { RootProvider } from "fumadocs-ui/provider/tanstack";
-import appCss from "~/styles/app.css?url";
+} from "@tanstack/react-router"
+import { RootProvider } from "fumadocs-ui/provider/tanstack"
+import appCss from "~/styles/app.css?url"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -21,10 +21,13 @@ export const Route = createRootRoute({
         title: "@kbroom/effect",
       },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/svg+xml", href: "/icon.svg" },
+    ],
   }),
   component: RootComponent,
-});
+})
 
 function RootComponent() {
   return (
@@ -39,5 +42,5 @@ function RootComponent() {
         <Scripts />
       </body>
     </html>
-  );
+  )
 }

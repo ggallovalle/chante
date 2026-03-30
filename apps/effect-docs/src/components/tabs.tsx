@@ -135,10 +135,8 @@ export interface TabProps
 
 export function Tab({ value, ...props }: TabProps) {
   const { items } = useTabContext()
-  const resolved =
-    value ??
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- `value` is not supposed to change
-    items?.at(useCollectionIndex())
+  const collection = useCollectionIndex()
+  const resolved = value ?? items?.at(collection)
   if (!resolved)
     throw new Error(
       "Failed to resolve tab `value`, please pass a `value` prop to the Tab component.",

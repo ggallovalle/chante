@@ -44,8 +44,11 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.d.ts", "docs/effect/src/routeTree.gen.ts"],
+      "includes": ["**/*.d.ts", "apps/effect-docs/src/routeTree.gen.ts"],
       "linter": {
+        "enabled": false
+      },
+      "formatter": {
         "enabled": false
       }
     },

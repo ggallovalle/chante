@@ -82,5 +82,5 @@ bunx --bun @biomejs/biome check --write --unsafe
 > Start the dev server for docs/effect
 
 ```bash
-cd docs/effect && bun run dev
+cd apps/effect-docs && bun run dev
 ```

@@ -1,4 +1,4 @@
-export const appName = "Tanstack Start"
+export const appName = "@kbroom/effect"
 export const docsRoute = "/docs"
 export const docsImageRoute = "/og/docs"
 export const docsContentRoute = "/llms.mdx/docs"
@@ -8,4 +8,5 @@ export const gitConfig = {
   user: "ggallovalle",
   repo: "chanet",
   branch: "main",
+  directory: "packages/effect",
 }

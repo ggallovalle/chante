@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { HomeLayout } from "fumadocs-ui/layouts/home";
-import { baseOptions } from "~/lib/layout.shared";
+import { createFileRoute, Link } from "@tanstack/react-router"
+import { HomeLayout } from "fumadocs-ui/layouts/home"
+import { baseOptions } from "~/lib/layout.shared"
 
 export const Route = createFileRoute("/")({
   component: Home,
-});
+})
 
 function Home() {
   return (
@@ -22,5 +22,5 @@ function Home() {
         </Link>
       </div>
     </HomeLayout>
-  );
+  )
 }
