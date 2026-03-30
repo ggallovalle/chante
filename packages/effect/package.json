@@ -27,6 +27,10 @@
       "types": "./dist/uwu/bun.d.ts",
       "import": "./dist/uwu/bun.js"
     },
+    "./uwu/node": {
+      "types": "./dist/uwu/node.d.ts",
+      "import": "./dist/uwu/node.js"
+    },
     "./miette": {
       "types": "./dist/miette.d.ts",
       "import": "./dist/miette.js"

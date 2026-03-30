@@ -6,6 +6,7 @@ export default defineConfig([
       "testing/vitest": "src/testing/vitest/index.ts",
       uwu: "src/uwu/index.ts",
       "uwu/bun": "src/uwu/bun.ts",
+      "uwu/node": "src/uwu/node.ts",
       miette: "src/miette/index.ts",
       kdl: "src/kdl/index.ts",
     },

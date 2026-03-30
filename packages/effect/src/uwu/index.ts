@@ -1,35 +1,9 @@
-import { Effect, Layer, Schema, ServiceMap } from "effect"
-import * as colors from "./colors.js"
+import { Effect, Layer, Match, Schema, ServiceMap } from "effect"
+import { getRuntime } from "~/internal/detect-runtime.js"
 
-export const TextEffect = Schema.Literals([
-  "bold",
-  "dimmed",
-  "italic",
-  "underline",
-  "blink",
-  "blinkFast",
-  "reversed",
-  "hidden",
-  "strikethrough",
-])
-export type TextEffect = Schema.Schema.Type<typeof TextEffect>
+import { Color, colors, TextEffect } from "./colors.js"
 
-export const Color = Schema.TaggedUnion({
-  css: { value: Schema.String },
-  ansi: { value: Schema.Finite },
-  hex: { value: Schema.Finite },
-})
-
-export const ansi = (code: number): Color =>
-  Color.cases.ansi.makeUnsafe({ value: code })
-
-export const css = (value: string): Color =>
-  Color.cases.css.makeUnsafe({ value })
-
-export const hex = (code: number): Color =>
-  Color.cases.ansi.makeUnsafe({ value: code })
-
-export type Color = Schema.Schema.Type<typeof Color>
+export { ansi, Color, colors, css, hex, TextEffect } from "./colors.js"
 
 export class Style extends Schema.Class<Style>("@kbroom/effect/uwu/Style")({
   fg: Schema.optional(Color),
@@ -38,18 +12,8 @@ export class Style extends Schema.Class<Style>("@kbroom/effect/uwu/Style")({
   effects: Schema.optional(Schema.HashSet(TextEffect)),
 }) {}
 
-export class Styled extends Schema.Class<Styled>("@kbroom/effect/uwu/Styled")({
-  style: Style,
-  prefix: Schema.String,
-  sufix: Schema.String,
-}) {
-  stiled(value: unknown): string {
-    return `${this.prefix}${String(value)}${this.sufix}`
-  }
-}
-
 export interface IStyler {
-  styled(style: Style): Styled
+  styled(style: Style): (value: unknown) => string
 }
 
 export class Styler extends ServiceMap.Service<Styler, IStyler>()(
@@ -57,28 +21,15 @@ export class Styler extends ServiceMap.Service<Styler, IStyler>()(
 ) {}
 
 export class NoopStyler implements IStyler {
-  styled(style: Style): Styled {
-    return new Styled({
-      prefix: "",
-      style,
-      sufix: "",
-    })
+  styled(_style: Style): (value: unknown) => string {
+    return (value) => `${value}`
   }
 }
-
-export const NooopStylerLayer = Layer.effect(
-  Styler,
-  Effect.sync(() => new NoopStyler()),
-)
 
 export interface IColorizer {
   success(value: unknown): string
   error(value: unknown): string
   warning(value: unknown): string
-
-  red(value: unknown): string
-  green(value: unknown): string
-  yellow(value: unknown): string
 }
 
 export class Colorizer extends ServiceMap.Service<Colorizer, IColorizer>()(
@@ -86,7 +37,11 @@ export class Colorizer extends ServiceMap.Service<Colorizer, IColorizer>()(
 ) {}
 
 export class DefaultColorizer implements IColorizer {
-  styled: { red: Styled; green: Styled; yellow: Styled }
+  styled: {
+    red: (value: unknown) => string
+    green: (value: unknown) => string
+    yellow: (value: unknown) => string
+  }
 
   constructor(styler: IStyler) {
     this.styled = {
@@ -96,31 +51,49 @@ export class DefaultColorizer implements IColorizer {
     }
   }
   success(value: unknown): string {
-    return this.styled.green.stiled(value)
+    return this.styled.green(value)
   }
   error(value: unknown): string {
-    return this.styled.red.stiled(value)
+    return this.styled.red(value)
   }
   warning(value: unknown): string {
-    return this.styled.yellow.stiled(value)
-  }
-  red(value: unknown): string {
-    return this.styled.red.stiled(value)
-  }
-  green(value: unknown): string {
-    return this.styled.green.stiled(value)
-  }
-  yellow(value: unknown): string {
-    return this.styled.yellow.stiled(value)
+    return this.styled.yellow(value)
   }
 }
 
-export const ColorizerDefaultLayer = Layer.effect(
-  Colorizer,
-  Effect.gen(function* () {
-    const styler = yield* Styler
-    return new DefaultColorizer(styler)
-  }),
-)
+export const layerWith = (
+  factory: (styler: IStyler) => Effect.Effect<IColorizer>,
+) => {
+  return Layer.effectServices(
+    Effect.gen(function* () {
+      const runtime = getRuntime()
+      const styler = yield* Match.value(runtime).pipe(
+        Match.when("node", () =>
+          Effect.promise(() =>
+            import("./node.js").then((m) => new m.AnsiNodeStyler() as IStyler),
+          ),
+        ),
+        Match.when("bun", () =>
+          Effect.promise(() =>
+            import("./bun.js").then((m) => new m.AnsiBunStyler() as IStyler),
+          ),
+        ),
+        Match.orElse(() => Effect.succeed(new NoopStyler())),
+      )
 
-export * as colors from "./colors.js"
+      const colorizer = yield* factory(styler)
+
+      return ServiceMap.makeUnsafe<IColorizer | IStyler>(
+        new Map([
+          [Styler.key, styler],
+          [Colorizer.key, colorizer],
+          // biome-ignore lint/suspicious/noExplicitAny: I Know
+        ] as any),
+      )
+    }),
+  )
+}
+
+export const layer = layerWith((styler) =>
+  Effect.succeed(new DefaultColorizer(styler)),
+)

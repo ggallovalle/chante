@@ -1,15 +1,9 @@
 import { Effect, Layer } from "effect"
 import { effectToAnsi } from "./ansi.js"
-import {
-  type Color,
-  type IStyler,
-  type Style,
-  Styled,
-  Styler,
-} from "./index.js"
+import { type Color, type IStyler, type Style, Styler } from "./index.js"
 
 export class AnsiBunStyler implements IStyler {
-  styled(style: Style): Styled {
+  styled(style: Style): (value: unknown) => string {
     let prefix = ""
 
     if (style.fg) {
@@ -33,7 +27,7 @@ export class AnsiBunStyler implements IStyler {
 
     const sufix = prefix === "" ? "" : "\x1b[0m"
 
-    return new Styled({ style, prefix, sufix })
+    return (value) => `${prefix}${value}${sufix}`
   }
 }
 
