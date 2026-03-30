@@ -1,5 +1,7 @@
 import { HashSet, Schema } from "effect"
-import { ansi, type IStyler, Style, Styled } from "../../uwu/index.js"
+import { isColorEnabled, isTty } from "~/internal/detect-runtime.js"
+import type { Severity } from "~/miette/diagnostic.js"
+import { ansi, type IStyler, Style } from "~/uwu/index.js"
 
 export class ThemeCharacters extends Schema.Class<ThemeCharacters>(
   "miette/ThemeCharacters",
@@ -108,102 +110,83 @@ export class ThemeCharacters extends Schema.Class<ThemeCharacters>(
 export class ThemeStyles extends Schema.Class<ThemeStyles>(
   "miette/ThemeStyles",
 )({
-  error: Styled,
-  warning: Styled,
-  advice: Styled,
-  help: Styled,
-  link: Styled,
-  linum: Styled,
-  highlights: Schema.Array(Styled),
+  error: Style,
+  warning: Style,
+  advice: Style,
+  help: Style,
+  link: Style,
+  linum: Style,
+  highlights: Schema.Array(Style),
 }) {
-  static ansi(styler: IStyler): ThemeStyles {
+  static ansi(): ThemeStyles {
     return new ThemeStyles({
-      error: styler.styled(
-        new Style({
-          fg: ansi(31),
-          bg: undefined,
-          bold: false,
-          effects: HashSet.empty(),
-        }),
-      ),
-      warning: styler.styled(
-        new Style({
-          fg: ansi(33),
-          bg: undefined,
-          bold: false,
-          effects: HashSet.empty(),
-        }),
-      ),
-      advice: styler.styled(
-        new Style({
-          fg: ansi(36),
-          bg: undefined,
-          bold: false,
-          effects: HashSet.empty(),
-        }),
-      ),
-      help: styler.styled(
-        new Style({
-          fg: ansi(36),
-          bg: undefined,
-          bold: false,
-          effects: HashSet.empty(),
-        }),
-      ),
-      link: styler.styled(
-        new Style({
-          fg: ansi(36),
-          bg: undefined,
-          bold: true,
-          effects: HashSet.fromIterable(["underline"] as const),
-        }),
-      ),
-      linum: styler.styled(
-        new Style({
-          fg: undefined,
-          bg: undefined,
-          bold: false,
-          effects: HashSet.fromIterable(["dimmed"] as const),
-        }),
-      ),
-      highlights: [
-        styler.styled(
-          new Style({
-            fg: ansi(35),
-            bg: undefined,
-            bold: true,
-            effects: HashSet.empty(),
-          }),
-        ),
-        styler.styled(
-          new Style({
-            fg: ansi(33),
-            bg: undefined,
-            bold: true,
-            effects: HashSet.empty(),
-          }),
-        ),
-        styler.styled(
-          new Style({
-            fg: ansi(32),
-            bg: undefined,
-            bold: true,
-            effects: HashSet.empty(),
-          }),
-        ),
-      ],
-    })
-  }
-
-  static none(styler: IStyler): ThemeStyles {
-    const plain = styler.styled(
-      new Style({
-        fg: undefined,
+      error: new Style({
+        fg: ansi(31),
         bg: undefined,
         bold: false,
         effects: HashSet.empty(),
       }),
-    )
+      warning: new Style({
+        fg: ansi(33),
+        bg: undefined,
+        bold: false,
+        effects: HashSet.empty(),
+      }),
+      advice: new Style({
+        fg: ansi(36),
+        bg: undefined,
+        bold: false,
+        effects: HashSet.empty(),
+      }),
+      help: new Style({
+        fg: ansi(36),
+        bg: undefined,
+        bold: false,
+        effects: HashSet.empty(),
+      }),
+      link: new Style({
+        fg: ansi(36),
+        bg: undefined,
+        bold: true,
+        effects: HashSet.fromIterable(["underline"] as const),
+      }),
+      linum: new Style({
+        fg: undefined,
+        bg: undefined,
+        bold: false,
+        effects: HashSet.fromIterable(["dimmed"] as const),
+      }),
+      highlights: [
+        new Style({
+          fg: ansi(35),
+          bg: undefined,
+          bold: true,
+          effects: HashSet.empty(),
+        }),
+        new Style({
+          fg: ansi(33),
+          bg: undefined,
+          bold: true,
+          effects: HashSet.empty(),
+        }),
+        new Style({
+          fg: ansi(32),
+          bg: undefined,
+          bold: true,
+          effects: HashSet.empty(),
+        }),
+      ],
+    })
+  }
+
+  static none(): ThemeStyles {
+    const plain = new Style({
+      fg: undefined,
+      bg: undefined,
+      bold: false,
+      effects: HashSet.empty(),
+    })
+
     return new ThemeStyles({
       error: plain,
       warning: plain,
@@ -214,6 +197,28 @@ export class ThemeStyles extends Schema.Class<ThemeStyles>(
       highlights: [plain],
     })
   }
+
+  buildColorer(styler: IStyler) {
+    return {
+      error: styler.styled(this.error),
+      warning: styler.styled(this.warning),
+      advice: styler.styled(this.advice),
+      help: styler.styled(this.help),
+      link: styler.styled(this.link),
+      linum: styler.styled(this.linum),
+      highlights: this.highlights.map((s) => styler.styled(s)),
+      pickFromSeverity(severity: Severity) {
+        switch (severity) {
+          case "warning":
+            return this.warning
+          case "advice":
+            return this.advice
+          default:
+            return this.error
+        }
+      },
+    }
+  }
 }
 
 export class GraphicalTheme extends Schema.Class<GraphicalTheme>(
@@ -222,47 +227,44 @@ export class GraphicalTheme extends Schema.Class<GraphicalTheme>(
   characters: ThemeCharacters,
   styles: ThemeStyles,
 }) {
-  static ascii(styler: IStyler): GraphicalTheme {
+  static ascii(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.ascii(),
-      styles: ThemeStyles.ansi(styler),
+      styles: ThemeStyles.ansi(),
     })
   }
 
-  static unicode(styler: IStyler): GraphicalTheme {
+  static unicode(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.unicode(),
-      styles: ThemeStyles.ansi(styler),
+      styles: ThemeStyles.ansi(),
     })
   }
 
-  static unicodeNoColor(styler: IStyler): GraphicalTheme {
+  static unicodeNoColor(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.unicode(),
-      styles: ThemeStyles.none(styler),
+      styles: ThemeStyles.none(),
     })
   }
 
-  static none(styler: IStyler): GraphicalTheme {
+  static none(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.ascii(),
-      styles: ThemeStyles.none(styler),
+      styles: ThemeStyles.none(),
     })
   }
 
-  static emoji(styler: IStyler): GraphicalTheme {
+  static emoji(): GraphicalTheme {
     return new GraphicalTheme({
       characters: ThemeCharacters.emoji(),
-      styles: ThemeStyles.ansi(styler),
+      styles: ThemeStyles.ansi(),
     })
   }
 
-  static default(styler: IStyler): GraphicalTheme {
-    const noColor = process.env["NO_COLOR"]
-    const isTty = Boolean(process.stdout?.isTTY && process.stderr?.isTTY)
-
-    if (!isTty) return GraphicalTheme.none(styler)
-    if (noColor && noColor !== "0") return GraphicalTheme.unicodeNoColor(styler)
-    return GraphicalTheme.unicode(styler)
+  static default(): GraphicalTheme {
+    if (!isTty()) return GraphicalTheme.none()
+    if (!isColorEnabled()) return GraphicalTheme.unicodeNoColor()
+    return GraphicalTheme.unicode()
   }
 }

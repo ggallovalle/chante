@@ -6,6 +6,8 @@ const TypeId = "~miette/Diagnostic"
 export const isDiagnostic = (u: unknown): u is Diagnostic =>
   Predicate.hasProperty(u, TypeId)
 
+export type Severity = "advice" | "warning" | "error" | undefined
+
 export class Diagnostic extends Schema.ErrorClass(TypeId)({
   _tag: Schema.tag("Diagnostic"),
   info: Schema.String,

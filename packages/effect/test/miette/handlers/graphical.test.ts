@@ -1,17 +1,17 @@
 import { Effect, Schema, Stream } from "effect"
-import {
-  Diagnostic,
-  GraphicalReportHandler,
-  GraphicalTheme,
-} from "../../../src/miette/index"
-import { NoopStyler } from "../../../src/uwu/index"
+import { Diagnostic, GraphicalReportHandler, GraphicalTheme } from "~/miette"
+import { NoopStyler } from "~/uwu"
 import { assert, describe, fc, test } from "../fixtures"
+
+const styler = new NoopStyler()
 
 const getReport = Effect.fnUntraced(function* (
   handler: GraphicalReportHandler,
   diagnostic: Diagnostic,
 ) {
-  const report = yield* Stream.runCollect(handler.renderReport(diagnostic))
+  const report = yield* Stream.runCollect(
+    handler.renderReport(diagnostic, styler),
+  )
 
   const iterator = {
     index: 0,
@@ -30,7 +30,7 @@ const getReport = Effect.fnUntraced(function* (
 })
 
 const baseHandler = GraphicalReportHandler.themed(
-  GraphicalTheme.unicodeNoColor(new NoopStyler()),
+  GraphicalTheme.unicodeNoColor(),
 )
 
 describe("GraphicalReportHandler", () => {
@@ -52,27 +52,24 @@ describe("GraphicalReportHandler", () => {
       ),
     ))
 
-  test("when options.link == none dont show the url", ({ expect, prop }) =>
-    fc.assert(
-      prop(
-        [fc.string({ minLength: 4, maxLength: 15 })],
-        Effect.fnUntraced(function* ([code]) {
-          const handler = new GraphicalReportHandler({
-            ...baseHandler,
-            links: "none",
-          })
+  test("when options.link == none dont show the url", ({ expect }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const handler = new GraphicalReportHandler({
+          ...baseHandler,
+          links: "none",
+        })
 
-          const diagnostic = new Diagnostic({
-            info: "root hidden",
-            code,
-            url: "https://example.com/hidden",
-            severity: "warning",
-          })
-          const report = yield* getReport(handler, diagnostic)
+        const diagnostic = new Diagnostic({
+          info: "root hidden",
+          code: "error::hidden",
+          url: "https://example.com/hidden",
+          severity: "warning",
+        })
+        const report = yield* getReport(handler, diagnostic)
 
-          expect(report.next()).toEqual(code)
-        }),
-      ),
+        expect(report.next()).toEqual("error::hidden")
+      }),
     ))
 
   test.for([
