@@ -1,7 +1,7 @@
 import { docs } from "collections/server"
 import { type InferPageType, loader } from "fumadocs-core/source"
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons"
-import { docsContentRoute, docsRoute } from "./shared"
+import { appName, docsContentRoute, docsRoute, gitConfig } from "./shared"
 
 export const source = loader({
   source: docs.toFumadocsSource(),
@@ -20,8 +20,14 @@ export function getPageMarkdownUrl(page: InferPageType<typeof source>) {
 
 export async function getLLMText(page: InferPageType<typeof source>) {
   const processed = await page.data.getText("processed")
+  const module = page.slugs[0] ?? ""
+  const category = `${appName}/${module}`
 
-  return `# ${page.data.title} (${page.url})
+  return `# ${category}: ${page.data.title}
+URL: ${page.url}
+Source: ${gitConfig.rawPath(page.data.info.fullPath)}
+
+${page.data.description ?? ""}
 
 ${processed}`
 }

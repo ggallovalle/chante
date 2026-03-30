@@ -9,4 +9,11 @@ export const gitConfig = {
   repo: "chante",
   branch: "main",
   directory: "packages/effect",
+  directoryDocs: "apps/effect-docs",
+  get url() {
+    return `https://github.com/${gitConfig.user}/${gitConfig.repo}/tree/${gitConfig.branch}/${gitConfig.directory}`
+  },
+  rawPath(path: string) {
+    return `https://raw.githubusercontent.com/${gitConfig.user}/${gitConfig.repo}/refs/heads/${gitConfig.branch}/${gitConfig.directoryDocs}/${path}`
+  },
 }
