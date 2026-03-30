@@ -1,6 +1,6 @@
-import { Effect, Layer, Match, Schema, ServiceMap } from "effect"
+import { Effect, HashSet, Layer, Match, Schema, ServiceMap } from "effect"
 import { getRuntime } from "~/internal/detect-runtime.js"
-
+import type { Severity } from "~/miette/diagnostic.js"
 import { Color, colors, TextEffect } from "./colors.js"
 
 export { ansi, Color, colors, css, hex, TextEffect } from "./colors.js"
@@ -27,9 +27,13 @@ export class NoopStyler implements IStyler {
 }
 
 export interface IColorizer {
+  diagnostic(severity: Severity, value: unknown): string
   success(value: unknown): string
   error(value: unknown): string
   warning(value: unknown): string
+  help(value: unknown): string
+  link(value: unknown): string
+  lineNumber(value: unknown): string
 }
 
 export class Colorizer extends ServiceMap.Service<Colorizer, IColorizer>()(
@@ -37,27 +41,77 @@ export class Colorizer extends ServiceMap.Service<Colorizer, IColorizer>()(
 ) {}
 
 export class DefaultColorizer implements IColorizer {
-  styled: {
-    red: (value: unknown) => string
-    green: (value: unknown) => string
-    yellow: (value: unknown) => string
-  }
+  success: (value: unknown) => string
+  error: (value: unknown) => string
+  warning: (value: unknown) => string
+  help: (value: unknown) => string
+  link: (value: unknown) => string
+  lineNumber: (value: unknown) => string
 
   constructor(styler: IStyler) {
-    this.styled = {
-      red: styler.styled(new Style({ fg: colors.red })),
-      green: styler.styled(new Style({ fg: colors.green })),
-      yellow: styler.styled(new Style({ fg: colors.yellow })),
+    this.success = styler.styled(new Style({ fg: colors.green }))
+    this.error = styler.styled(new Style({ fg: colors.red }))
+    this.warning = styler.styled(new Style({ fg: colors.yellow }))
+    this.help = styler.styled(new Style({ fg: colors.cyan }))
+    this.link = styler.styled(
+      new Style({
+        fg: colors.cyan,
+        bold: true,
+        effects: HashSet.fromIterable(["underline"] as const),
+      }),
+    )
+    this.lineNumber = styler.styled(
+      new Style({
+        effects: HashSet.fromIterable(["dimmed"] as const),
+      }),
+    )
+    // highlights: [
+    //   new Style({
+    //     fg: colors.magenta,
+    //     bold: true,
+    //   }),
+    //   new Style({
+    //     fg: colors.yellow,
+    //     bold: true,
+    //   }),
+    //   new Style({
+    //     fg: colors.green,
+    //     bold: true,
+    //   }),
+    // ],
+  }
+  diagnostic(severity: Severity, value: unknown): string {
+    if (severity === "warning") {
+      return this.warning(value)
     }
+    if (severity === "advice") {
+      return this.help(value)
+    }
+    return this.error(value)
+  }
+}
+
+export class NoopColorizer implements IColorizer {
+  diagnostic(_severity: Severity, value: unknown): string {
+    return `${value}`
   }
   success(value: unknown): string {
-    return this.styled.green(value)
+    return `${value}`
   }
   error(value: unknown): string {
-    return this.styled.red(value)
+    return `${value}`
   }
   warning(value: unknown): string {
-    return this.styled.yellow(value)
+    return `${value}`
+  }
+  help(value: unknown): string {
+    return `${value}`
+  }
+  link(value: unknown): string {
+    return `${value}`
+  }
+  lineNumber(value: unknown): string {
+    return `${value}`
   }
 }
 

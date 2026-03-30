@@ -1,16 +1,16 @@
 import { Effect, Schema, Stream } from "effect"
-import { Diagnostic, GraphicalReportHandler, GraphicalTheme } from "~/miette"
-import { NoopStyler } from "~/uwu"
+import { Diagnostic, GraphicalReportHandler, ThemeCharacters } from "~/miette"
+import { NoopColorizer } from "~/uwu"
 import { assert, describe, fc, test } from "../fixtures"
 
-const styler = new NoopStyler()
+const colorizer = new NoopColorizer()
 
 const getReport = Effect.fnUntraced(function* (
   handler: GraphicalReportHandler,
   diagnostic: Diagnostic,
 ) {
   const report = yield* Stream.runCollect(
-    handler.renderReport(diagnostic, styler),
+    handler.renderReport(diagnostic, colorizer),
   )
 
   const iterator = {
@@ -29,9 +29,7 @@ const getReport = Effect.fnUntraced(function* (
   return iterator
 })
 
-const baseHandler = GraphicalReportHandler.themed(
-  GraphicalTheme.unicodeNoColor(),
-)
+const baseHandler = GraphicalReportHandler.themed(ThemeCharacters.unicode())
 
 describe("GraphicalReportHandler", () => {
   test("header includes the code and the url", ({ expect, prop }) =>
@@ -145,6 +143,8 @@ describe("GraphicalReportHandler", () => {
           links: "none",
         })
         const report = yield* getReport(handler, root)
+        // const iter = report.values[Symbol.iterator]()
+        // iter.next().value
 
         expect(report.next()).toEqual("  × root")
         expect(report.next()).toEqual("  ├─▶ inner")

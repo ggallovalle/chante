@@ -1,12 +1,12 @@
 import { Schema } from "effect"
-import { GraphicalTheme } from "./theme.js"
+import { ThemeCharacters } from "./theme.js"
 
 export class MietteHandlerOpts extends Schema.Class<MietteHandlerOpts>(
   "miette/MietteHandlerOpts",
 )({
   linkify: Schema.optional(Schema.Boolean),
   width: Schema.optional(Schema.Number),
-  theme: Schema.optional(GraphicalTheme),
+  theme: Schema.optional(ThemeCharacters),
   color: Schema.optional(Schema.Boolean),
   unicode: Schema.optional(Schema.Boolean),
   footer: Schema.optional(Schema.String),

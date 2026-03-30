@@ -7,11 +7,7 @@ export {
 } from "./error.js"
 export { GraphicalReportHandler } from "./handlers/graphical.js"
 export { MietteHandlerOpts } from "./handlers/handler.js"
-export {
-  GraphicalTheme,
-  ThemeCharacters,
-  ThemeStyles,
-} from "./handlers/theme.js"
+export { ThemeCharacters } from "./handlers/theme.js"
 export {
   LabeledSpan,
   SourceSpan,

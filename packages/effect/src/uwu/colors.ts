@@ -31,7 +31,12 @@ export const hex = (code: number): Color =>
 export type Color = Schema.Schema.Type<typeof Color>
 
 export const colors = {
-  red: css("red"),
-  green: css("green"),
-  yellow: css("yellow"),
+  black: css("black"), // ansi 30
+  red: css("red"), // ansi 31
+  green: css("green"), // ansi 32
+  yellow: css("yellow"), // ansi 33
+  blue: css("blue"), // ansi 34
+  magenta: css("magenta"), // ansi 35
+  cyan: css("cyan"), // ansi 36
+  white: css("white"), // ansi 37
 }
