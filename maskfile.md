@@ -3,6 +3,7 @@
 Development tasks for `chante`
 
 ## deps
+
 > Commands related to manage dependencies
 
 ### deps install
@@ -18,13 +19,14 @@ bun install
 > Add dependency
 
 **OPTIONS**
-* dev
-    * flags: --dev
-    * desc: Dev dependency
-* version
-    * flags: --version
-    * type: string
-    * desc: Package version
+
+- dev
+    - flags: --dev
+    - desc: Dev dependency
+- version
+    - flags: --version
+    - type: string
+    - desc: Package version
 
 ```bash
 spec="$package"
@@ -40,6 +42,7 @@ fi
 ```
 
 ## build
+
 > Build all packages with turbo
 
 ```bash
@@ -47,6 +50,7 @@ bunx turbo run build
 ```
 
 ## check
+
 > Type check all packages with turbo
 
 ```bash
@@ -54,6 +58,7 @@ bunx turbo run check
 ```
 
 ## test
+
 > Test all packages with turbo
 
 ```bash
@@ -61,8 +66,21 @@ bunx turbo run test
 ```
 
 ## lint
+
 > Run Biome lint/format with unsafe fixes
 
 ```bash
 bunx --bun @biomejs/biome check --write --unsafe
+```
+
+## docs
+
+> Development tasks for documentation websites
+
+### dev
+
+> Start the dev server for docs/effect
+
+```bash
+cd docs/effect && bun run dev
 ```

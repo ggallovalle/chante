@@ -44,7 +44,7 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.d.ts"],
+      "includes": ["**/*.d.ts", "docs/effect/src/routeTree.gen.ts"],
       "linter": {
         "enabled": false
       }
