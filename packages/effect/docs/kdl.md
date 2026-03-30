@@ -11,7 +11,7 @@ Effect Schema integration for [KDL](https://kdl.dev). Provides bidirectional con
 
 ## Examples
 
-See `examples/` for complete examples:
+See `examples/kdl/` for complete examples:
 
-- `examples/package-json.ts` - Package.json-like schema with scripts and dependencies
-- `examples/niri.ts` - Niri window manager configuration schema
+- `examples/kdl/package-json.ts` - Package.json-like schema with scripts and dependencies
+- `examples/kdl/niri.ts` - Niri window manager configuration schema

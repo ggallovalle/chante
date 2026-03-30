@@ -14,29 +14,26 @@
     "url": "https://github.com/ggallovalle/chante/issues",
     "email": "ggallovalle@gmail.com"
   },
-  "main": "./dist/testing/vitest/index.js",
-  "module": "./dist/testing/vitest/index.js",
-  "types": "./dist/testing/vitest/index.d.ts",
   "exports": {
     "./testing/vitest": {
-      "types": "./dist/testing/vitest/index.d.ts",
-      "import": "./dist/testing/vitest/index.js"
+      "types": "./dist/testing/vitest.d.ts",
+      "import": "./dist/testing/vitest.js"
     },
     "./uwu": {
-      "types": "./dist/uwu/index.d.ts",
-      "import": "./dist/uwu/index.js"
+      "types": "./dist/uwu.d.ts",
+      "import": "./dist/uwu.js"
     },
     "./uwu/bun": {
       "types": "./dist/uwu/bun.d.ts",
       "import": "./dist/uwu/bun.js"
     },
     "./miette": {
-      "types": "./dist/miette/index.d.ts",
-      "import": "./dist/miette/index.js"
+      "types": "./dist/miette.d.ts",
+      "import": "./dist/miette.js"
     },
     "./kdl": {
-      "types": "./dist/kdl/index.d.ts",
-      "import": "./dist/kdl/index.js"
+      "types": "./dist/kdl.d.ts",
+      "import": "./dist/kdl.js"
     }
   },
   "files": [
