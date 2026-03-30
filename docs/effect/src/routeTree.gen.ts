@@ -9,12 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
-import { Route as LlmsDottxtRouteImport } from "./routes/llms[.]txt"
-import { Route as LlmsFullDottxtRouteImport } from "./routes/llms-full[.]txt"
-import { Route as IndexRouteImport } from "./routes/index"
-import { Route as DocsSplatRouteImport } from "./routes/docs/$"
 import { Route as ApiSearchRouteImport } from "./routes/api/search"
+import { Route as DocsSplatRouteImport } from "./routes/docs/$"
+import { Route as IndexRouteImport } from "./routes/index"
+import { Route as LlmsFullDottxtRouteImport } from "./routes/llms-full[.]txt"
 import { Route as LlmsDotmdxDocsSplatRouteImport } from "./routes/llms[.]mdx.docs.$"
+import { Route as LlmsDottxtRouteImport } from "./routes/llms[.]txt"
 
 const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
   id: "/llms.txt",
@@ -169,6 +169,7 @@ export const routeTree = rootRouteImport
 
 import type { getRouter } from "./router.tsx"
 import type { startInstance } from "./start.ts"
+
 declare module "@tanstack/react-start" {
   interface Register {
     ssr: true
