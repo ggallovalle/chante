@@ -27,7 +27,7 @@
 | Command | Purpose |
 |---------|---------|
 | `mask docs dev` | Start dev server (from root) |
-| `bun run dev` | Start dev server (from docs/effect) |
+| `bun run dev` | Start dev server (from apps/effect-docs) |
 | `bun run build` | Build for production |
 | `bun run types:check` | Type check MDX content |
 
@@ -36,7 +36,7 @@
 ### Directory
 
 ```
-docs/effect/
+apps/effect-docs/
 ├── content/docs/          # MDX documentation files
 │   ├── index.mdx          # → /docs/
 │   ├── getting-started.mdx # → /docs/getting-started
