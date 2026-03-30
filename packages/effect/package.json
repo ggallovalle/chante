@@ -1,0 +1,70 @@
+{
+  "name": "@kbroom/effect",
+  "version": "0.0.1",
+  "type": "module",
+  "license": "MIT",
+  "author": "Gerson Gallo <ggallovalle@gmail.com>",
+  "description": "A collection of Effect utilities and integrations.",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ggallovalle/chante.git",
+    "directory": "packages/effect"
+  },
+  "bugs": {
+    "url": "https://github.com/ggallovalle/chante/issues",
+    "email": "ggallovalle@gmail.com"
+  },
+  "main": "./dist/testing/vitest/index.js",
+  "module": "./dist/testing/vitest/index.js",
+  "types": "./dist/testing/vitest/index.d.ts",
+  "exports": {
+    "./testing/vitest": {
+      "types": "./dist/testing/vitest/index.d.ts",
+      "import": "./dist/testing/vitest/index.js"
+    },
+    "./uwu": {
+      "types": "./dist/uwu/index.d.ts",
+      "import": "./dist/uwu/index.js"
+    },
+    "./uwu/bun": {
+      "types": "./dist/uwu/bun.d.ts",
+      "import": "./dist/uwu/bun.js"
+    },
+    "./miette": {
+      "types": "./dist/miette/index.d.ts",
+      "import": "./dist/miette/index.js"
+    },
+    "./kdl": {
+      "types": "./dist/kdl/index.d.ts",
+      "import": "./dist/kdl/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsup",
+    "test": "bunx --bun vitest run"
+  },
+  "peerDependencies": {
+    "effect": "catalog:effect"
+  },
+  "optionalPeerDependencies": {
+    "vitest": "catalog:vite"
+  },
+  "dependencies": {
+    "wrap-ansi": "^9.0.0",
+    "@bgotink/kdl": "^0.4.0"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:typescript",
+    "tsup": "catalog:typescript",
+    "typescript": "catalog:typescript",
+    "vitest": "catalog:vite"
+  },
+  "engines": {
+    "bun": ">=1.2.14",
+    "node": ">=18"
+  }
+}

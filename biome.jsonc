@@ -53,7 +53,7 @@
       // vitest support {} destructuring of no dependencies
       "includes": [
         "packages/**/test/**/*.{ts,tsx,js,jsx}",
-        "packages/effect-vitest/src/**/*.{ts,tsx,js,jsx}"
+        "packages/effect/src/testing/vitest/**/*.{ts,tsx,js,jsx}"
       ],
       "linter": {
         "rules": {

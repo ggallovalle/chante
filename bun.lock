@@ -20,75 +20,26 @@
       },
       "dependencies": {
         "@effect/platform-node": "catalog:effect",
-        "@kbroom/effect-schema-kdl": "workspace:*",
-        "@kbroom/effect-schema-miette": "workspace:*",
+        "@kbroom/effect": "workspace:*",
         "@shikijs/cli": "^4.0.2",
         "effect": "catalog:effect",
         "wrap-ansi": "^9.0.0",
       },
       "devDependencies": {
-        "@kbroom/effect-vitest": "workspace:*",
         "@types/bun": "catalog:typescript",
         "@types/node": "catalog:typescript",
         "tsup": "catalog:typescript",
         "vitest": "catalog:vite",
       },
     },
-    "packages/effect-schema-kdl": {
-      "name": "@kbroom/effect-schema-kdl",
+    "packages/effect": {
+      "name": "@kbroom/effect",
       "version": "0.0.1",
       "dependencies": {
         "@bgotink/kdl": "^0.4.0",
-      },
-      "devDependencies": {
-        "@kbroom/effect-vitest": "workspace:*",
-        "@types/bun": "catalog:typescript",
-        "tsup": "catalog:typescript",
-        "typescript": "catalog:typescript",
-        "vitest": "catalog:vite",
-      },
-      "peerDependencies": {
-        "@kbroom/effect-schema-miette": "workspace:*",
-        "effect": "catalog:effect",
-      },
-    },
-    "packages/effect-schema-miette": {
-      "name": "@kbroom/effect-schema-miette",
-      "version": "0.0.1",
-      "dependencies": {
-        "@kbroom/uwu": "workspace:*",
         "wrap-ansi": "^9.0.0",
       },
       "devDependencies": {
-        "@kbroom/effect-vitest": "workspace:*",
-        "@types/bun": "catalog:typescript",
-        "tsup": "catalog:typescript",
-        "typescript": "catalog:typescript",
-        "vitest": "catalog:vite",
-      },
-      "peerDependencies": {
-        "effect": "catalog:effect",
-      },
-    },
-    "packages/effect-vitest": {
-      "name": "@kbroom/effect-vitest",
-      "version": "0.0.1",
-      "devDependencies": {
-        "@types/bun": "catalog:typescript",
-        "tsup": "catalog:typescript",
-        "typescript": "catalog:typescript",
-        "vitest": "catalog:vite",
-      },
-      "peerDependencies": {
-        "effect": "catalog:effect",
-        "vitest": "catalog:vite",
-      },
-    },
-    "packages/uwu": {
-      "name": "@kbroom/uwu",
-      "version": "0.0.1",
-      "devDependencies": {
-        "@kbroom/effect-vitest": "workspace:*",
         "@types/bun": "catalog:typescript",
         "tsup": "catalog:typescript",
         "typescript": "catalog:typescript",
@@ -211,13 +162,7 @@
 
     "@kbroom/chante": ["@kbroom/chante@workspace:packages/chante"],
 
-    "@kbroom/effect-schema-kdl": ["@kbroom/effect-schema-kdl@workspace:packages/effect-schema-kdl"],
-
-    "@kbroom/effect-schema-miette": ["@kbroom/effect-schema-miette@workspace:packages/effect-schema-miette"],
-
-    "@kbroom/effect-vitest": ["@kbroom/effect-vitest@workspace:packages/effect-vitest"],
-
-    "@kbroom/uwu": ["@kbroom/uwu@workspace:packages/uwu"],
+    "@kbroom/effect": ["@kbroom/effect@workspace:packages/effect"],
 
     "@msgpackr-extract/msgpackr-extract-darwin-arm64": ["@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3", "", { "os": "darwin", "cpu": "arm64" }, "sha512-QZHtlVgbAdy2zAqNA9Gu1UpIuI8Xvsd1v8ic6B2pZmeFnFcMWiPLfWXh7TVw4eGEZ/C9TH281KwhVoeQUKbyjw=="],
 

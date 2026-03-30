@@ -26,15 +26,13 @@
     "test": "bunx --bun vitest run"
   },
   "dependencies": {
-    "@kbroom/effect-schema-kdl": "workspace:*",
-    "@kbroom/effect-schema-miette": "workspace:*",
+    "@kbroom/effect": "workspace:*",
     "@effect/platform-node": "catalog:effect",
     "@shikijs/cli": "^4.0.2",
     "effect": "catalog:effect",
     "wrap-ansi": "^9.0.0"
   },
   "devDependencies": {
-    "@kbroom/effect-vitest": "workspace:*",
     "@types/bun": "catalog:typescript",
     "@types/node": "catalog:typescript",
     "tsup": "catalog:typescript",
