@@ -1,4 +1,4 @@
-import { KdlSchema } from "@kbroom/effect-schema-kdl"
+import { KdlSchema as K } from "@kbroom/effect-schema-kdl"
 import { SourceSpan } from "@kbroom/effect-schema-miette"
 import { Schema } from "effect"
 import {
@@ -11,11 +11,11 @@ import {
 
 describe("Node", () => {
   describe("with string arg and prop", () => {
-    const schema = KdlSchema.Node("bundle", {
-      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
-      version: KdlSchema.Prop("version", KdlSchema.V(Schema.String)),
+    const schema = K.Node("bundle", {
+      name: K.Arg(0, K.V(Schema.String)),
+      version: K.Prop("version", K.V(Schema.String)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts node with arg and prop", ({ expect }) => {
       const value = assertResultSuccess(
@@ -70,11 +70,11 @@ describe("Node", () => {
   })
 
   describe("with number arg and prop", () => {
-    const schema = KdlSchema.Node("add", {
-      a: KdlSchema.Arg(0, KdlSchema.V(Schema.Number)),
-      b: KdlSchema.Prop("b", KdlSchema.V(Schema.Number)),
+    const schema = K.Node("add", {
+      a: K.Arg(0, K.V(Schema.Number)),
+      b: K.Prop("b", K.V(Schema.Number)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts node with number args", ({ expect }) => {
       const value = assertResultSuccess(decode(`add 5 b=10`))
@@ -90,11 +90,11 @@ describe("Node", () => {
   })
 
   describe("with boolean arg and prop", () => {
-    const schema = KdlSchema.Node("config", {
-      enabled: KdlSchema.Arg(0, KdlSchema.V(Schema.Boolean)),
-      verbose: KdlSchema.Prop("verbose", KdlSchema.V(Schema.Boolean)),
+    const schema = K.Node("config", {
+      enabled: K.Arg(0, K.V(Schema.Boolean)),
+      verbose: K.Prop("verbose", K.V(Schema.Boolean)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts node with boolean args", ({ expect }) => {
       const value = assertResultSuccess(decode(`config #true verbose=#false`))
@@ -104,10 +104,10 @@ describe("Node", () => {
   })
 
   describe("with URLFromString", () => {
-    const schema = KdlSchema.Node("link", {
-      url: KdlSchema.Arg(0, KdlSchema.V(Schema.URLFromString)),
+    const schema = K.Node("link", {
+      url: K.Arg(0, K.V(Schema.URLFromString)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts URL arg", ({ expect }) => {
       const value = assertResultSuccess(decode(`link "https://github.com"`))
@@ -123,13 +123,10 @@ describe("Node", () => {
   })
 
   describe("with allowTagged", () => {
-    const schema = KdlSchema.Node("value", {
-      data: KdlSchema.Arg(
-        0,
-        KdlSchema.V(Schema.String).pipe(KdlSchema.allowTagged),
-      ),
+    const schema = K.Node("value", {
+      data: K.Arg(0, K.V(Schema.String).pipe(K.allowTagged)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts tagged value", ({ expect }) => {
       const value = assertResultSuccess(decode(`value (type)"hello"`))
@@ -152,11 +149,11 @@ describe("Node", () => {
   })
 
   describe("with multiple args", () => {
-    const schema = KdlSchema.Node("add", {
-      a: KdlSchema.Arg(0, KdlSchema.V(Schema.Number)),
-      b: KdlSchema.Arg(1, KdlSchema.V(Schema.Number)),
+    const schema = K.Node("add", {
+      a: K.Arg(0, K.V(Schema.Number)),
+      b: K.Arg(1, K.V(Schema.Number)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts multiple args at different indices", ({ expect }) => {
       const value = assertResultSuccess(decode(`add 5 10`))
@@ -173,11 +170,11 @@ describe("Node", () => {
   })
 
   describe("rejects", () => {
-    const schema = KdlSchema.Node("bundle", {
-      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
-      version: KdlSchema.Prop("version", KdlSchema.V(Schema.String)),
+    const schema = K.Node("bundle", {
+      name: K.Arg(0, K.V(Schema.String)),
+      version: K.Prop("version", K.V(Schema.String)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test.for([
       [
@@ -216,10 +213,10 @@ describe("Node", () => {
 
 describe("Option", () => {
   describe("with string", () => {
-    const schema = KdlSchema.Node("bundle", {
-      output: KdlSchema.Opt("output", KdlSchema.V(Schema.String)),
+    const schema = K.Node("bundle", {
+      output: K.Opt("output", K.V(Schema.String)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts child node", ({ expect }) => {
       const value = assertResultSuccess(decode(`bundle { output "dist" }`))
@@ -262,10 +259,10 @@ describe("Option", () => {
   })
 
   describe("with number", () => {
-    const schema = KdlSchema.Node("config", {
-      port: KdlSchema.Opt("port", KdlSchema.V(Schema.Number)),
+    const schema = K.Node("config", {
+      port: K.Opt("port", K.V(Schema.Number)),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts child node", ({ expect }) => {
       const value = assertResultSuccess(decode(`config { port 3000 }`))
@@ -282,11 +279,11 @@ describe("Option", () => {
 })
 
 describe("Many", () => {
-  const ItemNode = KdlSchema.Node("item", {
-    value: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+  const ItemNode = K.Node("item", {
+    value: K.Arg(0, K.V(Schema.String)),
   })
-  const schema = KdlSchema.Many(ItemNode)
-  const decode = KdlSchema.decodeSourceResult(schema)
+  const schema = K.Many(ItemNode)
+  const decode = K.decodeSourceResult(schema)
 
   test("accepts multiple nodes on separate lines", ({ expect }) => {
     const value = assertResultSuccess(decode(`item "a"\nitem "b"\nitem "c"`))
@@ -331,10 +328,10 @@ describe("Many", () => {
 
 describe("Literal", () => {
   describe("with Schema.Literal", () => {
-    const schema = KdlSchema.Node("language", {
-      code: KdlSchema.Arg(0, KdlSchema.V(Schema.Literals(["en", "es"]))),
+    const schema = K.Node("language", {
+      code: K.Arg(0, K.V(Schema.Literals(["en", "es"]))),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts valid literal 'en'", ({ expect }) => {
       const value = assertResultSuccess(decode(`language "en"`))
@@ -356,19 +353,19 @@ describe("Literal", () => {
 })
 
 describe("Document", () => {
-  const PackageNode = KdlSchema.Node("package", {
-    name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+  const PackageNode = K.Node("package", {
+    name: K.Arg(0, K.V(Schema.String)),
   })
-  const BundleNode = KdlSchema.Node("bundle", {
-    name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+  const BundleNode = K.Node("bundle", {
+    name: K.Arg(0, K.V(Schema.String)),
   })
 
-  const schema = KdlSchema.Document({
-    packages: KdlSchema.Many(PackageNode),
+  const schema = K.Document({
+    packages: K.Many(PackageNode),
     bundle: BundleNode,
-    setting: KdlSchema.Opt("setting", KdlSchema.V(Schema.String)),
+    setting: K.Opt("setting", K.V(Schema.String)),
   })
-  const decode = KdlSchema.decodeSourceResult(schema)
+  const decode = K.decodeSourceResult(schema)
 
   test("parses Many, Node, and Opt fields", ({ expect }) => {
     const value = assertResultSuccess(
@@ -403,11 +400,11 @@ describe("Document", () => {
 
 describe("optional", () => {
   describe("optional Arg - package with optional version", () => {
-    const schema = KdlSchema.Node("package", {
-      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
-      version: KdlSchema.optional(KdlSchema.Arg(1, KdlSchema.V(Schema.String))),
+    const schema = K.Node("package", {
+      name: K.Arg(0, K.V(Schema.String)),
+      version: K.optional(K.Arg(1, K.V(Schema.String))),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts package with version", ({ expect }) => {
       const value = assertResultSuccess(decode(`package "mylib" "1.0.0"`))
@@ -428,13 +425,11 @@ describe("optional", () => {
   })
 
   describe("optional Prop - server with optional port", () => {
-    const schema = KdlSchema.Node("server", {
-      host: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
-      port: KdlSchema.optional(
-        KdlSchema.Prop("port", KdlSchema.V(Schema.Number)),
-      ),
+    const schema = K.Node("server", {
+      host: K.Arg(0, K.V(Schema.String)),
+      port: K.optional(K.Prop("port", K.V(Schema.Number))),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts server with port property", ({ expect }) => {
       const value = assertResultSuccess(decode(`server "localhost" port=3000`))
@@ -450,13 +445,11 @@ describe("optional", () => {
   })
 
   describe("optional Opt - git remote with optional url", () => {
-    const schema = KdlSchema.Node("repo", {
-      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
-      remote: KdlSchema.optional(
-        KdlSchema.Opt("remote", KdlSchema.V(Schema.String)),
-      ),
+    const schema = K.Node("repo", {
+      name: K.Arg(0, K.V(Schema.String)),
+      remote: K.optional(K.Opt("remote", K.V(Schema.String))),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts remote as child node", ({ expect }) => {
       const value = assertResultSuccess(
@@ -486,21 +479,21 @@ describe("optional", () => {
   })
 
   describe("optional Node - project with optional build config", () => {
-    const BuildNode = KdlSchema.Node("build", {
-      command: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+    const BuildNode = K.Node("build", {
+      command: K.Arg(0, K.V(Schema.String)),
     })
-    const TestNode = KdlSchema.Node("test", {
-      command: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+    const TestNode = K.Node("test", {
+      command: K.Arg(0, K.V(Schema.String)),
     })
 
-    const schema = KdlSchema.Document({
-      project: KdlSchema.Node("project", {
-        name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
+    const schema = K.Document({
+      project: K.Node("project", {
+        name: K.Arg(0, K.V(Schema.String)),
       }),
-      build: KdlSchema.optional(BuildNode),
-      test: KdlSchema.optional(TestNode),
+      build: K.optional(BuildNode),
+      test: K.optional(TestNode),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("accepts project with build and test", ({ expect }) => {
       const value = assertResultSuccess(
@@ -535,15 +528,13 @@ describe("optional", () => {
   })
 
   describe("mixed required and optional - deployment config", () => {
-    const schema = KdlSchema.Node("deployment", {
-      name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
-      image: KdlSchema.Prop("image", KdlSchema.V(Schema.String)),
-      replicas: KdlSchema.optional(
-        KdlSchema.Prop("replicas", KdlSchema.V(Schema.Number)),
-      ),
-      env: KdlSchema.optional(KdlSchema.Opt("env", KdlSchema.V(Schema.String))),
+    const schema = K.Node("deployment", {
+      name: K.Arg(0, K.V(Schema.String)),
+      image: K.Prop("image", K.V(Schema.String)),
+      replicas: K.optional(K.Prop("replicas", K.V(Schema.Number))),
+      env: K.optional(K.Opt("env", K.V(Schema.String))),
     })
-    const decode = KdlSchema.decodeSourceResult(schema)
+    const decode = K.decodeSourceResult(schema)
 
     test("full deployment with all fields", ({ expect }) => {
       const value = assertResultSuccess(

@@ -22,3 +22,6 @@ export {
   type SourceCode,
   StringSourceCode,
 } from "./source-code.js"
+
+export const META_SPAN = "mietteSpan"
+export const META_DIAGNOSTIC = "mietteDiagnostic"
