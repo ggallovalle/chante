@@ -50,41 +50,16 @@
       }
     },
     {
-      "includes": ["packages/**/test/**/*.{ts,tsx,js,jsx}"],
+      // vitest support {} destructuring of no dependencies
+      "includes": [
+        "packages/**/test/**/*.{ts,tsx,js,jsx}",
+        "packages/effect-vitest/src/**/*.{ts,tsx,js,jsx}"
+      ],
       "linter": {
         "rules": {
           "correctness": {
-            "noEmptyPattern": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["packages/effect-vitest/**/*.{ts,tsx,js,jsx}"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noEmptyPattern": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["packages/effect-schema-miette/**/*.{ts,tsx,js,jsx}"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noEmptyPattern": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["packages/effect-schema-kdl/**/*.{ts,tsx,js,jsx}"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noEmptyPattern": "off"
+            "noEmptyPattern": "off",
+            "useYield": "off"
           }
         }
       }
