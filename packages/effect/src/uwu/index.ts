@@ -1,4 +1,5 @@
 import { Effect, Layer, Schema, ServiceMap } from "effect"
+import * as colors from "./colors.js"
 
 export const TextEffect = Schema.Literals([
   "bold",
@@ -30,14 +31,14 @@ export const hex = (code: number): Color =>
 
 export type Color = Schema.Schema.Type<typeof Color>
 
-export class Style extends Schema.Class<Style>("uwu/Style")({
+export class Style extends Schema.Class<Style>("@kbroom/effect/uwu/Style")({
   fg: Schema.optional(Color),
   bg: Schema.optional(Color),
-  bold: Schema.Boolean,
-  effects: Schema.HashSet(TextEffect),
+  bold: Schema.optional(Schema.Boolean),
+  effects: Schema.optional(Schema.HashSet(TextEffect)),
 }) {}
 
-export class Styled extends Schema.Class<Styled>("uwu/Styled")({
+export class Styled extends Schema.Class<Styled>("@kbroom/effect/uwu/Styled")({
   style: Style,
   prefix: Schema.String,
   sufix: Schema.String,
@@ -52,7 +53,7 @@ export interface IStyler {
 }
 
 export class Styler extends ServiceMap.Service<Styler, IStyler>()(
-  "@kbroom/uwu/Styler",
+  "@kbroom/effect/uwu/Styler",
 ) {}
 
 export class NoopStyler implements IStyler {
@@ -70,66 +71,56 @@ export const NooopStylerLayer = Layer.effect(
   Effect.sync(() => new NoopStyler()),
 )
 
-export class AnsiBunStyler implements IStyler {
-  styled(style: Style): Styled {
-    let prefix = ""
+export interface IColorizer {
+  success(value: unknown): string
+  error(value: unknown): string
+  warning(value: unknown): string
 
-    if (style.fg) {
-      const fg = colorToAnsi(style.fg, "fg")
-      if (fg) prefix += fg
+  red(value: unknown): string
+  green(value: unknown): string
+  yellow(value: unknown): string
+}
+
+export class Colorizer extends ServiceMap.Service<Colorizer, IColorizer>()(
+  "@kbroom/effect/uwu/Colorizer",
+) {}
+
+export class DefaultColorizer implements IColorizer {
+  styled: { red: Styled; green: Styled; yellow: Styled }
+
+  constructor(styler: IStyler) {
+    this.styled = {
+      red: styler.styled(new Style({ fg: colors.red })),
+      green: styler.styled(new Style({ fg: colors.green })),
+      yellow: styler.styled(new Style({ fg: colors.yellow })),
     }
-
-    if (style.bg) {
-      const bg = colorToAnsi(style.bg, "bg")
-      if (bg) prefix += bg
-    }
-
-    if (style.bold) {
-      prefix += "\x1b[1m"
-    }
-
-    for (const effect of style.effects) {
-      const ansi = effectToAnsi(effect)
-      if (ansi) prefix += ansi
-    }
-
-    const sufix = prefix === "" ? "" : "\x1b[0m"
-
-    return new Styled({ style, prefix, sufix })
+  }
+  success(value: unknown): string {
+    return this.styled.green.stiled(value)
+  }
+  error(value: unknown): string {
+    return this.styled.red.stiled(value)
+  }
+  warning(value: unknown): string {
+    return this.styled.yellow.stiled(value)
+  }
+  red(value: unknown): string {
+    return this.styled.red.stiled(value)
+  }
+  green(value: unknown): string {
+    return this.styled.green.stiled(value)
+  }
+  yellow(value: unknown): string {
+    return this.styled.yellow.stiled(value)
   }
 }
 
-function effectToAnsi(effect: string): string | null {
-  switch (effect) {
-    case "bold":
-      return "\x1b[1m"
-    case "dimmed":
-      return "\x1b[2m"
-    case "italic":
-      return "\x1b[3m"
-    case "underline":
-      return "\x1b[4m"
-    case "blink":
-      return "\x1b[5m"
-    case "blinkFast":
-      return "\x1b[6m"
-    case "reversed":
-      return "\x1b[7m"
-    case "hidden":
-      return "\x1b[8m"
-    case "strikethrough":
-      return "\x1b[9m"
-    default:
-      return null
-  }
-}
+export const ColorizerDefaultLayer = Layer.effect(
+  Colorizer,
+  Effect.gen(function* () {
+    const styler = yield* Styler
+    return new DefaultColorizer(styler)
+  }),
+)
 
-function colorToAnsi(color: Color, type: "fg" | "bg"): string | null {
-  const ansi = Bun.color(color.value as string, "ansi")
-
-  if (ansi == null) return null
-
-  if (type === "fg") return ansi
-
-  return ansi.startsWith("\x1b[38;") ? `\x1b[48;${ansi.slice(5)}` : ansi
-}
+export * as colors from "./colors.js"
