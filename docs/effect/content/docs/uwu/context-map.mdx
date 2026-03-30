@@ -1,0 +1,80 @@
+---
+title: Context Map
+description: Using Effect services and layers for styling.
+icon: Layers
+---
+
+uwu uses Effect's service system to provide styling capabilities, allowing you to swap implementations based on your runtime environment.
+
+## Service Interface
+
+The `Styler` service defines how text gets styled:
+
+```ts
+interface IStyler {
+  styled(style: Style): Styled;
+}
+```
+
+The `Styled` object contains:
+- `style` - The original style definition
+- `prefix` - ANSI escape codes to apply
+- `sufix` - ANSI escape codes to reset
+- `stiled(value)` - Method to apply the style to a string
+
+## Layers
+
+### NooopStylerLayer
+
+Default layer that strips all styling. Use this for production or non-TTY environments.
+
+```ts
+import { NooopStylerLayer } from "@kbroom/effect/uwu";
+
+Effect.provide(program, NooopStylerLayer);
+```
+
+### AnsiBunStylerLayer
+
+Bun-specific layer that leverages `Bun.color` for accurate color rendering.
+
+```ts
+import { AnsiBunStylerLayer } from "@kbroom/effect/uwu/bun";
+
+Effect.provide(program, AnsiBunStylerLayer);
+```
+
+## Usage Pattern
+
+```ts
+import { Style, ansi, Styler, NooopStylerLayer } from "@kbroom/effect/uwu";
+import { Effect, Console } from "effect";
+
+const styledLog = (message: string, style: Style) =>
+  Effect.gen(function* () {
+    const styler = yield* Styler;
+    const styled = styler.styled(style);
+    Console.log(styled.stiled(message));
+  });
+
+const program = styledLog("Hello!", new Style({ fg: ansi(32), bold: true }));
+
+program.pipe(Effect.provide(NooopStylerLayer));
+```
+
+## Switching Implementations
+
+You can easily swap layers based on runtime detection:
+
+```ts
+import { NooopStylerLayer, AnsiBunStylerLayer } from "@kbroom/effect/uwu";
+
+const getStylerLayer = () => {
+  if (typeof Bun !== "undefined") {
+    return AnsiBsiStylerLayer;
+  }
+  return NooopStylerLayer;
+};
+
+Effect.provide(program, getStylerLayer());
+```

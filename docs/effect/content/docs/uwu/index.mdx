@@ -1,0 +1,113 @@
+---
+title: Quick Start
+description: Text styling for the Effect ecosystem.
+icon: Rocket
+---
+
+uwu provides text styling primitives for the Effect ecosystem, with support for ANSI escape codes, CSS colors, and hex colors.
+
+## Installation
+
+<CodeBlockTabs defaultValue="bun" groupId="package-manager">
+  <CodeBlockTabsList>
+    <CodeBlockTabsTrigger value="bun">bun</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="npm">npm</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="pnpm">pnpm</CodeBlockTabsTrigger>
+    <CodeBlockTabsTrigger value="yarn">yarn</CodeBlockTabsTrigger>
+  </CodeBlockTabsList>
+
+  <CodeBlockTab value="bun">
+      ```bash
+      bun add @kbroom/effect 
+      ```
+  </CodeBlockTab>
+  <CodeBlockTab value="npm">
+      ```bash
+      npm add @kbroom/effect 
+      ```
+  </CodeBlockTab>
+  <CodeBlockTab value="pnpm">
+      ```bash
+      pnpm add @kbroom/effect
+      ```
+  </CodeBlockTab>
+  <CodeBlockTab value="yarn">
+      ```bash
+      yarn add @kbroom/effect 
+      ```
+  </CodeBlockTab>
+  
+</CodeBlockTabs>
+
+## Basic Usage
+
+```ts
+import { Style, ansi, css, hex, NooopStylerLayer } from "@kbroom/effect/uwu";
+import { Effect, Console } from "effect";
+import { Styler } from "@kbroom/effect/uwu";
+
+const program = Effect.gen(function* () {
+  const styler = yield* Styler;
+
+  const red = styler.styled(new Style({ fg: ansi(31) }));
+
+  Console.log(red.stiled("Hello, World!"));
+}).pipe(Effect.provide(NooopStylerLayer));
+```
+
+## Colors
+
+uwu supports three color types:
+
+```ts
+import { ansi, css, hex } from "@kbroom/effect/uwu";
+
+// ANSI color code (0-255)
+ansi(31); // red
+
+// CSS color name
+css("red"); // red
+
+// Hex color (converted to nearest ANSI)
+hex(0xff0000); // red
+```
+
+## Text Effects
+
+Available text effects:
+
+| Effect          | ANSI Code |
+| --------------- | --------- |
+| `bold`          | `\x1b[1m` |
+| `dimmed`        | `\x1b[2m` |
+| `italic`        | `\x1b[3m` |
+| `underline`     | `\x1b[4m` |
+| `blink`         | `\x1b[5m` |
+| `blinkFast`     | `\x1b[6m` |
+| `reversed`      | `\x1b[7m` |
+| `hidden`        | `\x1b[8m` |
+| `strikethrough` | `\x1b[9m` |
+
+## API Reference
+
+### `Style`
+
+Creates a style definition.
+
+```ts
+new Style({
+  fg: ansi(31), // foreground color
+  bg: hex(0xff0000), // background color
+  bold: true, // text effect
+  effects: new Set(["italic", "underline"]), // multiple effects
+});
+```
+
+### `Styler.styled()`
+
+Applies a style to text, returning a `Styled` object.
+
+```ts
+const styled = styler.styled(new Style({ fg: ansi(31) }));
+const result = styled.stiled("Hello"); // Applies prefix/suffix
+```
