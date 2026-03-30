@@ -2,20 +2,18 @@ import {
   Document as KdlDocument,
   Node as KdlNode,
   Value as KdlValue,
-  parse,
 } from "@bgotink/kdl"
 import type { SourceSpan } from "@kbroom/effect-schema-miette"
 import {
   Effect,
   Option as EffectOption,
-  Result,
   Schema,
-  type SchemaAST,
   SchemaIssue,
   SchemaParser,
 } from "effect"
 import * as D from "~/diagnostic.js"
 import { span } from "~/diagnostic.js"
+import { decodeSourceResult } from "~/parser.js"
 import type * as Model from "./model.js"
 
 export type ValueConstraint = Schema.Encoder<string | number | boolean | null>
@@ -442,38 +440,7 @@ export const Many = <const Items extends Node<any>>(
   return Schema.make(schema.ast, { node }) as Many<Items>
 }
 
-export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(
-  schema: S,
-) => {
-  const componentType = schema.ast.annotations?.["kdlComponent"]
-  if (typeof componentType !== "string") {
-    throw new Error(
-      "The schema MUST be a KDL component, either 'value', 'node' or 'document'",
-    )
-  }
-
-  const parser = SchemaParser.decodeUnknownResult(schema)
-  return (
-    source: string,
-    options?: SchemaAST.ParseOptions,
-  ): Result.Result<S["Type"], SchemaIssue.Issue> => {
-    try {
-      const kdl = parse(source, {
-        // biome-ignore lint/suspicious/noExplicitAny: I know
-        as: componentType as any,
-        storeLocations: true,
-      })
-      return parser(kdl, options)
-      // biome-ignore lint/suspicious/noExplicitAny: I know
-    } catch (error: any) {
-      return Result.fail(
-        new SchemaIssue.InvalidValue(EffectOption.some(source), {
-          message: error.message,
-        }),
-      )
-    }
-  }
-}
+export { decodeSourceResult }
 
 /*
 const Workspace = KdlSchema.Node("workspace", {
