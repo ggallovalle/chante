@@ -1,6 +1,6 @@
 import { Effect, Layer } from "effect"
+import { type Color, type IStyler, type Style, Styler } from "~/uwu.js"
 import { effectToAnsi } from "./ansi.js"
-import { type Color, type IStyler, type Style, Styler } from "./index.js"
 
 export class AnsiBunStyler implements IStyler {
   styled(style: Style): (value: unknown) => string {
@@ -31,12 +31,12 @@ export class AnsiBunStyler implements IStyler {
   }
 }
 
-export const AnsiBunStylerLayer = Layer.effect(
+export const layer = Layer.effect(
   Styler,
   Effect.sync(() => new AnsiBunStyler()),
 )
 
-export function colorToAnsi(color: Color, type: "fg" | "bg"): string | null {
+function colorToAnsi(color: Color, type: "fg" | "bg"): string | null {
   const ansi = Bun.color(color.value as string, "ansi")
 
   if (ansi == null) return null

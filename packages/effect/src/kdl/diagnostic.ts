@@ -6,13 +6,8 @@ import {
   type Value,
 } from "@bgotink/kdl"
 import { Option, type Schema, SchemaIssue } from "effect"
-import type { KdlComponent } from "~/model.js"
-import {
-  Diagnostic,
-  META_DIAGNOSTIC,
-  META_SPAN,
-  SourceSpan,
-} from "../miette/index.js"
+import { Diagnostic, META_DIAGNOSTIC, META_SPAN, SourceSpan } from "~/miette.js"
+import type { KdlComponent } from "./model.js"
 
 const META_COMPONENT = "kdlComponent" as const
 

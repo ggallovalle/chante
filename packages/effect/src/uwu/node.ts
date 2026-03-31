@@ -1,7 +1,7 @@
 import nodeUtil from "node:util"
 import { Effect, Layer } from "effect"
+import { type Color, type IStyler, type Style, Styler } from "~/uwu.js"
 import { effectToAnsi } from "./ansi.js"
-import { type Color, type IStyler, type Style, Styler } from "./index.js"
 
 export class AnsiNodeStyler implements IStyler {
   styled(style: Style): (value: unknown) => string {
@@ -32,12 +32,12 @@ export class AnsiNodeStyler implements IStyler {
   }
 }
 
-export const AnsiNodeStylerLayer = Layer.effect(
+export const layer = Layer.effect(
   Styler,
   Effect.sync(() => new AnsiNodeStyler()),
 )
 
-export function colorToFormat(color: Color, type: "fg" | "bg"): string | null {
+function colorToFormat(color: Color, type: "fg" | "bg"): string | null {
   if (color._tag === "css") {
     const colorName = color.value
     if (type === "fg") return colorName

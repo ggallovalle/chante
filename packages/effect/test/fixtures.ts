@@ -1,6 +1,6 @@
 export * as fc from "effect/testing/FastCheck"
 export { assert, describe } from "vitest"
-export { test } from "~/testing/vitest/index.js"
+export { test } from "~/testing/vitest.js"
 
 import { flow, Result } from "effect"
 

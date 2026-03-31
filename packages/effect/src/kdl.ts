@@ -1,3 +1,5 @@
+export * as KdlSchema from "~/kdl/schema.js"
+
 export const kdl = (
   strings: TemplateStringsArray,
   ...values: unknown[]

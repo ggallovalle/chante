@@ -46,7 +46,7 @@ fi
 > Build all packages with turbo
 
 ```bash
-bunx turbo run build
+bunx --bun turbo run build
 ```
 
 ## check
@@ -54,7 +54,7 @@ bunx turbo run build
 > Type check all packages with turbo
 
 ```bash
-bunx turbo run check
+bunx --bun turbo run check
 ```
 
 ## test
@@ -62,7 +62,7 @@ bunx turbo run check
 > Test all packages with turbo
 
 ```bash
-bunx turbo run test
+bunx --bun turbo run test
 ```
 
 ## lint
@@ -82,5 +82,5 @@ bunx --bun @biomejs/biome check --write --unsafe
 > Start the dev server for docs/effect
 
 ```bash
-cd apps/effect-docs && bun run dev
+cd apps/effect-docs && bun --bun run dev
 ```

@@ -1,6 +1,6 @@
 import { Schema } from "effect"
 import { isTty } from "~/internal/detect-runtime.js"
-import type { Severity } from "../diagnostic"
+import type { Severity } from "../diagnostic.js"
 
 export class ThemeCharacters extends Schema.Class<ThemeCharacters>(
   "miette/ThemeCharacters",

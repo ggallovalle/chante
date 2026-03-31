@@ -1,16 +1,5 @@
 import { Schema } from "effect"
 
-function utf8Length(char: string): number {
-  const codePoint = char.codePointAt(0)
-
-  if (codePoint === undefined) return 0
-
-  if (codePoint <= 0x7f) return 1
-  if (codePoint <= 0x7ff) return 2
-  if (codePoint <= 0xffff) return 3
-  return 4
-}
-
 export class SourceSpan extends Schema.Class<SourceSpan>("miette/SourceSpan")({
   offset: Schema.Number,
   length: Schema.Number,
@@ -171,4 +160,15 @@ export class SpanContents extends Schema.Class<SpanContents>(
   decode(): string {
     return new TextDecoder().decode(this.data)
   }
+}
+
+function utf8Length(char: string): number {
+  const codePoint = char.codePointAt(0)
+
+  if (codePoint === undefined) return 0
+
+  if (codePoint <= 0x7f) return 1
+  if (codePoint <= 0x7ff) return 2
+  if (codePoint <= 0xffff) return 3
+  return 4
 }

@@ -4,7 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".ts", ".tsx", ".json"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", ".vercel/**"]
     },
     "check": {
       "dependsOn": [],

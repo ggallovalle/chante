@@ -1,6 +1,6 @@
 import { type Cause, Effect, Queue, Schema, Stream } from "effect"
 import wrapAnsi from "wrap-ansi"
-import type { IColorizer } from "~/uwu"
+import type { IColorizer } from "~/uwu.js"
 import type { Diagnostic } from "../diagnostic.js"
 import type { SourceCode } from "../source-code.js"
 import { ThemeCharacters } from "./theme.js"

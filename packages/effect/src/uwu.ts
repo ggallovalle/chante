@@ -1,9 +1,47 @@
 import { Effect, HashSet, Layer, Match, Schema, ServiceMap } from "effect"
-import { getRuntime } from "~/internal/detect-runtime.js"
-import type { Severity } from "~/miette/diagnostic.js"
-import { Color, colors, TextEffect } from "./colors.js"
+import { getRuntime, isColorEnabled } from "~/internal/detect-runtime.js"
+import type { Severity } from "~/miette.js"
 
-export { ansi, Color, colors, css, hex, TextEffect } from "./colors.js"
+export const TextEffect = Schema.Literals([
+  "bold",
+  "dimmed",
+  "italic",
+  "underline",
+  "blink",
+  "blinkFast",
+  "reversed",
+  "hidden",
+  "strikethrough",
+])
+export type TextEffect = Schema.Schema.Type<typeof TextEffect>
+
+export const Color = Schema.TaggedUnion({
+  css: { value: Schema.String },
+  ansi: { value: Schema.Finite },
+  hex: { value: Schema.Finite },
+})
+
+export const ansi = (code: number): Color =>
+  Color.cases.ansi.makeUnsafe({ value: code })
+
+export const css = (value: string): Color =>
+  Color.cases.css.makeUnsafe({ value })
+
+export const hex = (code: number): Color =>
+  Color.cases.ansi.makeUnsafe({ value: code })
+
+export type Color = Schema.Schema.Type<typeof Color>
+
+export const colors = {
+  black: css("black"), // ansi 30
+  red: css("red"), // ansi 31
+  green: css("green"), // ansi 32
+  yellow: css("yellow"), // ansi 33
+  blue: css("blue"), // ansi 34
+  magenta: css("magenta"), // ansi 35
+  cyan: css("cyan"), // ansi 36
+  white: css("white"), // ansi 37
+}
 
 export class Style extends Schema.Class<Style>("@kbroom/effect/uwu/Style")({
   fg: Schema.optional(Color),
@@ -121,19 +159,25 @@ export const layerWith = (
   return Layer.effectServices(
     Effect.gen(function* () {
       const runtime = getRuntime()
-      const styler = yield* Match.value(runtime).pipe(
-        Match.when("node", () =>
-          Effect.promise(() =>
-            import("./node.js").then((m) => new m.AnsiNodeStyler() as IStyler),
-          ),
-        ),
-        Match.when("bun", () =>
-          Effect.promise(() =>
-            import("./bun.js").then((m) => new m.AnsiBunStyler() as IStyler),
-          ),
-        ),
-        Match.orElse(() => Effect.succeed(new NoopStyler())),
-      )
+      const styler = yield* isColorEnabled()
+        ? Match.value(runtime).pipe(
+            Match.when("node", () =>
+              Effect.promise(() =>
+                import("./uwu/node.js").then(
+                  (m) => new m.AnsiNodeStyler() as IStyler,
+                ),
+              ),
+            ),
+            Match.when("bun", () =>
+              Effect.promise(() =>
+                import("./uwu/bun.js").then(
+                  (m) => new m.AnsiBunStyler() as IStyler,
+                ),
+              ),
+            ),
+            Match.orElse(() => Effect.succeed(new NoopStyler())),
+          )
+        : Effect.succeed(new NoopStyler())
 
       const colorizer = yield* factory(styler)
 

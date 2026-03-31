@@ -10,11 +10,12 @@ import {
   SchemaIssue,
   SchemaParser,
 } from "effect"
-import type { SourceSpan } from "../miette/index.js"
+import type { SourceSpan } from "~/miette.js"
 import * as D from "./diagnostic.js"
 import { span } from "./diagnostic.js"
 import type * as Model from "./model.js"
-import { decodeSourceResult } from "./parser.js"
+
+export { decodeSourceResult } from "./parser.js"
 
 export type ValueConstraint = Schema.Encoder<string | number | boolean | null>
 // biome-ignore lint/suspicious/noExplicitAny: I know
@@ -439,8 +440,6 @@ export const Many = <const Items extends Node<any>>(
 
   return Schema.make(schema.ast, { node }) as Many<Items>
 }
-
-export { decodeSourceResult }
 
 /*
 const Workspace = KdlSchema.Node("workspace", {
