@@ -97,6 +97,7 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     return Effect.gen(function* () {
       let needNewline = isNested
       const severity = diagnostic.severity
+      const buffer = []
 
       // Link style OSC 8 hyperlink
       if (self.links === "link" && diagnostic.url) {
@@ -106,18 +107,79 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
         const displayText = self.linkDisplayText ?? "(link)"
         const linkStyled = colorizer.link(displayText)
         const line = `\u001b]8;;${diagnostic.url}\u001b\\${code}${linkStyled}\u001b]8;;\u001b\\`
-        yield* Queue.offer(queue, line)
+        buffer.push(line)
+        // yield* Queue.offer(queue, line)
         needNewline = true
       } else if (diagnostic.code) {
         let line = colorizer.diagnostic(severity, diagnostic.code)
         if (self.links === "text" && diagnostic.url) {
           line += ` (${colorizer.link(diagnostic.url)})`
         }
-        yield* Queue.offer(queue, line)
+        // yield* Queue.offer(queue, line)
+        buffer.push(line)
         needNewline = true
       }
 
       if (needNewline) {
+        // yield* Queue.offer(queue, "")
+        buffer.push("")
+      }
+
+      yield* Queue.offerAll(queue, buffer)
+    })
+  }
+
+  private renderCauses(
+    queue: Queue.Queue<string, Cause.Done>,
+    diagnostic: Diagnostic,
+    colorizer: IColorizer,
+    _parentSrc?: SourceCode,
+  ) {
+    const self = this
+    return Effect.gen(function* () {
+      const severity = diagnostic.severity
+      const severityIcon = self.theme.diagnostic(severity)
+
+      const iconIndent = colorizer.diagnostic(severity, severityIcon)
+      const rootLines = self.splitLines(
+        diagnostic.info,
+        `  ${iconIndent} `,
+        `  ${colorizer.diagnostic(severity, self.theme.vbar)} `,
+      )
+
+      let emitted = rootLines.length > 0
+      if (rootLines.length > 0) {
+        yield* Queue.offerAll(queue, rootLines)
+      }
+
+      if (!self.withCauseChain) {
+        if (emitted) yield* Queue.offer(queue, "")
+        return
+      }
+
+      const causes = self.collectCauses(diagnostic.diagnosticSource)
+
+      for (const [index, cause] of causes.entries()) {
+        const isLast = index === causes.length - 1
+        const branch = isLast ? self.theme.lbot : self.theme.lcross
+        const branchPrefix = `${branch}${self.theme.hbar}${self.theme.rarrow}`
+        const initialIndent = `  ${colorizer.diagnostic(severity, branchPrefix)} `
+        const restGlyph = isLast ? " " : self.theme.vbar
+        const subsequentIndent = `  ${colorizer.diagnostic(severity, restGlyph)}   `
+
+        const causeLines = self.splitLines(
+          cause.info,
+          initialIndent,
+          subsequentIndent,
+        )
+
+        if (causeLines.length > 0) {
+          yield* Queue.offerAll(queue, causeLines)
+          emitted = true
+        }
+      }
+
+      if (emitted) {
         yield* Queue.offer(queue, "")
       }
     })
@@ -160,62 +222,5 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     }
 
     return lines
-  }
-
-  private renderCauses(
-    queue: Queue.Queue<string, Cause.Done>,
-    diagnostic: Diagnostic,
-    colorizer: IColorizer,
-    _parentSrc?: SourceCode,
-  ) {
-    const self = this
-    return Effect.gen(function* () {
-      const severity = diagnostic.severity
-      const severityIcon = self.theme.diagnostic(severity)
-      let emitted = false
-
-      const iconIndent = colorizer.diagnostic(severity, severityIcon)
-      const rootLines = self.splitLines(
-        diagnostic.info,
-        `  ${iconIndent} `,
-        `  ${colorizer.diagnostic(severity, self.theme.vbar)} `,
-      )
-
-      for (const line of rootLines) {
-        yield* Queue.offer(queue, line)
-        emitted = true
-      }
-
-      if (!self.withCauseChain) {
-        if (emitted) yield* Queue.offer(queue, "")
-        return
-      }
-
-      const causes = self.collectCauses(diagnostic.diagnosticSource)
-
-      for (const [index, cause] of causes.entries()) {
-        const isLast = index === causes.length - 1
-        const branch = isLast ? self.theme.lbot : self.theme.lcross
-        const branchPrefix = `${branch}${self.theme.hbar}${self.theme.rarrow}`
-        const initialIndent = `  ${colorizer.diagnostic(severity, branchPrefix)} `
-        const restGlyph = isLast ? " " : self.theme.vbar
-        const subsequentIndent = `  ${colorizer.diagnostic(severity, restGlyph)}   `
-
-        const wrapped = self.splitLines(
-          cause.info,
-          initialIndent,
-          subsequentIndent,
-        )
-
-        for (const line of wrapped) {
-          yield* Queue.offer(queue, line)
-          emitted = true
-        }
-      }
-
-      if (emitted) {
-        yield* Queue.offer(queue, "")
-      }
-    })
   }
 }

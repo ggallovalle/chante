@@ -1,4 +1,4 @@
-import { Predicate, Schema } from "effect"
+import { Data, Predicate, Schema } from "effect"
 import { LabeledSpan } from "./protocol.js"
 
 const TypeId = "~miette/Diagnostic"
@@ -8,7 +8,8 @@ export const isDiagnostic = (u: unknown): u is Diagnostic =>
 
 export type Severity = "advice" | "warning" | "error" | undefined
 
-export class Diagnostic extends Schema.ErrorClass(TypeId)({
+export class DiagnosticAbc extends Schema.ErrorClass(TypeId)({
+  // export class Diagnostic extends Schema.ErrorClass(TypeId)({
   _tag: Schema.tag("Diagnostic"),
   info: Schema.String,
   cause: Schema.optional(Schema.Unknown),
@@ -55,6 +56,49 @@ If None, reporters should treat this as Severity::Error.`,
     description: "The cause of the error.",
   }),
 }) {
+  /**
+   * @since 4.0.0
+   */
+  readonly [TypeId] = TypeId
+
+  get severityValue() {
+    return this.severity ?? "error"
+  }
+
+  override get message() {
+    const code = this.code === "undefined" ? "" : `(${this.code})`
+    return `${this.severityValue}: ${code} ${this.info}`
+  }
+
+  toJSON() {
+    return {
+      code: this.code,
+      message: this.info,
+      severity: this.severityValue,
+    }
+  }
+
+  override toString() {
+    return `Diagnostic(${this.message})`
+  }
+}
+
+export class Diagnostic extends Data.TaggedError("Diagnostic")<{
+  info: string
+  cause?: unknown
+  template?: string
+  // biome-ignore lint/suspicious/noExplicitAny: I know
+  meta?: Record<string, any>
+  code?: string
+  severity?: Severity
+  help?: string
+  url?: string
+  // biome-ignore lint/suspicious/noExplicitAny: I know
+  sourceCode?: any
+  labels?: Array<LabeledSpan>
+  related?: Array<Diagnostic>
+  diagnosticSource?: Diagnostic
+}> {
   /**
    * @since 4.0.0
    */

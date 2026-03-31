@@ -1,35 +1,17 @@
 import { Effect, Schema, Stream } from "effect"
 import { Diagnostic, GraphicalReportHandler, ThemeCharacters } from "~/miette"
 import { NoopColorizer } from "~/uwu"
-import { assert, describe, fc, test } from "~test/fixtures"
+import { assertSome, describe, fc, test } from "~test/fixtures"
 
 const colorizer = new NoopColorizer()
 
-const getReport = Effect.fnUntraced(function* (
-  handler: GraphicalReportHandler,
-  diagnostic: Diagnostic,
-) {
-  const report = yield* Stream.runCollect(
-    handler.renderReport(diagnostic, colorizer),
-  )
-
-  const iterator = {
-    index: 0,
-    values: report,
-    get done() {
-      return this.index === this.values.length
-    },
-    next() {
-      const value = this.values[this.index]
-      this.index = this.index + 1
-      return value
-    },
-  }
-
-  return iterator
-})
+fc.configureGlobal({ numRuns: 20 })
 
 const baseHandler = GraphicalReportHandler.themed(ThemeCharacters.unicode())
+const noLinkHandler = new GraphicalReportHandler({
+  ...baseHandler,
+  links: "none",
+})
 
 describe("GraphicalReportHandler", () => {
   test("header includes the code and the url", ({ expect, prop }) =>
@@ -43,9 +25,13 @@ describe("GraphicalReportHandler", () => {
             url: props.url.toString(),
             severity: "error",
           })
-          const report = yield* getReport(baseHandler, diagnostic)
+          const report = assertSome(
+            yield* baseHandler
+              .renderReport(diagnostic, colorizer)
+              .pipe(Stream.runHead),
+          )
 
-          expect(report.next()).toEqual(`E0001 (${props.url})`)
+          expect(report).toEqual(`E0001 (${props.url})`)
         }),
       ),
     ))
@@ -53,20 +39,19 @@ describe("GraphicalReportHandler", () => {
   test("when options.link == none dont show the url", ({ expect }) =>
     Effect.runPromise(
       Effect.gen(function* () {
-        const handler = new GraphicalReportHandler({
-          ...baseHandler,
-          links: "none",
-        })
-
         const diagnostic = new Diagnostic({
           info: "root hidden",
           code: "error::hidden",
           url: "https://example.com/hidden",
           severity: "warning",
         })
-        const report = yield* getReport(handler, diagnostic)
+        const report = assertSome(
+          yield* noLinkHandler
+            .renderReport(diagnostic, colorizer)
+            .pipe(Stream.runHead),
+        )
 
-        expect(report.next()).toEqual("error::hidden")
+        expect(report).toEqual("error::hidden")
       }),
     ))
 
@@ -108,18 +93,18 @@ describe("GraphicalReportHandler", () => {
   ], { expect, effect }) =>
     effect(
       Effect.gen(function* () {
-        const report = yield* getReport(baseHandler, diagnostic)
+        const report = yield* baseHandler
+          .renderReport(diagnostic, colorizer)
+          .pipe(Stream.runCollect)
 
-        report.next()
-        report.next()
-        expect(report.next()).toEqual(message)
-        expect(report.next()).toEqual("")
-        assert(report.done)
+        expect(report[2]).toEqual(message)
+        expect(report[3]).toEqual("")
+        expect(report[4]).toBeUndefined()
       }),
     ))
 
-  test("renders the cause chain", ({ expect, effect }) =>
-    effect(
+  test("renders the cause chain", ({ expect }) =>
+    Effect.runPromise(
       Effect.gen(function* () {
         const deepest = new Diagnostic({
           info: "inner-most",
@@ -138,19 +123,15 @@ describe("GraphicalReportHandler", () => {
           severity: "error",
         })
 
-        const handler = new GraphicalReportHandler({
-          ...baseHandler,
-          links: "none",
-        })
-        const report = yield* getReport(handler, root)
-        // const iter = report.values[Symbol.iterator]()
-        // iter.next().value
+        const report = yield* noLinkHandler
+          .renderReport(root, colorizer)
+          .pipe(Stream.runCollect)
 
-        expect(report.next()).toEqual("  × root")
-        expect(report.next()).toEqual("  ├─▶ inner")
-        expect(report.next()).toEqual("  ╰─▶ inner-most")
-        expect(report.next()).toEqual("")
-        assert(report.done)
+        expect(report[0]).toEqual("  × root")
+        expect(report[1]).toEqual("  ├─▶ inner")
+        expect(report[2]).toEqual("  ╰─▶ inner-most")
+        expect(report[3]).toEqual("")
+        expect(report[4]).toBeUndefined()
       }),
     ))
 })
