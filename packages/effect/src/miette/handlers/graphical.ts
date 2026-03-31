@@ -1,5 +1,4 @@
 import { type Cause, Effect, Queue, Schema, Stream } from "effect"
-import wrapAnsi from "wrap-ansi"
 import type { IColorizer } from "~/uwu.js"
 import type { Diagnostic } from "../diagnostic.js"
 import type { SourceCode } from "../source-code.js"
@@ -134,34 +133,12 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     return causes
   }
 
-  private wrapText(
+  private splitLines(
     text: string,
-    opts: {
-      initialIndent: string
-      subsequentIndent: string
-      width: number
-      wrapLines: boolean
-      breakWords: boolean
-    },
+    initialIndent: string,
+    subsequentIndent: string,
   ) {
-    const { initialIndent, subsequentIndent, width, wrapLines, breakWords } =
-      opts
-
     const lines: string[] = []
-
-    if (wrapLines) {
-      const wrapped = wrapAnsi(text, Math.max(0, width), {
-        hard: breakWords,
-        trim: false,
-      })
-
-      wrapped.split("\n").forEach((line, idx) => {
-        lines.push(`${idx === 0 ? initialIndent : subsequentIndent}${line}`)
-      })
-
-      return lines
-    }
-
     const trimmedSub = subsequentIndent.trimEnd()
     const parts = text.split("\n")
 
@@ -196,16 +173,13 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       const severity = diagnostic.severity
       const severityIcon = self.theme.diagnostic(severity)
       let emitted = false
-      const width = Math.max(0, self.termwidth - 2)
 
-      const iconIndent = `${colorizer.diagnostic(severity, `${severityIcon}`)}`
-      const rootLines = self.wrapText(diagnostic.info, {
-        initialIndent: `  ${iconIndent} `,
-        subsequentIndent: `  ${colorizer.diagnostic(severity, self.theme.vbar)} `,
-        width,
-        wrapLines: self.wrapLines,
-        breakWords: self.breakWords,
-      })
+      const iconIndent = colorizer.diagnostic(severity, severityIcon)
+      const rootLines = self.splitLines(
+        diagnostic.info,
+        `  ${iconIndent} `,
+        `  ${colorizer.diagnostic(severity, self.theme.vbar)} `,
+      )
 
       for (const line of rootLines) {
         yield* Queue.offer(queue, line)
@@ -226,15 +200,12 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
         const initialIndent = `  ${colorizer.diagnostic(severity, branchPrefix)} `
         const restGlyph = isLast ? " " : self.theme.vbar
         const subsequentIndent = `  ${colorizer.diagnostic(severity, restGlyph)}   `
-        const availableWidth = Math.max(0, width - subsequentIndent.length)
 
-        const wrapped = self.wrapText(cause.info, {
+        const wrapped = self.splitLines(
+          cause.info,
           initialIndent,
           subsequentIndent,
-          width: availableWidth,
-          wrapLines: self.wrapLines,
-          breakWords: self.breakWords,
-        })
+        )
 
         for (const line of wrapped) {
           yield* Queue.offer(queue, line)

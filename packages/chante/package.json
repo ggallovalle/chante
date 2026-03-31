@@ -29,8 +29,7 @@
     "@kbroom/effect": "workspace:*",
     "@effect/platform-node": "catalog:",
     "@shikijs/cli": "^4.0.2",
-    "effect": "catalog:",
-    "wrap-ansi": "^9.0.0"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@types/bun": "catalog:",

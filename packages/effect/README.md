@@ -16,7 +16,6 @@ bun add effect@beta
 
 Optional dependencies:
 - `vitest` - for `@kbroom/effect/testing/vitest`
-- `wrap-ansi` - for `@kbroom/effect/miette`
 - `@bgotink/kdl` - for `@kbroom/effect/kdl`
 
 ## Modules
