@@ -1,13 +1,13 @@
 import { Schema } from "effect"
-import { KdlSchema as K } from "../../src/kdl/index.js"
-import { SourceSpan } from "../../src/miette/index.js"
+import { KdlSchema as K } from "~/kdl"
+import { SourceSpan } from "~/miette"
 import {
   assert,
   assertResultFailure,
   assertResultSuccess,
   describe,
   test,
-} from "./fixtures"
+} from "~test/fixtures.js"
 
 describe("Node", () => {
   describe("with string arg and prop", () => {

@@ -1,7 +1,7 @@
 import { Effect, Schema, Stream } from "effect"
 import { Diagnostic, GraphicalReportHandler, ThemeCharacters } from "~/miette"
 import { NoopColorizer } from "~/uwu"
-import { assert, describe, fc, test } from "../fixtures"
+import { assert, describe, fc, test } from "~test/fixtures"
 
 const colorizer = new NoopColorizer()
 

@@ -1,9 +1,5 @@
-import {
-  LabeledSpan,
-  SourceSpan,
-  SpanContents,
-} from "../../src/miette/index.js"
-import { describe, test } from "./fixtures"
+import { LabeledSpan, SourceSpan, SpanContents } from "~/miette"
+import { describe, test } from "~test/fixtures.js"
 
 describe("SourceSpan", () => {
   test(".from creates a span correctly", ({ expect }) => {

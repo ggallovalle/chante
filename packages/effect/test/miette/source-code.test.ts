@@ -5,8 +5,8 @@ import {
   type SourceCode,
   SourceSpan,
   StringSourceCode,
-} from "../../src/miette/index.js"
-import { describe, test } from "./fixtures"
+} from "~/miette"
+import { describe, test } from "~test/fixtures"
 
 export function runSourceCodeTests(
   name: string,
