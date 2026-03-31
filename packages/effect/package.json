@@ -49,23 +49,30 @@
     "test": "bunx --bun vitest run"
   },
   "peerDependencies": {
-    "effect": "catalog:effect"
+    "effect": "catalog:",
+    "@bgotink/kdl": "^0.4.0",
+    "vitest": "catalog:"
   },
-  "optionalPeerDependencies": {
-    "vitest": "catalog:vite"
+  "peerDependenciesMeta": {
+    "@bgotink/kdl": {
+      "optional": true
+    },
+    "vitest": {
+      "optional": true
+    }
   },
   "dependencies": {
-    "wrap-ansi": "^9.0.0",
-    "@bgotink/kdl": "^0.4.0"
+    "wrap-ansi": "^9.0.0"
   },
   "devDependencies": {
-    "@types/bun": "catalog:typescript",
-    "tsup": "catalog:typescript",
-    "typescript": "catalog:typescript",
-    "vitest": "catalog:vite"
+    "@types/bun": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
-    "bun": ">=1.2.14",
-    "node": ">=18"
-  }
+    "bun": ">=1.3.11",
+    "node": ">=24"
+  },
+  "packageManager": "bun@1.3.11"
 }
