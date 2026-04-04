@@ -2,14 +2,18 @@ import { defineConfig } from "tsdown"
 
 export default defineConfig([
   {
-    entry: {
-      "testing/vitest": "src/testing/vitest.ts",
-      uwu: "src/uwu.ts",
-      "uwu/bun": "src/uwu/bun.ts",
-      "uwu/node": "src/uwu/node.ts",
-      miette: "src/miette.ts",
-      kdl: "src/kdl.ts",
-    },
+    entry: [
+      "src/uwu.ts",
+      "src/uwu/bun.ts",
+      "src/uwu/node.ts",
+      // ** this works
+      // "src/kdl.ts",
+      // "src/miette.ts",
+      // ** this fails
+      "src/miette.ts",
+      "src/kdl.ts",
+    ],
+    fixedExtension: false,
     format: "esm",
     dts: true,
     clean: true,

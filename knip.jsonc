@@ -1,7 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  // https://knip.dev/reference/jsdoc-tsdoc-tags
   "tags": ["-lintignore"],
+  // https://knip.dev/reference/configuration#ignore
   "ignoreFiles": ["packages/**/examples/**"],
+  // https://knip.dev/features/monorepos-and-workspaces
   "workspaces": {
     ".": {}
   }

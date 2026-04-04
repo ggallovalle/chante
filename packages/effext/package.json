@@ -16,28 +16,28 @@
   },
   "exports": {
     "./testing/vitest": {
-      "types": "./dist/testing/vitest.d.mts",
-      "import": "./dist/testing/vitest.mjs"
+      "types": "./dist/testing/vitest.d.ts",
+      "import": "./dist/testing/vitest.js"
     },
     "./uwu": {
       "types": "./dist/uwu.d.mts",
-      "import": "./dist/uwu.mjs"
+      "import": "./dist/uwu.js"
     },
     "./uwu/bun": {
       "types": "./dist/uwu/bun.d.mts",
-      "import": "./dist/uwu/bun.mjs"
+      "import": "./dist/uwu/bun.js"
     },
     "./uwu/node": {
       "types": "./dist/uwu/node.d.mts",
-      "import": "./dist/uwu/node.mjs"
+      "import": "./dist/uwu/node.js"
     },
     "./miette": {
       "types": "./dist/miette.d.mts",
-      "import": "./dist/miette.mjs"
+      "import": "./dist/miette.js"
     },
     "./kdl": {
-      "types": "./dist/kdl.d.mts",
-      "import": "./dist/kdl.mjs"
+      "types": "./dist/kdl.d.ts",
+      "import": "./dist/kdl.js"
     }
   },
   "files": [
@@ -46,6 +46,8 @@
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsdown",
+    "build2": "bunup",
+    "dev": "bunup --watch",
     "test": "bunx --bun vitest run"
   },
   "peerDependencies": {
@@ -65,6 +67,7 @@
   "devDependencies": {
     "@types/bun": "catalog:",
     "tsdown": "catalog:",
+    "bunup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "@bgotink/kdl": "^0.4.0"
