@@ -74,6 +74,57 @@ bunx --bun @biomejs/biome check --write --unsafe
 bunx knip --max-show-issues 5 --fix
 ```
 
+## system
+
+> System and environment information
+
+### info
+
+> Output environment info as JSON
+
+```bash
+ver() {
+  local result=$($1 2>/dev/null | head -n 1)
+  result="${result#NVIM }"
+  result="${result#Nvim }"
+  result="${result#v}"
+  result="${result#V}"
+  if [[ -n "$result" ]]; then echo "\"$result\""; else echo "null"; fi
+}
+
+node_ver=$(ver "node --version")
+npm_ver=$(ver "npm --version")
+bun_ver=$(ver "bun --version")
+zed_ver=$(ver "zed --version")
+nvim_ver=$(ver "nvim --version")
+vscode_ver=$(ver "code --version")
+
+OS_NAME=$(uname -s)
+OS_KERNEL=$(uname -r)
+OS_ARCH=$(uname -m)
+
+cat <<EOF
+{
+  "os": {
+    "name": "$OS_NAME",
+    "kernel": "$OS_KERNEL",
+    "arch": "$OS_ARCH"
+  },
+  "runtime": {
+    "node": $node_ver,
+    "npm": $npm_ver,
+    "bun": $bun_ver
+  },
+  "editor": {
+    "zed": $zed_ver,
+    "nvim": $nvim_ver,
+    "vscode": $vscode_ver
+  },
+  "timestamp": "$(date -Iseconds)"
+}
+EOF
+```
+
 ## docs
 
 > Development tasks for documentation websites
