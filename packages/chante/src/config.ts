@@ -1,13 +1,13 @@
-export type {
-  DuplicateNameIssue,
-  ExpectedOneOfIssue,
-  KdlIssue,
-  MissingPathIssue,
-  MissingRequireIssue,
-  ParseContext,
-  RequiredArgumentIssue,
-  RequiredChildIssue,
-} from "~/config/issue.js"
+// export type {
+// DuplicateNameIssue,
+// ExpectedOneOfIssue,
+// KdlIssue,
+// MissingPathIssue,
+// MissingRequireIssue,
+// ParseContext,
+// RequiredArgumentIssue,
+// RequiredChildIssue,
+// } from "~/config/issue.js"
 export { renderSchemaError } from "~/config/issue.js"
 export {
   ChanteBundle,
@@ -16,7 +16,7 @@ export {
   ChanteSettings,
   StoredLocationSchema,
 } from "~/config/model.js"
-export type { BundleFile } from "~/config/parser.js"
+// export type { BundleFile } from "~/config/parser.js"
 export {
   parseFrom,
   parseFromCli,

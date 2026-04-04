@@ -24,7 +24,7 @@ import {
 import { ChanteConfig, ChanteSettings } from "~/config/model.js"
 import * as env from "~/env.js"
 
-export type BundleFile = {
+type BundleFile = {
   relativeTo: "home" | "config"
   op: "cp" | "ln" | "template"
   source: string

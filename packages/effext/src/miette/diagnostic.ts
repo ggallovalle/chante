@@ -1,14 +1,14 @@
 import { Data, Predicate, Schema } from "effect"
 import { LabeledSpan } from "./protocol.js"
 
-const TypeId = "~miette/Diagnostic"
+const TypeId = "~@kbroom/effext/miette/Diagnostic"
 
 export const isDiagnostic = (u: unknown): u is Diagnostic =>
   Predicate.hasProperty(u, TypeId)
 
 export type Severity = "advice" | "warning" | "error" | undefined
 
-export class DiagnosticAbc extends Schema.ErrorClass(TypeId)({
+export class Diagnostic extends Schema.ErrorClass(TypeId)({
   // export class Diagnostic extends Schema.ErrorClass(TypeId)({
   _tag: Schema.tag("Diagnostic"),
   info: Schema.String,
@@ -83,7 +83,7 @@ If None, reporters should treat this as Severity::Error.`,
   }
 }
 
-export class Diagnostic extends Data.TaggedError("Diagnostic")<{
+export class DiagnosticData extends Data.TaggedError("Diagnostic")<{
   info: string
   cause?: unknown
   template?: string
@@ -96,8 +96,8 @@ export class Diagnostic extends Data.TaggedError("Diagnostic")<{
   // biome-ignore lint/suspicious/noExplicitAny: I know
   sourceCode?: any
   labels?: Array<LabeledSpan>
-  related?: Array<Diagnostic>
-  diagnosticSource?: Diagnostic
+  related?: Array<DiagnosticData>
+  diagnosticSource?: DiagnosticData
 }> {
   /**
    * @since 4.0.0

@@ -27,7 +27,8 @@
   },
   "dependencies": {
     "@kbroom/effext": "workspace:*",
-    "@effect/platform-node": "catalog:",
+    "@effect/platform-bun": "catalog:",
+    "@bgotink/kdl": "catalog:",
     "@shikijs/cli": "^4.0.2",
     "effect": "catalog:"
   },

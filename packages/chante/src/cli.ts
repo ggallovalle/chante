@@ -1,4 +1,4 @@
-import { NodeRuntime, NodeServices } from "@effect/platform-node"
+import { BunRuntime, BunServices } from "@effect/platform-bun"
 import { Effect, Layer, Logger } from "effect"
 import { Command } from "effect/unstable/cli"
 import { doctor, down, root, up } from "~/commands.js"
@@ -48,9 +48,9 @@ const program = root.pipe(
 const Layers = Layer.mergeAll(
   OutputLayer,
   Layer.succeed(Logger.LogToStderr)(true),
-  NodeServices.layer,
+  BunServices.layer,
 )
 
 const main = program.pipe(Effect.provide(Layers))
 
-NodeRuntime.runMain(main as Effect.Effect<void, unknown, never>)
+BunRuntime.runMain(main as Effect.Effect<void, unknown, never>)

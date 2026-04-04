@@ -16,28 +16,28 @@
   },
   "exports": {
     "./testing/vitest": {
-      "types": "./dist/testing/vitest.d.ts",
-      "import": "./dist/testing/vitest.js"
+      "types": "./dist/testing/vitest.d.mts",
+      "import": "./dist/testing/vitest.mjs"
     },
     "./uwu": {
-      "types": "./dist/uwu.d.ts",
-      "import": "./dist/uwu.js"
+      "types": "./dist/uwu.d.mts",
+      "import": "./dist/uwu.mjs"
     },
     "./uwu/bun": {
-      "types": "./dist/uwu/bun.d.ts",
-      "import": "./dist/uwu/bun.js"
+      "types": "./dist/uwu/bun.d.mts",
+      "import": "./dist/uwu/bun.mjs"
     },
     "./uwu/node": {
-      "types": "./dist/uwu/node.d.ts",
-      "import": "./dist/uwu/node.js"
+      "types": "./dist/uwu/node.d.mts",
+      "import": "./dist/uwu/node.mjs"
     },
     "./miette": {
-      "types": "./dist/miette.d.ts",
-      "import": "./dist/miette.js"
+      "types": "./dist/miette.d.mts",
+      "import": "./dist/miette.mjs"
     },
     "./kdl": {
-      "types": "./dist/kdl.d.ts",
-      "import": "./dist/kdl.js"
+      "types": "./dist/kdl.d.mts",
+      "import": "./dist/kdl.mjs"
     }
   },
   "files": [
@@ -50,7 +50,7 @@
   },
   "peerDependencies": {
     "effect": "catalog:",
-    "@bgotink/kdl": "^0.4.0",
+    "@bgotink/kdl": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependenciesMeta": {
