@@ -137,4 +137,45 @@ describe("GraphicalReportHandler", () => {
         expect(report[4]).toBeUndefined()
       }),
     ))
+
+  test("footer appears when provided", ({ expect }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const diagnostic = new Diagnostic({
+          severity: "error",
+          code: "E0001",
+          labels: [LabeledSpan.message("test error")],
+        })
+        const handler = new GraphicalReportHandler({
+          ...baseHandler,
+          footer: "See docs: https://example.com",
+        })
+        const report = yield* handler
+          .renderReport(diagnostic, colorizer)
+          .pipe(Stream.runCollect)
+
+        expect(report[report.length - 1]).toEqual(
+          "See docs: https://example.com",
+        )
+      }),
+    ))
+
+  test("help text appears when provided", ({ expect }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const diagnostic = new Diagnostic({
+          severity: "error",
+          code: "E0001",
+          labels: [LabeledSpan.message("test error")],
+          help: "Run with --verbose for more details",
+        })
+        const report = yield* baseHandler
+          .renderReport(diagnostic, colorizer)
+          .pipe(Stream.runCollect)
+
+        expect(report[report.length - 1]).toEqual(
+          "help: Run with --verbose for more details",
+        )
+      }),
+    ))
 })

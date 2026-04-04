@@ -10,49 +10,49 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   "GraphicalReportHandler",
 )({
   links: LinkStyle,
-  termwidth: Schema.Number,
+  // termwidth: Schema.Number,
   theme: ThemeCharacters,
   footer: Schema.optional(Schema.String),
-  contextLines: Schema.Number,
-  tabWidth: Schema.Number,
+  // contextLines: Schema.Number,
+  // tabWidth: Schema.Number,
   withCauseChain: Schema.Boolean,
-  wrapLines: Schema.Boolean,
-  breakWords: Schema.Boolean,
-  withPrimarySpanStart: Schema.Boolean,
+  // wrapLines: Schema.Boolean,
+  // breakWords: Schema.Boolean,
+  // withPrimarySpanStart: Schema.Boolean,
   linkDisplayText: Schema.optional(Schema.String),
-  showRelatedAsNested: Schema.Boolean,
+  // showRelatedAsNested: Schema.Boolean,
 }) {
   public static default() {
     return new GraphicalReportHandler({
       links: "text",
-      termwidth: 200,
+      // termwidth: 200,
       theme: ThemeCharacters.unicode(),
       footer: undefined,
-      contextLines: 3,
-      tabWidth: 3,
+      // contextLines: 3,
+      // tabWidth: 3,
       withCauseChain: true,
-      wrapLines: true,
-      breakWords: true,
-      withPrimarySpanStart: true,
+      // wrapLines: true,
+      // breakWords: true,
+      // withPrimarySpanStart: true,
       linkDisplayText: "(link)",
-      showRelatedAsNested: false,
+      // showRelatedAsNested: false,
     })
   }
 
   public static themed(theme: ThemeCharacters) {
     return new GraphicalReportHandler({
       links: "text",
-      termwidth: 200,
+      // termwidth: 200,
       theme,
       footer: undefined,
-      contextLines: 3,
-      tabWidth: 3,
+      // contextLines: 3,
+      // tabWidth: 3,
       withCauseChain: true,
-      wrapLines: true,
-      breakWords: true,
-      withPrimarySpanStart: true,
+      // wrapLines: true,
+      // breakWords: true,
+      // withPrimarySpanStart: true,
       linkDisplayText: "(link)",
-      showRelatedAsNested: false,
+      // showRelatedAsNested: false,
     })
   }
 
@@ -83,6 +83,15 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       const src: SourceCode | undefined = diagnostic.sourceCode ?? parentSrc
       yield* self.renderHeader(queue, diagnostic, colorizer, false)
       yield* self.renderCauses(queue, diagnostic, colorizer, src)
+      // renderFooter
+      if (diagnostic.help !== undefined) {
+        const initialIdent = colorizer.help("help: ")
+        yield* Queue.offer(queue, `${initialIdent}${diagnostic.help}`)
+      }
+
+      if (self.footer !== undefined) {
+        yield* Queue.offer(queue, self.footer)
+      }
     })
   }
 
