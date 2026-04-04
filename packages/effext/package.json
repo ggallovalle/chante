@@ -15,30 +15,12 @@
     "email": "ggallovalle@gmail.com"
   },
   "exports": {
-    "./testing/vitest": {
-      "types": "./dist/testing/vitest.d.mts",
-      "import": "./dist/testing/vitest.mjs"
-    },
-    "./uwu": {
-      "types": "./dist/uwu.d.mts",
-      "import": "./dist/uwu.mjs"
-    },
-    "./uwu/bun": {
-      "types": "./dist/uwu/bun.d.mts",
-      "import": "./dist/uwu/bun.mjs"
-    },
-    "./uwu/node": {
-      "types": "./dist/uwu/node.d.mts",
-      "import": "./dist/uwu/node.mjs"
-    },
-    "./miette": {
-      "types": "./dist/miette.d.mts",
-      "import": "./dist/miette.mjs"
-    },
-    "./kdl": {
-      "types": "./dist/kdl.d.mts",
-      "import": "./dist/kdl.mjs"
-    }
+    "./kdl": "./src/kdl.ts",
+    "./miette": "./src/miette.ts",
+    "./testing/vitest": "./src/testing/vitest.ts",
+    "./uwu": "./src/uwu.ts",
+    "./uwu/bun": "./src/uwu/bun.ts",
+    "./uwu/node": "./src/uwu/node.ts"
   },
   "files": [
     "dist"
@@ -63,15 +45,27 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@bgotink/kdl": "catalog:",
     "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "publint": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
-    "@bgotink/kdl": "^0.4.0"
+    "vitest": "catalog:"
   },
   "engines": {
     "bun": ">=1.3.11",
     "node": ">=24"
   },
-  "packageManager": "bun@1.3.11"
+  "packageManager": "bun@1.3.11",
+  "publishConfig": {
+    "exports": {
+      "./kdl": "./dist/kdl.mjs",
+      "./miette": "./dist/miette.mjs",
+      "./testing/vitest": "./dist/testing/vitest.mjs",
+      "./uwu": "./dist/uwu.mjs",
+      "./uwu/bun": "./dist/uwu/bun.mjs",
+      "./uwu/node": "./dist/uwu/node.mjs"
+    }
+  }
 }

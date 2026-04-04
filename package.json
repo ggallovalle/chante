@@ -16,9 +16,11 @@
       "@effect/platform-bun": "^4.0.0-beta.36",
       "@effect/language-service": "^0.81.0",
       "typescript": "5.9.3",
+      "@typescript/native-preview": "^7.0.0-dev.20260404.1",
       "@types/bun": "latest",
       "@types/node": "^22.5.4",
       "tsdown": "^0.21.7",
+      "publint": "^0.3.18",
       "vite": "^8.0.3",
       "vitest": "^4.1.0",
       "@bgotink/kdl": "^0.4.0"
