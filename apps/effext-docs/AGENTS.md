@@ -1,6 +1,6 @@
 # AGENTS.md
 
-> Documentation for `@kbroom/effect` library using fumadocs.
+> Documentation for `@kbroom/effext` library using fumadocs.
 
 ## Tech Stack
 
@@ -10,24 +10,24 @@
 
 ## Library Being Documented
 
-`@kbroom/effect` (`packages/effect/`) — A collection of Effect utilities and integrations.
+`@kbroom/effext` (`packages/effext/`) — A collection of Effect utilities and integrations.
 
 ### Public Exports
 
 | Export | Description |
 | ------ |-------------|
-| `@kbroom/effect/testing/vitest` | Vitest integration utilities |
-| `@kbroom/effect/uwu` | Uwu utilities |
-| `@kbroom/effect/uwu/bun` | Bun-specific uwu helpers |
-| `@kbroom/effect/miette` | Error/diagnostic handling |
-| `@kbroom/effect/kdl` | KDL parser and schema |
+| `@kbroom/effext/testing/vitest` | Vitest integration utilities |
+| `@kbroom/effext/uwu` | Uwu utilities |
+| `@kbroom/effext/uwu/bun` | Bun-specific uwu helpers |
+| `@kbroom/effext/miette` | Error/diagnostic handling |
+| `@kbroom/effext/kdl` | KDL parser and schema |
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
 | `mask docs dev` | Start dev server (from root) |
-| `bun run dev` | Start dev server (from apps/effect-docs) |
+| `bun run dev` | Start dev server (from apps/effext-docs) |
 | `bun run build` | Build for production |
 | `bun run types:check` | Type check MDX content |
 
@@ -36,7 +36,7 @@
 ### Directory
 
 ```
-apps/effect-docs/
+apps/effext-docs/
 ├── content/docs/          # MDX documentation files
 │   ├── index.mdx          # → /docs/
 │   ├── getting-started.mdx # → /docs/getting-started
@@ -84,5 +84,5 @@ Create `meta.json` in a folder:
 - Use double quotes for strings
 - No comments unless requested
 - Follow existing MDX patterns in `content/docs/`
-- Reference source code in `packages/effect/src/`
-- Test utilities: `packages/effect/test/`
+- Reference source code in `packages/effext/src/`
+- Test utilities: `packages/effext/test/`

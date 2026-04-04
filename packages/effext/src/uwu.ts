@@ -43,7 +43,7 @@ export const colors = {
   white: css("white"), // ansi 37
 }
 
-export class Style extends Schema.Class<Style>("@kbroom/effect/uwu/Style")({
+export class Style extends Schema.Class<Style>("@kbroom/effext/uwu/Style")({
   fg: Schema.optional(Color),
   bg: Schema.optional(Color),
   bold: Schema.optional(Schema.Boolean),
@@ -55,7 +55,7 @@ export interface IStyler {
 }
 
 export class Styler extends ServiceMap.Service<Styler, IStyler>()(
-  "@kbroom/effect/uwu/Styler",
+  "@kbroom/effext/uwu/Styler",
 ) {}
 
 export class NoopStyler implements IStyler {
@@ -75,7 +75,7 @@ export interface IColorizer {
 }
 
 export class Colorizer extends ServiceMap.Service<Colorizer, IColorizer>()(
-  "@kbroom/effect/uwu/Colorizer",
+  "@kbroom/effext/uwu/Colorizer",
 ) {}
 
 export class DefaultColorizer implements IColorizer {

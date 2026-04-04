@@ -1,5 +1,5 @@
 {
-  "name": "@kbroom/effect-docs",
+  "name": "@kbroom/effext-docs",
   "private": true,
   "type": "module",
   "sideEffects": false,

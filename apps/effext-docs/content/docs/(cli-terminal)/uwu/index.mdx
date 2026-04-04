@@ -9,15 +9,15 @@ uwu provides text styling primitives for the Effect ecosystem, with support for 
 ## Installation
 
 ```npm
-npm install @kbroom/effect
+npm install @kbroom/effext
 ```
 
 ## Basic Usage
 
 ```ts
-import { Style, ansi, css, hex, NooopStylerLayer } from "@kbroom/effect/uwu";
+import { Style, ansi, css, hex, NooopStylerLayer } from "@kbroom/effext/uwu";
 import { Effect, Console } from "effect";
-import { Styler } from "@kbroom/effect/uwu";
+import { Styler } from "@kbroom/effext/uwu";
 
 const program = Effect.gen(function* () {
   const styler = yield* Styler;
@@ -33,7 +33,7 @@ const program = Effect.gen(function* () {
 uwu supports three color types:
 
 ```ts
-import { ansi, css, hex } from "@kbroom/effect/uwu";
+import { ansi, css, hex } from "@kbroom/effext/uwu";
 
 // ANSI color code (0-255)
 ansi(31); // red

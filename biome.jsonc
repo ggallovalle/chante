@@ -44,7 +44,7 @@
   },
   "overrides": [
     {
-      "includes": ["**/*.d.ts", "apps/effect-docs/src/routeTree.gen.ts"],
+      "includes": ["**/*.d.ts", "apps/effext-docs/src/routeTree.gen.ts"],
       "assist": {
         "enabled": false
       },
@@ -59,7 +59,7 @@
       // vitest support {} destructuring of no dependencies
       "includes": [
         "packages/**/test/**/*.{ts,tsx,js,jsx}",
-        "packages/effect/src/testing/**/*.{ts,tsx,js,jsx}"
+        "packages/effext/src/testing/**/*.{ts,tsx,js,jsx}"
       ],
       "linter": {
         "rules": {

@@ -1,1 +1,1 @@
-export { test } from "@kbroom/effect/testing/vitest"
+export { test } from "@kbroom/effext/testing/vitest"

@@ -21,8 +21,8 @@
 ### Basic Usage 🌈
 
 ```typescript
-import { Style, NoopStyler, AnsiBunStyler } from "@kbroom/effect/uwu"
-import { css, ansi } from "@kbroom/effect/uwu"
+import { Style, NoopStyler, AnsiBunStyler } from "@kbroom/effext/uwu"
+import { css, ansi } from "@kbroom/effext/uwu"
 
 // Create a colorful style ✨
 const myStyle = new Style({
@@ -43,7 +43,7 @@ console.log(styled.stiled("Hello, World!"))
 
 ```typescript
 import { Effect, Layer } from "effect"
-import { Styler, AnsiBunStylerLayer } from "@kbroom/effect/uwu"
+import { Styler, AnsiBunStylerLayer } from "@kbroom/effext/uwu"
 
 const program = Effect.gen(function* () {
   const styler = yield* Styler
@@ -100,7 +100,7 @@ This package includes special Bun-specific functionality! 🌟
 Import the Bun styler separately:
 
 ```typescript
-import { AnsiBunStylerLayer } from "@kbroom/effect/uwu/bun"
+import { AnsiBunStylerLayer } from "@kbroom/effext/uwu/bun"
 ```
 
 > **Note:** The `./bun` export only works with Bun runtime due to its use of `Bun.color()`.

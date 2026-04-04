@@ -1,4 +1,4 @@
-export const appName = "@kbroom/effect"
+export const appName = "@kbroom/effext"
 export const docsRoute = "/docs"
 export const docsImageRoute = "/og/docs"
 export const docsContentRoute = "/llms.mdx/docs"
@@ -8,8 +8,8 @@ export const gitConfig = {
   user: "ggallovalle",
   repo: "chante",
   branch: "main",
-  directory: "packages/effect",
-  directoryDocs: "apps/effect-docs",
+  directory: "packages/effext",
+  directoryDocs: "apps/effext-docs",
   get url() {
     return `https://github.com/${gitConfig.user}/${gitConfig.repo}/tree/${gitConfig.branch}/${gitConfig.directory}`
   },

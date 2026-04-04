@@ -29,7 +29,7 @@ The `Styled` object contains:
 Default layer that strips all styling. Use this for production or non-TTY environments.
 
 ```ts
-import { NooopStylerLayer } from "@kbroom/effect/uwu";
+import { NooopStylerLayer } from "@kbroom/effext/uwu";
 
 Effect.provide(program, NooopStylerLayer);
 ```
@@ -39,7 +39,7 @@ Effect.provide(program, NooopStylerLayer);
 Bun-specific layer that leverages `Bun.color` for accurate color rendering.
 
 ```ts
-import { AnsiBunStylerLayer } from "@kbroom/effect/uwu/bun";
+import { AnsiBunStylerLayer } from "@kbroom/effext/uwu/bun";
 
 Effect.provide(program, AnsiBunStylerLayer);
 ```
@@ -47,7 +47,7 @@ Effect.provide(program, AnsiBunStylerLayer);
 ## Usage Pattern
 
 ```ts
-import { Style, ansi, Styler, NooopStylerLayer } from "@kbroom/effect/uwu";
+import { Style, ansi, Styler, NooopStylerLayer } from "@kbroom/effext/uwu";
 import { Effect, Console } from "effect";
 
 const styledLog = (message: string, style: Style) =>
@@ -67,7 +67,7 @@ program.pipe(Effect.provide(NooopStylerLayer));
 You can easily swap layers based on runtime detection:
 
 ```ts
-import { NooopStylerLayer, AnsiBunStylerLayer } from "@kbroom/effect/uwu";
+import { NooopStylerLayer, AnsiBunStylerLayer } from "@kbroom/effext/uwu";
 
 const getStylerLayer = () => {
   if (typeof Bun !== "undefined") {

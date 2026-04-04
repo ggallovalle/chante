@@ -7,7 +7,7 @@ A Vitest fixture for testing Effect-based code with proper scope management.
 Import the `test` function and use it like regular Vitest:
 
 ```typescript
-import { test, Effect } from "@kbroom/effect/testing/vitest"
+import { test, Effect } from "@kbroom/effext/testing/vitest"
 
 test("my effect test", ({ effect, expect }) =>
   effect(

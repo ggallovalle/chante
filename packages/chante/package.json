@@ -26,7 +26,7 @@
     "test": "bunx --bun vitest run"
   },
   "dependencies": {
-    "@kbroom/effect": "workspace:*",
+    "@kbroom/effext": "workspace:*",
     "@effect/platform-node": "catalog:",
     "@shikijs/cli": "^4.0.2",
     "effect": "catalog:"

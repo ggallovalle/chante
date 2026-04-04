@@ -13,7 +13,7 @@ Fancy error reporting for Effect, inspired by the Rust [miette](https://github.c
 
 ```typescript
 import { Effect } from "effect"
-import { Diagnostic, GraphicalReportHandler, StringSourceCode } from "@kbroom/effect/miette"
+import { Diagnostic, GraphicalReportHandler, StringSourceCode } from "@kbroom/effext/miette"
 
 const error = new Diagnostic({
   _tag: "Diagnostic",

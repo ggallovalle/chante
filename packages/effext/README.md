@@ -1,11 +1,11 @@
-# @kbroom/effect
+# @kbroom/effext
 
 A collection of Effect utilities and integrations.
 
 ## Installation
 
 ```bash
-bun add @kbroom/effect
+bun add @kbroom/effext
 ```
 
 Requires `effect` as a peer dependency:
@@ -15,8 +15,8 @@ bun add effect@beta
 ```
 
 Optional dependencies:
-- `vitest` - for `@kbroom/effect/testing/vitest`
-- `@bgotink/kdl` - for `@kbroom/effect/kdl`
+- `vitest` - for `@kbroom/effext/testing/vitest`
+- `@bgotink/kdl` - for `@kbroom/effext/kdl`
 
 ## Modules
 

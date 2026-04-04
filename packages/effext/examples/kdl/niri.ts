@@ -1,4 +1,4 @@
-import { KdlSchema, kdl } from "@kbroom/effect/kdl"
+import { KdlSchema, kdl } from "@kbroom/effext/kdl"
 import { Effect, Schema, SchemaIssue } from "effect"
 
 const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1()
