@@ -6,11 +6,11 @@ export function getRuntime() {
   return "unknown"
 }
 
-export function isServer() {
+function _isServer() {
   return getRuntime() === "node" || getRuntime() === "bun"
 }
 
-export function isClient() {
+function _isClient() {
   return getRuntime() === "browser"
 }
 

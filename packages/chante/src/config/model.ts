@@ -1,20 +1,20 @@
 import { Schema } from "effect"
 
-export class StoredLocationSchema extends Schema.Opaque<StoredLocationSchema>()(
+class StoredLocationSchema extends Schema.Opaque<StoredLocationSchema>()(
   Schema.Struct({
     start: Schema.Struct({ line: Schema.Number, column: Schema.Number }),
     end: Schema.Struct({ line: Schema.Number, column: Schema.Number }),
   }),
 ) {}
 
-export class ChantePackage extends Schema.Opaque<ChantePackage>()(
+class ChantePackage extends Schema.Opaque<ChantePackage>()(
   Schema.Struct({
     name: Schema.String,
     root: Schema.optional(Schema.String),
   }),
 ) {}
 
-export class ChanteBundle extends Schema.Opaque<ChanteBundle>()(
+class ChanteBundle extends Schema.Opaque<ChanteBundle>()(
   Schema.Struct({
     name: Schema.String,
     requires: Schema.Array(Schema.String),

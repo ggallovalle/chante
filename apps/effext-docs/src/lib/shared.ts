@@ -1,6 +1,6 @@
 export const appName = "@kbroom/effext"
 export const docsRoute = "/docs"
-export const docsImageRoute = "/og/docs"
+const _docsImageRoute = "/og/docs"
 export const docsContentRoute = "/llms.mdx/docs"
 
 // fill this with your actual GitHub info, for example:

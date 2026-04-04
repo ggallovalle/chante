@@ -16,7 +16,7 @@ import { mergeRefs } from "~/lib/merge-refs"
 import { buttonVariants } from "./ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 
-export interface CodeBlockProps extends ComponentProps<"figure"> {
+interface CodeBlockProps extends ComponentProps<"figure"> {
   /**
    * Icon of code block
    *
@@ -192,9 +192,20 @@ function CopyButton({
   )
 }
 
+/**
+ * @public
+ */
 export function CodeBlockTabs({ ref, ...props }: ComponentProps<typeof Tabs>) {
   const containerRef = useRef<HTMLDivElement>(null)
   const nested = use(TabsContext) !== null
+
+  const tabCtx = useMemo(
+    () => ({
+      containerRef,
+      nested,
+    }),
+    [nested],
+  )
 
   return (
     <Tabs
@@ -206,21 +217,14 @@ export function CodeBlockTabs({ ref, ...props }: ComponentProps<typeof Tabs>) {
         props.className,
       )}
     >
-      <TabsContext
-        value={useMemo(
-          () => ({
-            containerRef,
-            nested,
-          }),
-          [nested],
-        )}
-      >
-        {props.children}
-      </TabsContext>
+      <TabsContext value={tabCtx}>{props.children}</TabsContext>
     </Tabs>
   )
 }
 
+/**
+ * @public
+ */
 export function CodeBlockTabsList(props: ComponentProps<typeof TabsList>) {
   return (
     <TabsList
@@ -235,6 +239,9 @@ export function CodeBlockTabsList(props: ComponentProps<typeof TabsList>) {
   )
 }
 
+/**
+ * @public
+ */
 export function CodeBlockTabsTrigger({
   children,
   ...props
@@ -253,6 +260,9 @@ export function CodeBlockTabsTrigger({
   )
 }
 
+/**
+ * @public
+ */
 export function CodeBlockTab(props: ComponentProps<typeof TabsContent>) {
   return <TabsContent {...props} />
 }

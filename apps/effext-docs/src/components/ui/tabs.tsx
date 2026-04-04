@@ -16,7 +16,7 @@ import { mergeRefs } from "../../lib/merge-refs"
 type ChangeListener = (v: string) => void
 const listeners = new Map<string, Set<ChangeListener>>()
 
-export interface TabsProps extends ComponentProps<typeof Primitive.Tabs> {
+interface TabsProps extends ComponentProps<typeof Primitive.Tabs> {
   /**
    * Identifier for Sharing value of tabs
    */

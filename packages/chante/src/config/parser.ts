@@ -78,9 +78,7 @@ export const parseFromCli = Effect.fnUntraced(function* (
   }
 })
 
-export const parseFromFile = Effect.fn("parseFromFile")(function* (
-  path: string,
-) {
+const parseFromFile = Effect.fn("parseFromFile")(function* (path: string) {
   const fs = yield* FileSystem.FileSystem
   const pathModule = yield* Path.Path
   const content = yield* fs.readFileString(path)
@@ -240,7 +238,7 @@ const parseFileOps = Effect.fn("parseFileOps")(function* (
   }
 })
 
-export const parseFrom = Effect.fn("parseFrom")(function* (opts: ParseContext) {
+const parseFrom = Effect.fn("parseFrom")(function* (opts: ParseContext) {
   const doc = parse(opts.content, { storeLocations: true })
   const kdlIssues: KdlIssue[] = []
   const failWith: FailWith = (...issues) => invalid(issues, opts)
@@ -332,7 +330,7 @@ export const parseFrom = Effect.fn("parseFrom")(function* (opts: ParseContext) {
   })
 })
 
-export function argumentString(
+function argumentString(
   root: Node,
   index: number,
   failWith: FailWith,
@@ -361,7 +359,7 @@ export function argumentString(
   })
 }
 
-export function childRequired(
+function _childRequired(
   root: Document | Node,
   name: string,
   failWith: FailWith,

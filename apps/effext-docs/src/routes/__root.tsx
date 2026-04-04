@@ -4,6 +4,7 @@ import {
   Outlet,
   Scripts,
 } from "@tanstack/react-router"
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools"
 import { RootProvider } from "fumadocs-ui/provider/tanstack"
 import appCss from "~/styles/app.css?url"
 
@@ -40,6 +41,7 @@ function RootComponent() {
           <Outlet />
         </RootProvider>
         <Scripts />
+        <TanStackRouterDevtools />
       </body>
     </html>
   )

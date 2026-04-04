@@ -16,7 +16,7 @@ import * as Unstyled from "./ui/tabs"
 
 type CollectionKey = string | symbol
 
-export interface TabsProps
+interface TabsProps
   extends Omit<
     ComponentProps<typeof Unstyled.Tabs>,
     "value" | "onValueChange"
@@ -50,7 +50,7 @@ function useTabContext() {
   return ctx
 }
 
-export function TabsList(
+function TabsList(
   props: React.ComponentPropsWithRef<typeof Unstyled.TabsList>,
 ) {
   return (
@@ -64,7 +64,7 @@ export function TabsList(
   )
 }
 
-export function TabsTrigger(
+function TabsTrigger(
   props: React.ComponentPropsWithRef<typeof Unstyled.TabsTrigger>,
 ) {
   return (
@@ -125,7 +125,7 @@ export function Tabs({
   )
 }
 
-export interface TabProps
+interface TabProps
   extends Omit<ComponentProps<typeof Unstyled.TabsContent>, "value"> {
   /**
    * Value of tab, detect from index if unspecified.
@@ -149,7 +149,7 @@ export function Tab({ value, ...props }: TabProps) {
   )
 }
 
-export function TabsContent({
+function TabsContent({
   value,
   className,
   ...props

@@ -4,6 +4,13 @@
 // see the documentation: https://zed.dev/docs/configuring-zed#settings-files
 {
   "format_on_save": "on",
+  "lsp": {
+    "tailwindcss-language-server": {
+      "settings": {
+        "classFunctions": ["cva", "cx"]
+      }
+    }
+  },
   "languages": {
     "JavaScript": {
       "formatter": {
@@ -13,6 +20,13 @@
       }
     },
     "TypeScript": {
+      "formatter": {
+        "language_server": {
+          "name": "biome"
+        }
+      }
+    },
+    "TSX": {
       "formatter": {
         "language_server": {
           "name": "biome"

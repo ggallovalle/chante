@@ -71,7 +71,7 @@ bunx --bun turbo run test
 
 ```bash
 bunx --bun @biomejs/biome check --write --unsafe
-bunx knip --max-show-issues 5
+bunx knip --max-show-issues 5 --fix
 ```
 
 ## docs

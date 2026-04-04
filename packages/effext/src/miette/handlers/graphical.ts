@@ -4,8 +4,7 @@ import type { Diagnostic } from "../diagnostic.js"
 import type { SourceCode } from "../source-code.js"
 import { ThemeCharacters } from "./theme.js"
 
-export const LinkStyle = Schema.Literals(["link", "text", "none"])
-export type LinkStyle = Schema.Schema.Type<typeof LinkStyle>
+const LinkStyle = Schema.Literals(["link", "text", "none"])
 
 export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>(
   "GraphicalReportHandler",
