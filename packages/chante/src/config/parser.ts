@@ -358,18 +358,3 @@ function argumentString(
     location,
   })
 }
-
-function _childRequired(
-  root: Document | Node,
-  name: string,
-  failWith: FailWith,
-): Effect.Effect<Node, Schema.SchemaError, never> {
-  const node = root.findNodeByName(name)
-
-  if (Predicate.isUndefined(node)) {
-    const location = getLocationStrict(root)
-    return failWith({ _type: "RequiredChild", location, child: name })
-  }
-
-  return Effect.succeed(node)
-}

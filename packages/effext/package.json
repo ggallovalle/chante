@@ -8,7 +8,7 @@
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/ggallovalle/chante.git",
-    "directory": "packages/effect"
+    "directory": "packages/effext"
   },
   "bugs": {
     "url": "https://github.com/ggallovalle/chante/issues",
@@ -26,7 +26,7 @@
     "dist"
   ],
   "scripts": {
-    "check": "tsc --noEmit",
+    "check": "tsgo --noEmit",
     "build": "tsdown",
     "test": "bunx --bun vitest run"
   },
@@ -47,6 +47,7 @@
   "devDependencies": {
     "@bgotink/kdl": "catalog:",
     "@types/bun": "catalog:",
+    "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
     "publint": "catalog:",
     "tsdown": "catalog:",

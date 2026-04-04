@@ -49,14 +49,6 @@ fi
 bunx --bun turbo run build
 ```
 
-## check
-
-> Type check all packages with turbo
-
-```bash
-bunx --bun turbo run check
-```
-
 ## test
 
 > Test all packages with turbo
@@ -67,11 +59,12 @@ bunx --bun turbo run test
 
 ## lint
 
-> Run Biome lint/format with unsafe fixes
+> Run biome, knip and tsgo check
 
 ```bash
 bunx --bun @biomejs/biome check --write --unsafe
-bunx knip --max-show-issues 5 --fix
+bunx knip --max-show-issues 5
+bunx --bun turbo run check --affected
 ```
 
 ## system
