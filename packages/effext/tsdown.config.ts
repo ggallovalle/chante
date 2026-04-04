@@ -1,4 +1,4 @@
-import { defineConfig } from "tsup"
+import { defineConfig } from "tsdown"
 
 export default defineConfig([
   {
@@ -13,8 +13,5 @@ export default defineConfig([
     format: "esm",
     dts: true,
     clean: true,
-    // splitting: false,
-    sourcemap: true,
-    external: ["effect", "vitest", "@kbroom/*"],
   },
 ])
