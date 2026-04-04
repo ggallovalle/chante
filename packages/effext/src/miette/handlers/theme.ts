@@ -1,5 +1,4 @@
 import { Schema } from "effect"
-import { isTty } from "~/internal/detect-runtime.js"
 import type { Severity } from "../diagnostic.js"
 
 export class ThemeCharacters extends Schema.Class<ThemeCharacters>(
@@ -113,10 +112,5 @@ export class ThemeCharacters extends Schema.Class<ThemeCharacters>(
       return this.advice
     }
     return this.error
-  }
-
-  static default(): ThemeCharacters {
-    if (!isTty()) return ThemeCharacters.ascii()
-    return ThemeCharacters.unicode()
   }
 }

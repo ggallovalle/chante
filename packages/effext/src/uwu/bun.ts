@@ -1,5 +1,4 @@
-import { Effect, Layer } from "effect"
-import { type Color, type IStyler, type Style, Styler } from "~/uwu.js"
+import type { Color, IStyler, Style } from "~/uwu.js"
 import { effectToAnsi } from "./ansi.js"
 
 export class AnsiBunStyler implements IStyler {
@@ -30,11 +29,6 @@ export class AnsiBunStyler implements IStyler {
     return (value) => `${prefix}${value}${sufix}`
   }
 }
-
-export const layer = Layer.effect(
-  Styler,
-  Effect.sync(() => new AnsiBunStyler()),
-)
 
 function colorToAnsi(color: Color, type: "fg" | "bg"): string | null {
   const ansi = Bun.color(color.value as string, "ansi")

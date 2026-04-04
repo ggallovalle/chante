@@ -26,7 +26,7 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
     return new GraphicalReportHandler({
       links: "text",
       termwidth: 200,
-      theme: ThemeCharacters.default(),
+      theme: ThemeCharacters.unicode(),
       footer: undefined,
       contextLines: 3,
       tabWidth: 3,

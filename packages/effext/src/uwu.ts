@@ -1,5 +1,14 @@
-import { Effect, HashSet, Layer, Match, Schema, ServiceMap } from "effect"
-import { getRuntime, isColorEnabled } from "~/internal/detect-runtime.js"
+import {
+  Config,
+  Effect,
+  HashSet,
+  Layer,
+  Match,
+  Schema,
+  ServiceMap,
+  Stdio,
+} from "effect"
+import { getRuntime } from "~/internal/detect-runtime.js"
 import type { Severity } from "~/miette.js"
 
 export const TextEffect = Schema.Literals([
@@ -49,6 +58,51 @@ export class Style extends Schema.Class<Style>("@kbroom/effext/uwu/Style")({
   bold: Schema.optional(Schema.Boolean),
   effects: Schema.optional(Schema.HashSet(TextEffect)),
 }) {}
+
+export interface ITerminalColors {
+  readonly isTTY: boolean
+  readonly useColors: boolean
+}
+
+export class TerminalColors extends ServiceMap.Service<
+  TerminalColors,
+  ITerminalColors
+>()("@kbroom/effext/uwu/TerminalColors") {
+  public static service = Effect.gen(function* () {
+    const stdio = yield* Stdio.Stdio
+    const noColor = yield* Config.boolean("NO_COLOR").pipe(
+      Config.withDefault(false),
+    )
+    const forceColor = yield* Config.boolean("FORCE_COLOR").pipe(
+      Config.withDefault(false),
+    )
+    const argv = yield* stdio.args
+
+    const hasColorFlag = argv.includes("--color")
+    const hasNoColorFlag = argv.includes("--no-color")
+
+    const isTTY = Boolean(globalThis.process?.stdout?.isTTY)
+    let useColors: boolean
+
+    // Priority order
+    if (hasNoColorFlag) {
+      useColors = false
+    } else if (hasColorFlag) {
+      useColors = true
+    } else if (noColor) {
+      useColors = false
+    } else if (forceColor) {
+      useColors = true
+    } else {
+      useColors = isTTY
+    }
+
+    return TerminalColors.of({
+      isTTY,
+      useColors,
+    })
+  })
+}
 
 export interface IStyler {
   styled(style: Style): (value: unknown) => string
@@ -158,8 +212,9 @@ export const layerWith = (
 ) => {
   return Layer.effectServices(
     Effect.gen(function* () {
+      const colors = yield* TerminalColors.service
       const runtime = getRuntime()
-      const styler = yield* isColorEnabled()
+      const styler = yield* colors.useColors
         ? Match.value(runtime).pipe(
             Match.when("node", () =>
               Effect.promise(() =>
@@ -181,10 +236,11 @@ export const layerWith = (
 
       const colorizer = yield* factory(styler)
 
-      return ServiceMap.makeUnsafe<IColorizer | IStyler>(
+      return ServiceMap.makeUnsafe<IColorizer | IStyler | ITerminalColors>(
         new Map([
           [Styler.key, styler],
           [Colorizer.key, colorizer],
+          [TerminalColors.key, colors],
           // biome-ignore lint/suspicious/noExplicitAny: I Know
         ] as any),
       )

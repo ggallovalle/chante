@@ -1,6 +1,5 @@
 import nodeUtil from "node:util"
-import { Effect, Layer } from "effect"
-import { type Color, type IStyler, type Style, Styler } from "~/uwu.js"
+import type { Color, IStyler, Style } from "~/uwu.js"
 import { effectToAnsi } from "./ansi.js"
 
 export class AnsiNodeStyler implements IStyler {
@@ -31,11 +30,6 @@ export class AnsiNodeStyler implements IStyler {
       : (value) => `${value}`
   }
 }
-
-export const layer = Layer.effect(
-  Styler,
-  Effect.sync(() => new AnsiNodeStyler()),
-)
 
 function colorToFormat(color: Color, type: "fg" | "bg"): string | null {
   if (color._tag === "css") {
