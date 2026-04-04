@@ -83,6 +83,10 @@ export class LabeledSpan extends Schema.Class<LabeledSpan>(
     return LabeledSpan.fromSpan(undefined, span)
   }
 
+  static message(label: string) {
+    return LabeledSpan.from(label, 0, 0)
+  }
+
   get offset(): number {
     return this.span.offset
   }

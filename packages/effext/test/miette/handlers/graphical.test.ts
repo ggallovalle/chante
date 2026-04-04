@@ -1,5 +1,10 @@
 import { Effect, Schema, Stream } from "effect"
-import { Diagnostic, GraphicalReportHandler, ThemeCharacters } from "~/miette"
+import {
+  Diagnostic,
+  GraphicalReportHandler,
+  LabeledSpan,
+  ThemeCharacters,
+} from "~/miette"
 import { NoopColorizer } from "~/uwu"
 import { assertSome, describe, fc, test } from "~test/fixtures"
 
@@ -20,10 +25,9 @@ describe("GraphicalReportHandler", () => {
         { url: Schema.URLFromString },
         Effect.fnUntraced(function* (props) {
           const diagnostic = new Diagnostic({
-            info: "root",
             code: "E0001",
-            url: props.url.toString(),
             severity: "error",
+            url: props.url.toString(),
           })
           const report = assertSome(
             yield* baseHandler
@@ -40,10 +44,9 @@ describe("GraphicalReportHandler", () => {
     Effect.runPromise(
       Effect.gen(function* () {
         const diagnostic = new Diagnostic({
-          info: "root hidden",
           code: "error::hidden",
-          url: "https://example.com/hidden",
           severity: "warning",
+          url: "https://example.com/hidden",
         })
         const report = assertSome(
           yield* noLinkHandler
@@ -60,30 +63,30 @@ describe("GraphicalReportHandler", () => {
       "error",
       "  × file not found",
       new Diagnostic({
-        info: "file not found",
-        code: "E0001",
-        url: "https://example.com",
         severity: "error",
+        code: "E0001",
+        labels: [LabeledSpan.message("file not found")],
+        url: "https://example.com",
       }),
     ],
     [
       "warning",
       "  ⚠ root hidden",
       new Diagnostic({
-        info: "root hidden",
-        code: "E0002",
-        url: "https://example.com/hidden",
         severity: "warning",
+        code: "E0002",
+        labels: [LabeledSpan.message("root hidden")],
+        url: "https://example.com/hidden",
       }),
     ],
     [
       "advice",
       "  ☞ file a complain",
       new Diagnostic({
-        info: "file a complain",
-        code: "E0003",
-        url: "https://example.com/whoami",
         severity: "advice",
+        code: "E0003",
+        labels: [LabeledSpan.message("file a complain")],
+        url: "https://example.com/whoami",
       }),
     ],
   ] as const)("renders the icon according to severity($0)", ([
@@ -107,20 +110,20 @@ describe("GraphicalReportHandler", () => {
     Effect.runPromise(
       Effect.gen(function* () {
         const deepest = new Diagnostic({
-          info: "inner-most",
           severity: "error",
+          labels: [LabeledSpan.message("inner-most")],
         })
 
         const inner = new Diagnostic({
-          info: "inner",
-          diagnosticSource: deepest,
           severity: "error",
+          labels: [LabeledSpan.message("inner")],
+          diagnosticSource: deepest,
         })
 
         const root = new Diagnostic({
-          info: "root",
-          diagnosticSource: inner,
           severity: "error",
+          labels: [LabeledSpan.message("root")],
+          diagnosticSource: inner,
         })
 
         const report = yield* noLinkHandler

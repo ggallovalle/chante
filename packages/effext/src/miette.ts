@@ -19,5 +19,4 @@ export {
   StringSourceCode,
 } from "~/miette/source-code.js"
 
-export const META_SPAN = "mietteSpan"
 export const META_DIAGNOSTIC = "mietteDiagnostic"

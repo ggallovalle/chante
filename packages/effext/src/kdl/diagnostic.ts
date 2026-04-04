@@ -6,31 +6,25 @@ import {
   type Value,
 } from "@bgotink/kdl"
 import { Option, type Schema, SchemaIssue } from "effect"
-import { Diagnostic, META_DIAGNOSTIC, META_SPAN, SourceSpan } from "~/miette.js"
+import {
+  Diagnostic,
+  LabeledSpan,
+  META_DIAGNOSTIC,
+  SourceSpan,
+} from "~/miette.js"
 import type { KdlComponent } from "./model.js"
 
 const META_COMPONENT = "kdlComponent" as const
 
-const tagNotAllowedH = {
-  code: "kdl::tag_not_allowed",
-  msg: makeTemplate(["tag"]),
-}
-
 export function tagNotAllowed(tag: Tag) {
-  const issue = tagNotAllowedH
   const tagName = tag.getName()
-  const [template, message] = issue.msg`Expected no tag name, got "${tagName}"`
+  const message = `Expected no tag name, got "${tagName}"`
   return new SchemaIssue.InvalidValue(Option.some(tag), {
     message,
     [META_COMPONENT]: tag,
-    [META_SPAN]: span(tag),
     [META_DIAGNOSTIC]: new Diagnostic({
-      code: issue.code,
-      info: message,
-      template,
-      meta: {
-        tag: tagName,
-      },
+      code: "kdl::tag_not_allowed",
+      labels: labels(labeled(message, tag)),
       help: "Remove the tag",
     }),
   })
@@ -42,123 +36,66 @@ export function invalidValue(value: Value, cause: SchemaIssue.Issue) {
   return new SchemaIssue.InvalidValue(Option.some(v), {
     message,
     [META_COMPONENT]: value,
-    [META_SPAN]: span(value),
     [META_DIAGNOSTIC]: new Diagnostic({
       code: "kdl::invalid_value",
-      info: message,
+      labels: labels(labeled(message, value)),
       help: "Use a valid value",
     }),
   })
 }
 
-const nodeRequiresArgumentH = {
-  code: "kdl::node_requires_argument",
-  msg: makeTemplate(["node", "index"]),
-}
-
 export function nodeRequiresArgument(node: Node, index: number) {
-  const issue = nodeRequiresArgumentH
   const nodeName = node.getName()
-  const [template, message] =
-    issue.msg`Expected node "${nodeName}" to have argument at index ${index}`
+  const message = `Expected node "${nodeName}" to have argument at index ${index}`
   return new SchemaIssue.InvalidValue(Option.none(), {
     message,
     [META_COMPONENT]: node,
-    [META_SPAN]: span(node),
     [META_DIAGNOSTIC]: new Diagnostic({
-      code: issue.code,
-      info: message,
-      template,
-      meta: {
-        node: nodeName,
-        index,
-      },
+      code: "kdl::node_requires_argument",
+      labels: labels(labeled(message, node)),
       help: "Add the argument",
     }),
   })
 }
 
-const nodeRequiresPropertyH = {
-  code: "kdl::node_requires_property",
-  msg: makeTemplate(["node", "property"]),
-}
-
 export function nodeRequiresProperty(node: Node, property: string) {
-  const issue = nodeRequiresPropertyH
   const nodeName = node.getName()
-  const [template, message] =
-    issue.msg`Expected node "${nodeName}" to have property "${property}"`
+  const message = `Expected node "${nodeName}" to have property "${property}"`
   return new SchemaIssue.InvalidValue(Option.none(), {
     message,
     [META_COMPONENT]: node,
-    [META_SPAN]: span(node),
     [META_DIAGNOSTIC]: new Diagnostic({
-      code: issue.code,
-      info: message,
-      template,
-      meta: {
-        node: nodeName,
-        property,
-      },
+      code: "kdl::node_requires_property",
+      labels: labels(labeled(message, node)),
       help: "Add the property",
     }),
   })
 }
 
-const documentRequiresNodeH = {
-  code: "kdl::document_requires_node",
-  msg: makeTemplate(["node"]),
-}
-
 export function documentRequiresNode(document: Document, name: string) {
-  const issue = documentRequiresNodeH
-  const [template, message] =
-    issue.msg`Expected document to have node "${name}"`
+  const message = `Expected document to have node "${name}"`
   return new SchemaIssue.InvalidValue(Option.some(document), {
     message,
     [META_COMPONENT]: document,
-    [META_SPAN]: span(document),
     [META_DIAGNOSTIC]: new Diagnostic({
-      code: issue.code,
-      info: message,
-      template,
-      meta: {
-        name,
-      },
+      code: "kdl::document_requires_node",
+      labels: labels(labeled(message, document)),
       help: `Add a node named "${name}" to the document`,
     }),
   })
 }
 
-const nodeNameMismatchH = {
-  code: "kdl::node_name_mismatch",
-  msg: makeTemplate(["expected", "actual"]),
-}
-
 export function nodeNameMismatch(node: Node, expected: string, actual: string) {
-  const issue = nodeNameMismatchH
-  const [template, message] =
-    issue.msg`Expected node to have name "${expected}", got "${actual}"`
+  const message = `Expected node to have name "${expected}", got "${actual}"`
   return new SchemaIssue.InvalidValue(Option.some(node), {
     message,
     [META_COMPONENT]: node.name,
-    [META_SPAN]: span(node.name),
     [META_DIAGNOSTIC]: new Diagnostic({
-      code: issue.code,
-      info: message,
-      template,
-      meta: {
-        expected,
-        actual,
-      },
+      code: "kdl::node_name_mismatch",
+      labels: labels(labeled(message, node.name)),
       help: `Rename the node to "${expected}"`,
     }),
   })
-}
-
-const optRequiresArgumentH = {
-  code: "kdl::option_requires_argument",
-  msg: makeTemplate(["node", "index"]),
 }
 
 export function optRequiresArgument(
@@ -166,48 +103,27 @@ export function optRequiresArgument(
   optName: string,
   index: number,
 ) {
-  const issue = optRequiresArgumentH
-  const [template, message] =
-    issue.msg`Expected node "${optName}" to have argument at index ${index}`
+  const message = `Expected node "${optName}" to have argument at index ${index}`
   return new SchemaIssue.InvalidValue(Option.none(), {
     message,
     [META_COMPONENT]: node,
-    [META_SPAN]: span(node),
     [META_DIAGNOSTIC]: new Diagnostic({
-      code: issue.code,
-      info: message,
-      template,
-      meta: {
-        node: optName,
-        index,
-      },
+      code: "kdl::option_requires_argument",
+      labels: labels(labeled(message, node)),
       help: `Add an argument at index ${index}`,
     }),
   })
 }
 
-const optRequiresPropertyH = {
-  code: "kdl::option_requires_property_or_child",
-  msg: makeTemplate(["node", "property"]),
-}
-
 export function optRequiresProperty(node: Node, name: string) {
-  const issue = optRequiresPropertyH
   const nodeName = node.getName()
-  const [template, message] =
-    issue.msg`Expected node "${nodeName}" to have either a child node or a property named "${name}"`
+  const message = `Expected node "${nodeName}" to have either a child node or a property named "${name}"`
   return new SchemaIssue.InvalidValue(Option.none(), {
     message,
     [META_COMPONENT]: node,
-    [META_SPAN]: span(node),
     [META_DIAGNOSTIC]: new Diagnostic({
-      code: issue.code,
-      info: message,
-      template,
-      meta: {
-        node: nodeName,
-        property: name,
-      },
+      code: "kdl::option_requires_property_or_child",
+      labels: labels(labeled(message, node)),
       help: `Add a child node or property named "${name}"`,
     }),
   })
@@ -253,18 +169,23 @@ export function span(component: KdlComponent | null | undefined) {
   return SourceSpan.fromStartEnd(location.start.offset, location.end.offset)
 }
 
-function makeTemplate(names: string[]) {
-  return function template(
-    strings: TemplateStringsArray,
-    ...values: unknown[]
-  ): [string, string] {
-    // Raw template with named placeholders
-    // based on https://projectfluent.org/
-    const rawTemplate = String.raw(strings, ...names.map((n) => `{ $${n} }`))
+function labeled(
+  message: string,
+  component: KdlComponent | null | undefined,
+): LabeledSpan | undefined {
+  const componentSpan = span(component)
+  if (componentSpan === undefined) return undefined
+  return LabeledSpan.fromSpan(message, componentSpan)
+}
 
-    // Evaluated message
-    const message = String.raw(strings, ...values)
-
-    return [rawTemplate, message]
+function labels(
+  ...labels: (LabeledSpan | undefined)[]
+): LabeledSpan[] | undefined {
+  const result = []
+  for (const label of labels) {
+    if (label !== undefined) {
+      result.push(label)
+    }
   }
+  return result.length === 0 ? undefined : result
 }
