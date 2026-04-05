@@ -1,2 +1,0 @@
-// This triggers document_requires_node - wrong node name
-bundle "core"

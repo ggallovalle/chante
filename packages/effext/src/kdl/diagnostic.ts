@@ -79,7 +79,6 @@ export function documentRequiresNode(document: Document, name: string) {
     [META_COMPONENT]: document,
     [META_DIAGNOSTIC]: new Diagnostic({
       code: "kdl::document_requires_node",
-      labels: labels(labeled(message, document)),
       help: `Add a node named "${name}" to the document`,
     }),
   })

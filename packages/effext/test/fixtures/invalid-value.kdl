@@ -1,2 +1,0 @@
-// This triggers invalid_value - number instead of string
-package "mylib" version=42

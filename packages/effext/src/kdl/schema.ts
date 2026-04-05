@@ -15,7 +15,7 @@ import * as D from "./diagnostic.js"
 import { span } from "./diagnostic.js"
 import type * as Model from "./model.js"
 
-export { decodeSourceResult, diagnostFile } from "./parser.js"
+export { decodeSourceResult, diagnostFile, diagnosticString } from "./parser.js"
 
 export type ValueConstraint = Schema.Encoder<string | number | boolean | null>
 // biome-ignore lint/suspicious/noExplicitAny: I know

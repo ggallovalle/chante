@@ -15,6 +15,8 @@ import {
   FromFileSourceCode,
   LabeledSpan,
   META_DIAGNOSTIC,
+  type SourceCode,
+  StringSourceCode,
 } from "~/miette"
 
 function getAnnotation(
@@ -92,33 +94,46 @@ export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(
   }
 }
 
-export const diagnostFile = <S extends Schema.Decoder<unknown>>(schema: S) => {
-  const componentType = schema.ast.annotations?.["kdlComponent"]
-  if (typeof componentType !== "string") {
-    throw new Error(
-      "The schema MUST be a KDL component, either 'value', 'node' or 'document'",
-    )
-  }
+const parseKdl = <S extends Schema.Decoder<unknown>>(schema: S) => {
   const parser = SchemaParser.decodeUnknownEffect(schema)
-  const curried = Effect.fnUntraced(function* (path: string) {
-    const [sourceCode, source] = yield* Effect.orDie(
-      FromFileSourceCode.fromFileContent(path, "kdl"),
-    )
+  return (source: string, sourceCode: SourceCode) => {
     const kdl = parse(source, {
-      // biome-ignore lint/suspicious/noExplicitAny: I know
-      as: componentType as any,
       storeLocations: true,
     })
-    const result = yield* parser(kdl).pipe(
+    return parser(kdl).pipe(
       Effect.mapError((issue) => {
         const diagnostic = extractDiagnostic(issue)
         diagnostic.sourceCode = sourceCode
         return diagnostic
       }),
     )
-    return result
-  }) as (
-    path: string,
-  ) => Effect.Effect<S["Type"], Diagnostic, FileSystem.FileSystem | Path.Path>
-  return curried
+  }
+}
+
+export const diagnostFile = <S extends Schema.Decoder<unknown>>(
+  schema: S,
+): ((
+  path: string,
+) => Effect.Effect<
+  S["Type"],
+  Diagnostic,
+  FileSystem.FileSystem | Path.Path | S["DecodingServices"]
+>) => {
+  const parse = parseKdl(schema)
+  return Effect.fnUntraced(function* (path: string) {
+    const [sourceCode, source] = yield* Effect.orDie(
+      FromFileSourceCode.fromFileContent(path, "kdl"),
+    )
+    return yield* parse(source, sourceCode)
+  })
+}
+
+export const diagnosticString = <S extends Schema.Decoder<unknown>>(
+  schema: S,
+) => {
+  const parse = parseKdl(schema)
+  return (source: string) => {
+    const sourceCode = new StringSourceCode(source)
+    return parse(source, sourceCode)
+  }
 }
