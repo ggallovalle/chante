@@ -67,6 +67,32 @@ const extractKeywordInfo = (
   return null
 }
 
+type ParseErrorInfo = {
+  label: string
+  help: string
+  code: string
+} | null
+
+const extractParseErrorInfo = (message: string): ParseErrorInfo => {
+  if (message.startsWith("Invalid node children")) {
+    return {
+      label: "Invalid node children",
+      help: "Check for missing closing brace",
+      code: "kdl::invalid_node_children",
+    }
+  }
+
+  if (message.startsWith("Expected a value")) {
+    return {
+      label: "Expected a value",
+      help: "Add a value after the property name",
+      code: "kdl::expected_value",
+    }
+  }
+
+  return null
+}
+
 export const extractDiagnosticFromError = (
   error: InvalidKdlError,
   sourceCode: SourceCode,
@@ -90,12 +116,24 @@ export const extractDiagnosticFromError = (
       code = "kdl::invalid_keyword"
       help = keywordInfo.help
     } else {
-      if (endOffset === startOffset + 1) {
-        startOffset = Math.max(0, startOffset - 1)
-        endOffset = startOffset + 1
+      const parseErrorInfo = extractParseErrorInfo(message)
+      if (parseErrorInfo) {
+        code = parseErrorInfo.code
+        help = parseErrorInfo.help
+        if (endOffset <= startOffset + 1) {
+          startOffset = Math.max(0, startOffset - 1)
+          endOffset = startOffset + 1
+        }
+        const span = SourceSpan.fromStartEnd(startOffset, endOffset)
+        labels.push(LabeledSpan.fromSpan(parseErrorInfo.label, span))
+      } else {
+        if (endOffset <= startOffset + 1) {
+          startOffset = Math.max(0, startOffset - 1)
+          endOffset = startOffset + 1
+        }
+        const span = SourceSpan.fromStartEnd(startOffset, endOffset)
+        labels.push(LabeledSpan.fromSpan(message, span))
       }
-      const span = SourceSpan.fromStartEnd(startOffset, endOffset)
-      labels.push(LabeledSpan.fromSpan(message, span))
     }
   }
 

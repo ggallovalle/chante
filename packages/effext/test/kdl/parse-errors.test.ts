@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect"
 import { KdlSchema as K, kdl } from "~/kdl"
+import { SourceSpan } from "~/miette"
 import { assertDiagnosticPointsTo, describe, test } from "~test/fixtures.js"
 
 class SampleSchema extends Schema.Opaque<SampleSchema>()(
@@ -51,6 +52,28 @@ describe("parse errors", () => {
         yield* assertDiagnosticPointsTo(diagnostic, "true", 1)
         yield* assertDiagnosticPointsTo(diagnostic, "false", 2)
         yield* assertDiagnosticPointsTo(diagnostic, " ", 3)
+      }),
+    ))
+
+  test("invalid node children - missing closing brace", ({ expect }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const diagnostic = yield* Effect.flip(parseString(kdl`test { child `))
+        expect(diagnostic.code).toEqual("kdl::invalid_node_children")
+        expect(diagnostic.help).toEqual("Check for missing closing brace")
+        expect(diagnostic.labels?.[0]?.label).toEqual("Invalid node children")
+        yield* assertDiagnosticPointsTo(diagnostic, SourceSpan.from(12, 1))
+      }),
+    ))
+
+  test("expected a value - property without value", ({ expect }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const diagnostic = yield* Effect.flip(parseString(kdl`test key=`))
+        expect(diagnostic.code).toEqual("kdl::expected_value")
+        expect(diagnostic.help).toEqual("Add a value after the property name")
+        expect(diagnostic.labels?.[0]?.label).toEqual("Expected a value")
+        yield* assertDiagnosticPointsTo(diagnostic, "=")
       }),
     ))
 })
