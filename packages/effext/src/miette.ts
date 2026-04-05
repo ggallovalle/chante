@@ -16,6 +16,7 @@ export {
   TypeId as ReportHandlerTypeId,
 } from "~/miette/handlers/handler.js"
 export { JsonReportHandler } from "~/miette/handlers/json.js"
+export { NarratableReportHandler } from "~/miette/handlers/narratable.js"
 export { ThemeCharacters } from "~/miette/handlers/theme.js"
 export {
   LabeledSpan,

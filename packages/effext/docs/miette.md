@@ -7,13 +7,19 @@ Fancy error reporting for Effect, inspired by the Rust [miette](https://github.c
 - **Diagnostic**: Schema-based error type with labels, source code, and severity
 - **SourceCode**: Read source code spans with context
 - **GraphicalReportHandler**: Pretty-print errors to terminal
+- **NarratableReportHandler**: Concise plain-text summary for logs or CI
 - **Themes**: Unicode, ASCII, and emoji themes
 
 ## Usage
 
 ```typescript
 import { Effect } from "effect"
-import { Diagnostic, GraphicalReportHandler, StringSourceCode } from "@kbroom/effext/miette"
+import {
+  Diagnostic,
+  GraphicalReportHandler,
+  NarratableReportHandler,
+  StringSourceCode,
+} from "@kbroom/effext/miette"
 
 const error = new Diagnostic({
   _tag: "Diagnostic",
@@ -24,9 +30,13 @@ const error = new Diagnostic({
 })
 
 const handler = GraphicalReportHandler.default()
+const narratable = NarratableReportHandler.default()
 
 const source = new StringSourceCode("hello world")
 handler.debug(error, { sourceCode: source })
+for await (const line of narratable.renderReport(error)) {
+  console.log(line)
+}
 ```
 
 ## API
