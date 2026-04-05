@@ -1,4 +1,4 @@
-import { parse } from "@bgotink/kdl"
+import { InvalidKdlError, parse } from "@bgotink/kdl"
 import {
   Effect,
   Option as EffectOption,
@@ -16,6 +16,7 @@ import {
   LabeledSpan,
   META_DIAGNOSTIC,
   type SourceCode,
+  SourceSpan,
   StringSourceCode,
 } from "~/miette"
 
@@ -94,19 +95,49 @@ export const decodeSourceResult = <S extends Schema.Decoder<unknown>>(
   }
 }
 
+const extractLabelsFromError = (error: InvalidKdlError): LabeledSpan[] => {
+  const labels: LabeledSpan[] = []
+  for (const e of error.flat()) {
+    let startOffset = e.start?.offset ?? 0
+    let endOffset = e.end?.offset ?? startOffset
+    if (endOffset === startOffset + 1) {
+      startOffset = Math.max(0, startOffset - 1)
+      endOffset = startOffset + 1
+    }
+    const span = SourceSpan.fromStartEnd(startOffset, endOffset)
+    const message = e.message.replace(/\s+at\s+\d+:\d+$/, "")
+    labels.push(LabeledSpan.fromSpan(message, span))
+  }
+  return labels
+}
+
 const parseKdl = <S extends Schema.Decoder<unknown>>(schema: S) => {
   const parser = SchemaParser.decodeUnknownEffect(schema)
   return (source: string, sourceCode: SourceCode) => {
-    const kdl = parse(source, {
-      storeLocations: true,
-    })
-    return parser(kdl).pipe(
-      Effect.mapError((issue) => {
-        const diagnostic = extractDiagnostic(issue)
-        diagnostic.sourceCode = sourceCode
-        return diagnostic
-      }),
-    )
+    try {
+      const kdl = parse(source, {
+        storeLocations: true,
+      })
+      return parser(kdl).pipe(
+        Effect.mapError((issue) => {
+          const diagnostic = extractDiagnostic(issue)
+          diagnostic.sourceCode = sourceCode
+          return diagnostic
+        }),
+      )
+    } catch (error) {
+      if (error instanceof InvalidKdlError) {
+        const labels = extractLabelsFromError(error)
+        return Effect.fail(
+          new Diagnostic({
+            code: "kdl::parse_error",
+            labels,
+            sourceCode,
+          }),
+        )
+      }
+      throw error
+    }
   }
 }
 

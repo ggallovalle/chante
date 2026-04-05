@@ -146,6 +146,55 @@ test("returns Diagnostic for tag not allowed", ({ expect }) =>
     }),
   ))
 
+test("returns Diagnostic for invalid identifier", ({ expect }) =>
+  Effect.runPromise(
+    Effect.gen(function* () {
+      const diagnostic = yield* Effect.flip(parseString(kdl`lorem[ipsum`))
+      expect(diagnostic.code).toEqual("kdl::parse_error")
+      expect(diagnostic.labels).toBeDefined()
+      expect(diagnostic.labels?.length).toBe(1)
+      const label0 = diagnostic.labels?.[0]
+      expect(label0?.label).toEqual(
+        'Unexpected character "[", did you forget to quote an identifier?',
+      )
+      const pointer = yield* diagnosticPointsTo(diagnostic)
+      expect(pointer).toEqual("m")
+    }),
+  ))
+
+test("returns Diagnostic for multiple parse errors", ({ expect }) =>
+  Effect.runPromise(
+    Effect.gen(function* () {
+      const diagnostic = yield* Effect.flip(
+        parseString(kdl`test null true false [ohno]`),
+      )
+      expect(diagnostic.code).toEqual("kdl::parse_error")
+      expect(diagnostic.labels).toBeDefined()
+      expect(diagnostic.labels?.length).toBe(4)
+      const [l0, l1, l2, l3] = diagnostic.labels ?? []
+      expect(l0?.label).toEqual(
+        'Invalid keyword "null", add a leading # to use the keyword or surround with quotes to make it a string',
+      )
+      expect(l1?.label).toEqual(
+        'Invalid keyword "true", add a leading # to use the keyword or surround with quotes to make it a string',
+      )
+      expect(l2?.label).toEqual(
+        'Invalid keyword "false", add a leading # to use the keyword or surround with quotes to make it a string',
+      )
+      expect(l3?.label).toEqual(
+        'Unexpected character "[", did you forget to quote an identifier?',
+      )
+      const pointer0 = yield* diagnosticPointsTo(diagnostic, 0)
+      expect(pointer0).toEqual("l")
+      const pointer1 = yield* diagnosticPointsTo(diagnostic, 1)
+      expect(pointer1).toEqual("e")
+      const pointer2 = yield* diagnosticPointsTo(diagnostic, 2)
+      expect(pointer2).toEqual("e")
+      const pointer3 = yield* diagnosticPointsTo(diagnostic, 3)
+      expect(pointer3).toEqual(" ")
+    }),
+  ))
+
 const diagnosticPointsTo = Effect.fnUntraced(function* (
   diagnostic: Diagnostic,
   labelIndex: number = 0,
