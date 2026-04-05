@@ -70,11 +70,13 @@ export class TerminalColors extends ServiceMap.Service<
 >()("@kbroom/effext/uwu/TerminalColors") {
   public static service = Effect.gen(function* () {
     const stdio = yield* Stdio.Stdio
-    const noColor = yield* Config.boolean("NO_COLOR").pipe(
-      Config.withDefault(false),
+    const noColor = yield* Effect.orElseSucceed(
+      Config.boolean("NO_COLOR").pipe(Config.withDefault(false)).asEffect(),
+      () => false,
     )
-    const forceColor = yield* Config.boolean("FORCE_COLOR").pipe(
-      Config.withDefault(false),
+    const forceColor = yield* Effect.orElseSucceed(
+      Config.boolean("FORCE_COLOR").pipe(Config.withDefault(false)).asEffect(),
+      () => false,
     )
     const argv = yield* stdio.args
 
@@ -102,6 +104,11 @@ export class TerminalColors extends ServiceMap.Service<
       useColors,
     })
   })
+
+  public static layer = Layer.effect(this, this.service)
+
+  public static layerTest = (impl: ITerminalColors) =>
+    Layer.succeed(this, this.of(impl))
 }
 
 export interface IStyler {
@@ -212,7 +219,7 @@ export const layerWith = (
 ) => {
   return Layer.effectServices(
     Effect.gen(function* () {
-      const colors = yield* TerminalColors.service
+      const colors = yield* TerminalColors
       const runtime = getRuntime()
       const styler = yield* colors.useColors
         ? Match.value(runtime).pipe(
@@ -236,11 +243,11 @@ export const layerWith = (
 
       const colorizer = yield* factory(styler)
 
-      return ServiceMap.makeUnsafe<IColorizer | IStyler | ITerminalColors>(
+      return ServiceMap.makeUnsafe<Colorizer | Styler>(
         new Map([
           [Styler.key, styler],
           [Colorizer.key, colorizer],
-          [TerminalColors.key, colors],
+          // [TerminalColors.key, colors],
           // biome-ignore lint/suspicious/noExplicitAny: I Know
         ] as any),
       )
