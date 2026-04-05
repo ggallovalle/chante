@@ -1,7 +1,5 @@
 import { KdlSchema, kdl } from "@kbroom/effext/kdl"
-import { Effect, Schema, SchemaIssue } from "effect"
-
-const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1()
+import { Effect, Schema } from "effect"
 
 const Script = KdlSchema.Node("script", {
   name: KdlSchema.Arg(0, KdlSchema.V(Schema.String)),
@@ -31,7 +29,7 @@ const Package = KdlSchema.Node("package", {
   devDeps: KdlSchema.Many(DevDep),
 })
 
-const decoder = KdlSchema.decodeSourceResult(Package)
+const parse = KdlSchema.diagnosticString(Package)
 
 const program = Effect.gen(function* () {
   const fullPackage = kdl`
@@ -47,9 +45,10 @@ package "mylib" "1.0.0" {
 `
 
   console.log("=== Full package ===")
-  const fullResult = yield* Effect.fromResult(decoder(fullPackage)).pipe(
-    Effect.mapError(standardSchemaFormatter),
-  )
+  const fullResult = yield* Effect.match(parse(fullPackage), {
+    onSuccess: (v) => v,
+    onFailure: (e) => e,
+  })
   console.dir(fullResult, { depth: null })
 
   const minimalPackage = kdl`
@@ -57,9 +56,10 @@ package "mylib" "1.0.0"
 `
 
   console.log("\n=== Minimal package ===")
-  const minimalResult = yield* Effect.fromResult(decoder(minimalPackage)).pipe(
-    Effect.mapError(standardSchemaFormatter),
-  )
+  const minimalResult = yield* Effect.match(parse(minimalPackage), {
+    onSuccess: (v) => v,
+    onFailure: (e) => e,
+  })
   console.dir(minimalResult, { depth: null })
 
   const withScripts = kdl`
@@ -70,9 +70,10 @@ package "mylib" "1.0.0" {
 `
 
   console.log("\n=== Package with scripts only ===")
-  const scriptsResult = yield* Effect.fromResult(decoder(withScripts)).pipe(
-    Effect.mapError(standardSchemaFormatter),
-  )
+  const scriptsResult = yield* Effect.match(parse(withScripts), {
+    onSuccess: (v) => v,
+    onFailure: (e) => e,
+  })
   console.dir(scriptsResult, { depth: null })
 
   const withDeps = kdl`
@@ -83,9 +84,10 @@ package "mylib" "1.0.0" {
 `
 
   console.log("\n=== Package with deps only ===")
-  const depsResult = yield* Effect.fromResult(decoder(withDeps)).pipe(
-    Effect.mapError(standardSchemaFormatter),
-  )
+  const depsResult = yield* Effect.match(parse(withDeps), {
+    onSuccess: (v) => v,
+    onFailure: (e) => e,
+  })
   console.dir(depsResult, { depth: null })
 })
 

@@ -1,7 +1,5 @@
 import { KdlSchema, kdl } from "@kbroom/effext/kdl"
-import { Effect, Schema, SchemaIssue } from "effect"
-
-const standardSchemaFormatter = SchemaIssue.makeFormatterStandardSchemaV1()
+import { Effect, Schema } from "effect"
 
 // @see https://github.com/niri-wm/niri/blob/main/niri-config/src/workspace.rs
 const Workspace = KdlSchema.Node("workspace", {
@@ -17,7 +15,7 @@ const Config = KdlSchema.Document({
   worspaces: KdlSchema.Many(Workspace),
 })
 
-const decoder = KdlSchema.decodeSourceResult(Config)
+const parse = KdlSchema.diagnosticString(Config)
 
 const program = Effect.gen(function* () {
   const namedWorkspaces = kdl`
@@ -28,9 +26,10 @@ workspace "chat" {
 }
 `
 
-  const namedWorkspacesTree = yield* Effect.fromResult(
-    decoder(namedWorkspaces),
-  ).pipe(Effect.mapError(standardSchemaFormatter))
+  const namedWorkspacesTree = yield* Effect.match(parse(namedWorkspaces), {
+    onSuccess: (v) => v,
+    onFailure: (e) => e,
+  })
 
   console.dir(namedWorkspacesTree, { depth: null })
 })
