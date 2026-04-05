@@ -1,0 +1,2 @@
+// This triggers node_requires_property - missing version property
+package "mylib"

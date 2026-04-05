@@ -1,4 +1,3 @@
-import { BunFileSystem, BunPath } from "@effect/platform-bun"
 import { Effect, Layer } from "effect"
 import {
   FromFileSourceCode,
@@ -7,7 +6,12 @@ import {
   SourceSpan,
   StringSourceCode,
 } from "~/miette"
-import { describe, test } from "~test/fixtures"
+import {
+  describe,
+  PlatformFileSystem,
+  PlatformPath,
+  test,
+} from "~test/fixtures"
 
 export function runSourceCodeTests(
   name: string,
@@ -167,7 +171,7 @@ runSourceCodeTests("FromFileSourceCode", (source) => {
 })
 
 describe("FromFileSourceCode.fromFile", () => {
-  const testLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer)
+  const testLayer = Layer.mergeAll(PlatformFileSystem.layer, PlatformPath.layer)
 
   test("reads file and creates source code", ({ expect }) =>
     Effect.runPromise(

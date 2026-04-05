@@ -1,0 +1,2 @@
+// This triggers node_name_mismatch - wrong node name
+wrongnode "mylib"

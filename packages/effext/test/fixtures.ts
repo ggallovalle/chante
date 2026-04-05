@@ -7,3 +7,8 @@ import { flow, Option, Result } from "effect"
 export const assertResultSuccess = Result.getOrThrow
 export const assertResultFailure = flow(Result.flip, Result.getOrThrow)
 export const assertSome = Option.getOrThrow
+
+export {
+  NodeFileSystem as PlatformFileSystem,
+  NodePath as PlatformPath,
+} from "@effect/platform-node"
