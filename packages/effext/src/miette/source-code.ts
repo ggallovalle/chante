@@ -1,9 +1,11 @@
 import { Effect } from "effect"
+import * as FileSystem from "effect/FileSystem"
+import * as Path from "effect/Path"
 import { type MietteError, OutOfBounds } from "./error.js"
 import { SourceSpan, SpanContents } from "./protocol.js"
 
-export interface SourceCode {
-  readSpan(
+export abstract class SourceCode {
+  abstract readSpan(
     span: SourceSpan,
     contextLinesBefore: number,
     contextLinesAfter: number,
@@ -71,11 +73,12 @@ function sliceWithContext(
   }
 }
 
-export class StringSourceCode implements SourceCode {
+export class StringSourceCode extends SourceCode {
   private readonly data: Uint8Array
   private readonly lineStarts: number[]
 
   constructor(source: string) {
+    super()
     this.data = new TextEncoder().encode(source)
     this.lineStarts = computeLineStarts(this.data)
   }
@@ -161,7 +164,7 @@ export class StringSourceCode implements SourceCode {
   }
 }
 
-export class FromFileSourceCode implements SourceCode {
+export class FromFileSourceCode extends SourceCode {
   #inner: SourceCode
   public fs: string
   public path: string
@@ -175,6 +178,7 @@ export class FromFileSourceCode implements SourceCode {
     language: string,
     content: SourceCode,
   ) {
+    super()
     this.fs = fs
     this.path = path
     this.name = name
@@ -202,4 +206,15 @@ export class FromFileSourceCode implements SourceCode {
       },
     )
   }
+
+  static readonly fromFile = Effect.fn("FromFileSourceCode.fromFile")(
+    function* (path: string, language: string) {
+      const fs = yield* FileSystem.FileSystem
+      const pathModule = yield* Path.Path
+      const content = yield* fs.readFileString(path)
+      const name = pathModule.basename(path)
+      const source = new StringSourceCode(content)
+      return new FromFileSourceCode("fs", path, name, language, source)
+    },
+  )
 }

@@ -15,7 +15,7 @@ export {
 } from "~/miette/protocol.js"
 export {
   FromFileSourceCode,
-  type SourceCode,
+  SourceCode,
   StringSourceCode,
 } from "~/miette/source-code.js"
 

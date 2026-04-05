@@ -1,4 +1,5 @@
-import { Effect } from "effect"
+import { BunFileSystem, BunPath } from "@effect/platform-bun"
+import { Effect, Layer } from "effect"
 import {
   FromFileSourceCode,
   OutOfBounds,
@@ -163,4 +164,44 @@ runSourceCodeTests("FromFileSourceCode", (source) => {
       new StringSourceCode(source),
     ),
   )
+})
+
+describe("FromFileSourceCode.fromFile", () => {
+  const testLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer)
+
+  test("reads file and creates source code", ({ expect }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const src = yield* FromFileSourceCode.fromFile(
+          "test/fixtures/sample.kdl",
+          "kdl",
+        )
+        expect(src.language).toBe("kdl")
+        expect(src.name).toBe("sample.kdl")
+        expect(src.path).toContain("sample.kdl")
+      }).pipe(Effect.provide(testLayer)),
+    ))
+
+  test("readSpan works on file content", ({ expect }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const src = yield* FromFileSourceCode.fromFile(
+          "test/fixtures/sample.kdl",
+          "kdl",
+        )
+        const span = SourceSpan.from(0, 7)
+        const contents = yield* src.readSpan(span, 0, 0)
+        expect(contents.decode()).toBe("package")
+      }).pipe(Effect.provide(testLayer)),
+    ))
+
+  test("fails for non-existent file", ({ expect }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const result = yield* Effect.result(
+          FromFileSourceCode.fromFile("nonexistent.kdl", "kdl"),
+        )
+        expect(result._tag).toBe("Failure")
+      }).pipe(Effect.provide(testLayer)),
+    ))
 })

@@ -1,0 +1,6 @@
+package "mylib" version="1.0.0"
+setting "debug"
+
+bundle "core" {
+  name "app"
+}
