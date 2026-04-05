@@ -28,7 +28,8 @@
   "scripts": {
     "check": "tsgo --noEmit",
     "build": "tsdown",
-    "test": "bunx --bun vitest run"
+    "test": "bunx --bun vitest run",
+    "bench": "bunx --bun vitest bench --run"
   },
   "peerDependencies": {
     "effect": "catalog:",

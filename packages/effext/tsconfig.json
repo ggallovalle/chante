@@ -4,8 +4,9 @@
     "types": ["node", "bun"],
     "paths": {
       "~/*": ["./src/*"],
-      "~test/*": ["./test/*"]
+      "~test/*": ["./test/*"],
+      "~bench/*": ["./benchmark/*"]
     }
   },
-  "include": ["src/**/*", "test/**/*", "examples/**/*"]
+  "include": ["src/**/*", "test/**/*", "examples/**/*", "benchmark/**/*"]
 }

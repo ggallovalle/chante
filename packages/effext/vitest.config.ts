@@ -19,5 +19,9 @@ export default defineConfig({
     sequence: {
       concurrent: true,
     },
+    benchmark: {
+      include: ["./benchmark/**/*.bench.ts?(x)"],
+      outputJson: "./benchmark/bench-result.main.json",
+    },
   },
 })

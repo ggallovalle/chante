@@ -15,6 +15,7 @@
 | `mask deps add <pkg> [--dev] [--version=<ver>]` | Add dependency                        |
 | `mask build`                                    | Build all packages                    |
 | `mask lint`                                     | Lint/format with Biome (unsafe fixes) |
+| `mask benchmark`                                | Run benchmarks for packages           |
 
 ### packages/cli
 
@@ -110,6 +111,7 @@ invoking commands.
 | Workspace      | Stack  | AGENTS.md                    |
 | -------------- | ------ | ---------------------------- |
 | `packages/cli` | Effect | See `packages/cli/AGENTS.md` |
+| `packages/effext` | Effect | This file                  |
 
 ## Testing
 

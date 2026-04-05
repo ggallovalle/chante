@@ -67,6 +67,14 @@ bunx knip --max-show-issues 5
 bunx --bun turbo run check --affected
 ```
 
+## bench
+
+> Run benchmarks across packages
+
+```bash
+cd packages/effext && mask bench
+```
+
 ## system
 
 > System and environment information
