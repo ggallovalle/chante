@@ -1,33 +1,43 @@
-import { type Cause, Effect, Queue, Schema, Stream } from "effect"
+import { type Cause, Effect, Queue, Stream } from "effect"
 import type { IColorizer } from "~/uwu.js"
+import { NoopColorizer } from "~/uwu.js"
 import type { Diagnostic } from "../diagnostic.js"
 import type { SourceCode } from "../source-code.js"
+import { type IReportHandler, TypeId } from "./handler.js"
 import { ThemeCharacters } from "./theme.js"
 
-const LinkStyle = Schema.Literals(["link", "text", "none"])
+type LinkStyle = "link" | "text" | "none"
 
-export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>(
-  "GraphicalReportHandler",
-)({
-  links: LinkStyle,
-  // termwidth: Schema.Number,
-  theme: ThemeCharacters,
-  footer: Schema.optional(Schema.String),
-  // contextLines: Schema.Number,
-  // tabWidth: Schema.Number,
-  withCauseChain: Schema.Boolean,
-  // wrapLines: Schema.Boolean,
-  // breakWords: Schema.Boolean,
-  // withPrimarySpanStart: Schema.Boolean,
-  linkDisplayText: Schema.optional(Schema.String),
-  // showRelatedAsNested: Schema.Boolean,
-}) {
-  public static default() {
+export class GraphicalReportHandler implements IReportHandler {
+  public readonly [TypeId] = TypeId
+  public links: LinkStyle
+  public theme: ThemeCharacters
+  public footer?: string | undefined
+  public withCauseChain: boolean
+  public linkDisplayText?: string | undefined
+  public colorizer: IColorizer
+
+  constructor(options: {
+    links: LinkStyle
+    theme: ThemeCharacters
+    footer?: string | undefined
+    withCauseChain: boolean
+    linkDisplayText?: string | undefined
+    colorizer: IColorizer
+  }) {
+    this.links = options.links
+    this.theme = options.theme
+    this.footer = options.footer
+    this.withCauseChain = options.withCauseChain
+    this.linkDisplayText = options.linkDisplayText
+    this.colorizer = options.colorizer
+  }
+
+  public static default(colorizer: IColorizer = new NoopColorizer()) {
     return new GraphicalReportHandler({
       links: "text",
       // termwidth: 200,
       theme: ThemeCharacters.unicode(),
-      footer: undefined,
       // contextLines: 3,
       // tabWidth: 3,
       withCauseChain: true,
@@ -36,15 +46,18 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       // withPrimarySpanStart: true,
       linkDisplayText: "(link)",
       // showRelatedAsNested: false,
+      colorizer,
     })
   }
 
-  public static themed(theme: ThemeCharacters) {
+  public static themed(
+    theme: ThemeCharacters,
+    colorizer: IColorizer = new NoopColorizer(),
+  ) {
     return new GraphicalReportHandler({
       links: "text",
       // termwidth: 200,
       theme,
-      footer: undefined,
       // contextLines: 3,
       // tabWidth: 3,
       withCauseChain: true,
@@ -53,20 +66,16 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       // withPrimarySpanStart: true,
       linkDisplayText: "(link)",
       // showRelatedAsNested: false,
+      colorizer,
     })
   }
 
-  public renderReport(diagnostic: Diagnostic, colorizer: IColorizer) {
+  public renderReport(diagnostic: Diagnostic): Stream.Stream<string> {
     const self = this
     return Stream.callback<string>((queue) => {
       return Effect.gen(function* () {
         // yield* Queue.offer(queue, "render-report")
-        yield* self.renderReportInner(
-          queue,
-          diagnostic,
-          colorizer,
-          diagnostic.sourceCode,
-        )
+        yield* self.renderReportInner(queue, diagnostic, diagnostic.sourceCode)
         yield* Queue.end(queue)
       })
     })
@@ -75,17 +84,16 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   private renderReportInner(
     queue: Queue.Queue<string, Cause.Done>,
     diagnostic: Diagnostic,
-    colorizer: IColorizer,
     parentSrc?: SourceCode,
   ) {
     const self = this
     return Effect.gen(function* () {
       const src: SourceCode | undefined = diagnostic.sourceCode ?? parentSrc
-      yield* self.renderHeader(queue, diagnostic, colorizer, false)
-      yield* self.renderCauses(queue, diagnostic, colorizer, src)
+      yield* self.renderHeader(queue, diagnostic, false)
+      yield* self.renderCauses(queue, diagnostic, src)
       // renderFooter
       if (diagnostic.help !== undefined) {
-        const initialIdent = colorizer.help("help: ")
+        const initialIdent = self.colorizer.help("help: ")
         yield* Queue.offer(queue, `${initialIdent}${diagnostic.help}`)
       }
 
@@ -98,7 +106,6 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   private renderHeader(
     queue: Queue.Queue<string, Cause.Done>,
     diagnostic: Diagnostic,
-    colorizer: IColorizer,
     isNested: boolean,
   ) {
     const self = this
@@ -110,18 +117,18 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       // Link style OSC 8 hyperlink
       if (self.links === "link" && diagnostic.url) {
         const code = diagnostic.code
-          ? `${colorizer.diagnostic(severity, diagnostic.code)} `
+          ? `${self.colorizer.diagnostic(severity, diagnostic.code)} `
           : ""
         const displayText = self.linkDisplayText ?? "(link)"
-        const linkStyled = colorizer.link(displayText)
+        const linkStyled = self.colorizer.link(displayText)
         const line = `\u001b]8;;${diagnostic.url}\u001b\\${code}${linkStyled}\u001b]8;;\u001b\\`
         buffer.push(line)
         // yield* Queue.offer(queue, line)
         needNewline = true
       } else if (diagnostic.code) {
-        let line = colorizer.diagnostic(severity, diagnostic.code)
+        let line = self.colorizer.diagnostic(severity, diagnostic.code)
         if (self.links === "text" && diagnostic.url) {
-          line += ` (${colorizer.link(diagnostic.url)})`
+          line += ` (${self.colorizer.link(diagnostic.url)})`
         }
         // yield* Queue.offer(queue, line)
         buffer.push(line)
@@ -140,7 +147,6 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   private renderCauses(
     queue: Queue.Queue<string, Cause.Done>,
     diagnostic: Diagnostic,
-    colorizer: IColorizer,
     _parentSrc?: SourceCode,
   ) {
     const self = this
@@ -148,11 +154,11 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
       const severity = diagnostic.severity
       const severityIcon = self.theme.diagnostic(severity)
 
-      const iconIndent = colorizer.diagnostic(severity, severityIcon)
+      const iconIndent = self.colorizer.diagnostic(severity, severityIcon)
       const rootLines = self.splitLines(
         diagnostic.info,
         `  ${iconIndent} `,
-        `  ${colorizer.diagnostic(severity, self.theme.vbar)} `,
+        `  ${self.colorizer.diagnostic(severity, self.theme.vbar)} `,
       )
 
       let emitted = rootLines.length > 0
@@ -171,9 +177,9 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
         const isLast = index === causes.length - 1
         const branch = isLast ? self.theme.lbot : self.theme.lcross
         const branchPrefix = `${branch}${self.theme.hbar}${self.theme.rarrow}`
-        const initialIndent = `  ${colorizer.diagnostic(severity, branchPrefix)} `
+        const initialIndent = `  ${self.colorizer.diagnostic(severity, branchPrefix)} `
         const restGlyph = isLast ? " " : self.theme.vbar
-        const subsequentIndent = `  ${colorizer.diagnostic(severity, restGlyph)}   `
+        const subsequentIndent = `  ${self.colorizer.diagnostic(severity, restGlyph)}   `
 
         const causeLines = self.splitLines(
           cause.info,
@@ -233,45 +239,59 @@ export class GraphicalReportHandler extends Schema.Class<GraphicalReportHandler>
   }
 }
 
-export class OptimizedGraphicalReportHandler extends Schema.Class<OptimizedGraphicalReportHandler>(
-  "OptimizedGraphicalReportHandler",
-)({
-  links: LinkStyle,
-  theme: ThemeCharacters,
-  footer: Schema.optional(Schema.String),
-  withCauseChain: Schema.Boolean,
-  linkDisplayText: Schema.optional(Schema.String),
-}) {
-  public static default() {
+export class OptimizedGraphicalReportHandler implements IReportHandler {
+  public readonly [TypeId] = TypeId
+  public links: LinkStyle
+  public theme: ThemeCharacters
+  public footer?: string | undefined
+  public withCauseChain: boolean
+  public linkDisplayText?: string | undefined
+  public colorizer: IColorizer
+
+  constructor(options: {
+    links: LinkStyle
+    theme: ThemeCharacters
+    footer?: string
+    withCauseChain: boolean
+    linkDisplayText?: string
+    colorizer: IColorizer
+  }) {
+    this.links = options.links
+    this.theme = options.theme
+    this.footer = options.footer
+    this.withCauseChain = options.withCauseChain
+    this.linkDisplayText = options.linkDisplayText
+    this.colorizer = options.colorizer
+  }
+
+  public static default(colorizer: IColorizer = new NoopColorizer()) {
     return new OptimizedGraphicalReportHandler({
       links: "text",
       theme: ThemeCharacters.unicode(),
-      footer: undefined,
       withCauseChain: true,
       linkDisplayText: "(link)",
+      colorizer,
     })
   }
 
-  public static themed(theme: ThemeCharacters) {
+  public static themed(
+    theme: ThemeCharacters,
+    colorizer: IColorizer = new NoopColorizer(),
+  ) {
     return new OptimizedGraphicalReportHandler({
       links: "text",
       theme,
-      footer: undefined,
       withCauseChain: true,
       linkDisplayText: "(link)",
+      colorizer,
     })
   }
 
-  public renderReport(diagnostic: Diagnostic, colorizer: IColorizer) {
+  public renderReport(diagnostic: Diagnostic) {
     const self = this
     return Stream.callback<string>((queue) => {
       return Effect.gen(function* () {
-        yield* self.renderReportInner(
-          queue,
-          diagnostic,
-          colorizer,
-          diagnostic.sourceCode,
-        )
+        yield* self.renderReportInner(queue, diagnostic, diagnostic.sourceCode)
         yield* Queue.end(queue)
       })
     })
@@ -280,16 +300,15 @@ export class OptimizedGraphicalReportHandler extends Schema.Class<OptimizedGraph
   private renderReportInner(
     queue: Queue.Queue<string, Cause.Done>,
     diagnostic: Diagnostic,
-    colorizer: IColorizer,
     parentSrc?: SourceCode,
   ) {
     const self = this
     return Effect.gen(function* () {
       const src: SourceCode | undefined = diagnostic.sourceCode ?? parentSrc
-      yield* self.renderHeader(queue, diagnostic, colorizer, false)
-      yield* self.renderCauses(queue, diagnostic, colorizer, src)
+      yield* self.renderHeader(queue, diagnostic, false)
+      yield* self.renderCauses(queue, diagnostic, src)
       if (diagnostic.help !== undefined) {
-        const initialIdent = colorizer.help("help: ")
+        const initialIdent = self.colorizer.help("help: ")
         yield* Queue.offer(queue, `${initialIdent}${diagnostic.help}`)
       }
       if (self.footer !== undefined) {
@@ -301,7 +320,6 @@ export class OptimizedGraphicalReportHandler extends Schema.Class<OptimizedGraph
   private renderHeader(
     queue: Queue.Queue<string, Cause.Done>,
     diagnostic: Diagnostic,
-    colorizer: IColorizer,
     isNested: boolean,
   ) {
     const self = this
@@ -312,17 +330,17 @@ export class OptimizedGraphicalReportHandler extends Schema.Class<OptimizedGraph
 
       if (self.links === "link" && diagnostic.url) {
         const code = diagnostic.code
-          ? `${colorizer.diagnostic(severity, diagnostic.code)} `
+          ? `${self.colorizer.diagnostic(severity, diagnostic.code)} `
           : ""
         const displayText = self.linkDisplayText ?? "(link)"
-        const linkStyled = colorizer.link(displayText)
+        const linkStyled = self.colorizer.link(displayText)
         const line = `\u001b]8;;${diagnostic.url}\u001b\\${code}${linkStyled}\u001b]8;;\u001b\\`
         buffer.push(line)
         needNewline = true
       } else if (diagnostic.code) {
-        let line = colorizer.diagnostic(severity, diagnostic.code)
+        let line = self.colorizer.diagnostic(severity, diagnostic.code)
         if (self.links === "text" && diagnostic.url) {
-          line += ` (${colorizer.link(diagnostic.url)})`
+          line += ` (${self.colorizer.link(diagnostic.url)})`
         }
         buffer.push(line)
         needNewline = true
@@ -339,18 +357,17 @@ export class OptimizedGraphicalReportHandler extends Schema.Class<OptimizedGraph
   private renderCauses(
     queue: Queue.Queue<string, Cause.Done>,
     diagnostic: Diagnostic,
-    colorizer: IColorizer,
     _parentSrc?: SourceCode,
   ) {
     const self = this
     return Effect.gen(function* () {
       const severity = diagnostic.severity
       const severityIcon = self.theme.diagnostic(severity)
-      const iconIndent = colorizer.diagnostic(severity, severityIcon)
+      const iconIndent = self.colorizer.diagnostic(severity, severityIcon)
       const rootLines = self.collectLines(
         diagnostic.info,
         `  ${iconIndent} `,
-        `  ${colorizer.diagnostic(severity, self.theme.vbar)} `,
+        `  ${self.colorizer.diagnostic(severity, self.theme.vbar)} `,
       )
 
       let emitted = rootLines.length > 0
@@ -368,9 +385,9 @@ export class OptimizedGraphicalReportHandler extends Schema.Class<OptimizedGraph
         const isLast = index === causes.length - 1
         const branch = isLast ? self.theme.lbot : self.theme.lcross
         const branchPrefix = `${branch}${self.theme.hbar}${self.theme.rarrow}`
-        const initialIndent = `  ${colorizer.diagnostic(severity, branchPrefix)} `
+        const initialIndent = `  ${self.colorizer.diagnostic(severity, branchPrefix)} `
         const restGlyph = isLast ? " " : self.theme.vbar
-        const subsequentIndent = `  ${colorizer.diagnostic(severity, restGlyph)}   `
+        const subsequentIndent = `  ${self.colorizer.diagnostic(severity, restGlyph)}   `
 
         const causeLines = self.collectLines(
           cause.info,

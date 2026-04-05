@@ -12,10 +12,17 @@ const colorizer = new NoopColorizer()
 
 fc.configureGlobal({ numRuns: 20 })
 
-const baseHandler = GraphicalReportHandler.themed(ThemeCharacters.unicode())
+const baseHandler = GraphicalReportHandler.themed(
+  ThemeCharacters.unicode(),
+  colorizer,
+)
 const noLinkHandler = new GraphicalReportHandler({
-  ...baseHandler,
   links: "none",
+  theme: baseHandler.theme,
+  footer: baseHandler.footer,
+  withCauseChain: baseHandler.withCauseChain,
+  linkDisplayText: baseHandler.linkDisplayText,
+  colorizer,
 })
 
 describe("GraphicalReportHandler", () => {
@@ -30,9 +37,7 @@ describe("GraphicalReportHandler", () => {
             url: props.url.toString(),
           })
           const report = assertSome(
-            yield* baseHandler
-              .renderReport(diagnostic, colorizer)
-              .pipe(Stream.runHead),
+            yield* baseHandler.renderReport(diagnostic).pipe(Stream.runHead),
           )
 
           expect(report).toEqual(`E0001 (${props.url})`)
@@ -49,9 +54,7 @@ describe("GraphicalReportHandler", () => {
           url: "https://example.com/hidden",
         })
         const report = assertSome(
-          yield* noLinkHandler
-            .renderReport(diagnostic, colorizer)
-            .pipe(Stream.runHead),
+          yield* noLinkHandler.renderReport(diagnostic).pipe(Stream.runHead),
         )
 
         expect(report).toEqual("error::hidden")
@@ -97,7 +100,7 @@ describe("GraphicalReportHandler", () => {
     effect(
       Effect.gen(function* () {
         const report = yield* baseHandler
-          .renderReport(diagnostic, colorizer)
+          .renderReport(diagnostic)
           .pipe(Stream.runCollect)
 
         expect(report[2]).toEqual(message)
@@ -127,7 +130,7 @@ describe("GraphicalReportHandler", () => {
         })
 
         const report = yield* noLinkHandler
-          .renderReport(root, colorizer)
+          .renderReport(root)
           .pipe(Stream.runCollect)
 
         expect(report[0]).toEqual("  × root")
@@ -151,7 +154,7 @@ describe("GraphicalReportHandler", () => {
           footer: "See docs: https://example.com",
         })
         const report = yield* handler
-          .renderReport(diagnostic, colorizer)
+          .renderReport(diagnostic)
           .pipe(Stream.runCollect)
 
         expect(report[report.length - 1]).toEqual(
@@ -170,7 +173,7 @@ describe("GraphicalReportHandler", () => {
           help: "Run with --verbose for more details",
         })
         const report = yield* baseHandler
-          .renderReport(diagnostic, colorizer)
+          .renderReport(diagnostic)
           .pipe(Stream.runCollect)
 
         expect(report[report.length - 1]).toEqual(

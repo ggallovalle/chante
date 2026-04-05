@@ -57,18 +57,17 @@ const root = new Diagnostic({
 })
 
 const themed = ThemeCharacters.unicode()
-const baselineHandler = GraphicalReportHandler.themed(themed)
-const optimizedHandler = OptimizedGraphicalReportHandler.themed(themed)
+const baselineHandler = GraphicalReportHandler.themed(themed, colorizer)
+const optimizedHandler = OptimizedGraphicalReportHandler.themed(
+  themed,
+  colorizer,
+)
 
 const runBaseline = () =>
-  Effect.runSync(
-    baselineHandler.renderReport(root, colorizer).pipe(Stream.runDrain),
-  )
+  Effect.runSync(baselineHandler.renderReport(root).pipe(Stream.runDrain))
 
 const runOptimized = () =>
-  Effect.runSync(
-    optimizedHandler.renderReport(root, colorizer).pipe(Stream.runDrain),
-  )
+  Effect.runSync(optimizedHandler.renderReport(root).pipe(Stream.runDrain))
 
 describe("GraphicalReportHandler benchmarks", () => {
   bench("GraphicalReportHandler", () => runBaseline())

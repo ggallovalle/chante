@@ -1,4 +1,5 @@
-import { Schema } from "effect"
+import { Schema, ServiceMap, type Stream } from "effect"
+import type { Diagnostic } from "~/miette/diagnostic.js"
 import { ThemeCharacters } from "./theme.js"
 
 export class MietteHandlerOpts extends Schema.Class<MietteHandlerOpts>(
@@ -20,4 +21,23 @@ export class MietteHandlerOpts extends Schema.Class<MietteHandlerOpts>(
   static empty(): MietteHandlerOpts {
     return new MietteHandlerOpts({})
   }
+}
+
+export const TypeId = "~@kbroom/effext/miette/ReportHandler"
+
+export interface IReportHandler {
+  readonly [TypeId]: typeof TypeId
+  renderReport(diagnostic: Diagnostic): Stream.Stream<string>
+}
+
+export class ReportHandler extends ServiceMap.Service<
+  ReportHandler,
+  IReportHandler
+>()("@kbroom/effext/miette/ReportHandler") {
+  public static make = (
+    renderReport: (diagnostic: Diagnostic) => Stream.Stream<string>,
+  ): IReportHandler => ({
+    [TypeId]: TypeId,
+    renderReport,
+  })
 }

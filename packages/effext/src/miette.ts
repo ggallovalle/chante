@@ -9,7 +9,12 @@ export {
   GraphicalReportHandler,
   OptimizedGraphicalReportHandler,
 } from "~/miette/handlers/graphical.js"
-export { MietteHandlerOpts } from "~/miette/handlers/handler.js"
+export {
+  type IReportHandler,
+  MietteHandlerOpts,
+  ReportHandler,
+  TypeId as ReportHandlerTypeId,
+} from "~/miette/handlers/handler.js"
 export { ThemeCharacters } from "~/miette/handlers/theme.js"
 export {
   LabeledSpan,
