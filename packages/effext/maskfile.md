@@ -76,12 +76,44 @@ else
 fi
 ```
 
+### bench compare
+
+> Run benchmarks and update previous snapshot
+
+```bash
+mkdir -p benchmark/results
+
+if [[ ! -f "benchmark/results/00-current.json" ]]; then
+    echo "No previous benchmark found. Run 'mask bench update' first." >&2
+    exit 1
+fi
+
+bunx --bun vitest bench --run \
+  --compare ./benchmark/results/00-current.json
+```
+
 ### bench update
 
 > Run benchmarks and update previous snapshot
 
 ```bash
-bunx --bun vitest bench --run --update
+mkdir -p benchmark/results
+
+current="benchmark/results/00-current.json"
+
+if [[ -f "$current" ]]; then
+    timestamp=$(date -u +"%Y%m%dT%H%M%SZ")
+    target="benchmark/results/${timestamp}-previous.json"
+
+    if git ls-files --error-unmatch "$current" >/dev/null 2>&1; then
+        git mv "$current" "$target"
+    else
+        mv "$current" "$target"
+    fi
+fi
+
+bunx --bun vitest bench --run \
+  --outputJson ./benchmark/results/00-current.json
 ```
 
 ### bench watch

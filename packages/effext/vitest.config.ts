@@ -21,7 +21,6 @@ export default defineConfig({
     },
     benchmark: {
       include: ["./benchmark/**/*.bench.ts?(x)"],
-      outputJson: "./benchmark/bench-result.main.json",
     },
   },
 })
