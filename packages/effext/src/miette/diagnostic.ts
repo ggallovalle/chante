@@ -31,7 +31,9 @@ If None, reporters should treat this as Severity::Error.`,
       description:
         "URL to visit for a more detailed explanation/help about this Diagnostic.",
     }),
-    sourceCode: Schema.optional(Schema.instanceOf(SourceCode)).annotate({
+    sourceCode: Schema.mutableKey(
+      Schema.optional(Schema.instanceOf(SourceCode)),
+    ).annotate({
       description:
         "Source code to apply this Diagnostic’s Diagnostic::labels to.",
     }),

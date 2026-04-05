@@ -5,13 +5,25 @@
 > Run tests
 
 **OPTIONS**
-* file
-    * flags: -f --file
-    * type: string
-    * desc: Only run tests from a specific filename
-    
+
+- file
+    - flags: -f --file
+    - type: string
+    - desc: Only run tests from a specific filename
+- debug
+    - flags: --debug
+    - desc: Start in debug mode
+
 ```bash
-if [[ -z "$file" ]]; then
+if [[ "$debug" == "true" ]]; then
+    if [[ -z "$file" ]]; then
+        # cant use --bun because of this issue
+        # https://github.com/oven-sh/bun/issues/2445
+        bunx vitest --inspect-brk --no-file-parallelism run
+    else
+        bunx vitest --inspect-brk --no-file-parallelism run "$file"
+    fi
+elif [[ -z "$file" ]]; then
     bunx --bun vitest run
 else
     bunx --bun vitest run "$file"

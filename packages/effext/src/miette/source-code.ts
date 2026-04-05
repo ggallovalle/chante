@@ -217,4 +217,18 @@ export class FromFileSourceCode extends SourceCode {
       return new FromFileSourceCode("fs", path, name, language, source)
     },
   )
+
+  static readonly fromFileContent = Effect.fn("FromFileSourceCode.fromFile")(
+    function* (path: string, language: string) {
+      const fs = yield* FileSystem.FileSystem
+      const pathModule = yield* Path.Path
+      const content = yield* fs.readFileString(path)
+      const name = pathModule.basename(path)
+      const source = new StringSourceCode(content)
+      return [
+        new FromFileSourceCode("fs", path, name, language, source),
+        content,
+      ] as const
+    },
+  )
 }

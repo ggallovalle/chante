@@ -46,7 +46,7 @@
   "dependencies": {},
   "devDependencies": {
     "@bgotink/kdl": "catalog:",
-    "@effect/platform-bun": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@typescript/native-preview": "catalog:",
