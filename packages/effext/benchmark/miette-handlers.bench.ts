@@ -1,5 +1,6 @@
 import { Effect, Stream } from "effect"
 import { bench, describe } from "vitest"
+import { NoopHighlighter } from "~/miette/highlihter/noop.js"
 import {
   Diagnostic,
   GraphicalReportHandler,
@@ -16,7 +17,11 @@ import { NoopColorizer } from "~/uwu.js"
 const theme = ThemeCharacters.unicode()
 const colorizer = new NoopColorizer()
 
-const graphicalHandler = GraphicalReportHandler.themed(theme, colorizer)
+const graphicalHandler = GraphicalReportHandler.themed(
+  theme,
+  colorizer,
+  new NoopHighlighter(),
+)
 const optimizedHandler = OptimizedGraphicalReportHandler.themed(
   theme,
   colorizer,

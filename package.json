@@ -18,6 +18,7 @@
       "@effect/language-service": "^0.81.0",
       "typescript": "5.9.3",
       "@typescript/native-preview": "^7.0.0-dev.20260404.1",
+      "@shikijs/cli": "^1.24.0",
       "@types/bun": "latest",
       "@types/node": "^22.5.4",
       "tsdown": "^0.21.7",

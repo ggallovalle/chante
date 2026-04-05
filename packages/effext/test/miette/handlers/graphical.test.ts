@@ -5,6 +5,7 @@ import {
   LabeledSpan,
   ThemeCharacters,
 } from "~/miette"
+import { NoopHighlighter } from "~/miette/highlihter/noop.js"
 import { NoopColorizer } from "~/uwu"
 import { assertSome, describe, fc, test } from "~test/fixtures"
 
@@ -15,6 +16,7 @@ fc.configureGlobal({ numRuns: 20 })
 const baseHandler = GraphicalReportHandler.themed(
   ThemeCharacters.unicode(),
   colorizer,
+  new NoopHighlighter(),
 )
 const noLinkHandler = new GraphicalReportHandler({
   links: "none",
@@ -23,6 +25,7 @@ const noLinkHandler = new GraphicalReportHandler({
   withCauseChain: baseHandler.withCauseChain,
   linkDisplayText: baseHandler.linkDisplayText,
   colorizer,
+  highlighter: new NoopHighlighter(),
 })
 
 describe("GraphicalReportHandler", () => {
@@ -152,6 +155,7 @@ describe("GraphicalReportHandler", () => {
         const handler = new GraphicalReportHandler({
           ...baseHandler,
           footer: "See docs: https://example.com",
+          highlighter: new NoopHighlighter(),
         })
         const report = yield* handler
           .renderReport(diagnostic)

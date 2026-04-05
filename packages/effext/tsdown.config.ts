@@ -8,6 +8,8 @@ export default defineConfig([
       "src/uwu/bun.ts",
       "src/uwu/node.ts",
       "src/miette.ts",
+      "src/miette/highlihter/noop.ts",
+      "src/miette/highlihter/shiki.ts",
       "src/kdl.ts",
     ],
     format: "esm",

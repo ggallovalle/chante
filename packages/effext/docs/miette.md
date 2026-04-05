@@ -19,7 +19,9 @@ import {
   GraphicalReportHandler,
   NarratableReportHandler,
   StringSourceCode,
+  NoopHighlighter,
 } from "@kbroom/effext/miette"
+import { NoopColorizer } from "@kbroom/effext/uwu"
 
 const error = new Diagnostic({
   _tag: "Diagnostic",
@@ -29,7 +31,8 @@ const error = new Diagnostic({
   labels: [{ offset: 0, text: "here", length: 5 }],
 })
 
-const handler = GraphicalReportHandler.default()
+const colorizer = new NoopColorizer()
+const handler = GraphicalReportHandler.default(colorizer, new NoopHighlighter())
 const narratable = NarratableReportHandler.default()
 
 const source = new StringSourceCode("hello world")

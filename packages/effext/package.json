@@ -17,6 +17,8 @@
   "exports": {
     "./kdl": "./src/kdl.ts",
     "./miette": "./src/miette.ts",
+    "./miette/highlihter/noop": "./src/miette/highlihter/noop.ts",
+    "./miette/highlihter/shiki": "./src/miette/highlihter/shiki.ts",
     "./testing/vitest": "./src/testing/vitest.ts",
     "./uwu": "./src/uwu.ts",
     "./uwu/bun": "./src/uwu/bun.ts",
@@ -32,11 +34,15 @@
     "bench": "bunx --bun vitest bench --run"
   },
   "peerDependencies": {
+    "@shikijs/cli": "catalog:",
     "effect": "catalog:",
     "@bgotink/kdl": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependenciesMeta": {
+    "@shikijs/cli": {
+      "optional": true
+    },
     "@bgotink/kdl": {
       "optional": true
     },
@@ -46,6 +52,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@shikijs/cli": "catalog:",
     "@bgotink/kdl": "catalog:",
     "@effect/platform-node": "catalog:",
     "@types/bun": "catalog:",
@@ -65,6 +72,8 @@
     "exports": {
       "./kdl": "./dist/kdl.mjs",
       "./miette": "./dist/miette.mjs",
+      "./miette/highlihter/noop": "./dist/miette/highlihter/noop.mjs",
+      "./miette/highlihter/shiki": "./dist/miette/highlihter/shiki.mjs",
       "./testing/vitest": "./dist/testing/vitest.mjs",
       "./uwu": "./dist/uwu.mjs",
       "./uwu/bun": "./dist/uwu/bun.mjs",

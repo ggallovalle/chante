@@ -19,6 +19,16 @@ export { JsonReportHandler } from "~/miette/handlers/json.js"
 export { NarratableReportHandler } from "~/miette/handlers/narratable.js"
 export { ThemeCharacters } from "~/miette/handlers/theme.js"
 export {
+  Highlighter,
+  type IHighlighter,
+  layer as noopHighlighterLayer,
+  NoopHighlighter,
+} from "~/miette/highlihter/noop.js"
+export {
+  layer as shikiHighlighterLayer,
+  ShikiHighlighter,
+} from "~/miette/highlihter/shiki.js"
+export {
   LabeledSpan,
   SourceSpan,
   SpanContents,
@@ -38,6 +48,10 @@ import {
 import { JsonReportHandler } from "~/miette/handlers/json.js"
 import { NarratableReportHandler } from "~/miette/handlers/narratable.js"
 import {
+  Highlighter,
+  layer as highlighterLayer,
+} from "~/miette/highlihter/noop.js"
+import {
   Colorizer,
   type IColorizer,
   TerminalColors,
@@ -48,6 +62,7 @@ const selectReportHandler = (
   args: ReadonlyArray<string>,
   isTTY: boolean,
   colorizer: IColorizer,
+  highlighter: import("~/miette/highlihter/noop.js").IHighlighter,
 ): IReportHandler => {
   let mode: "json" | "pretty" | undefined
 
@@ -68,7 +83,7 @@ const selectReportHandler = (
   if (mode === "json") return JsonReportHandler.default()
 
   return isTTY
-    ? GraphicalReportHandler.default(colorizer)
+    ? GraphicalReportHandler.default(colorizer, highlighter)
     : NarratableReportHandler.default()
 }
 
@@ -79,11 +94,20 @@ const handlerLayer = Layer.effect(
     const args = yield* stdio.args
     const term = yield* TerminalColors
     const colorizer = yield* Colorizer
-    const handler = selectReportHandler(args, term.isTTY, colorizer)
+    const highlighter = yield* Highlighter
+    const handler = selectReportHandler(
+      args,
+      term.isTTY,
+      colorizer,
+      highlighter,
+    )
     return handler
   }),
 )
 
-export const layer = Layer.provideMerge(handlerLayer, uwuLayer)
+export const layer = Layer.provideMerge(
+  handlerLayer,
+  Layer.merge(uwuLayer, highlighterLayer),
+)
 
 export const META_DIAGNOSTIC = "mietteDiagnostic"

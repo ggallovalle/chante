@@ -2,6 +2,8 @@ import { type Cause, Effect, Queue, Stream } from "effect"
 import type { IColorizer } from "~/uwu.js"
 import { NoopColorizer } from "~/uwu.js"
 import type { Diagnostic } from "../diagnostic.js"
+import type { IHighlighter } from "../highlihter/noop.js"
+import { LabeledSpan, type SpanContents } from "../protocol.js"
 import type { SourceCode } from "../source-code.js"
 import { type IReportHandler, TypeId } from "./handler.js"
 import { ThemeCharacters } from "./theme.js"
@@ -16,6 +18,7 @@ export class GraphicalReportHandler implements IReportHandler {
   public withCauseChain: boolean
   public linkDisplayText?: string | undefined
   public colorizer: IColorizer
+  public highlighter: IHighlighter
 
   constructor(options: {
     links: LinkStyle
@@ -24,6 +27,7 @@ export class GraphicalReportHandler implements IReportHandler {
     withCauseChain: boolean
     linkDisplayText?: string | undefined
     colorizer: IColorizer
+    highlighter: IHighlighter
   }) {
     this.links = options.links
     this.theme = options.theme
@@ -31,9 +35,10 @@ export class GraphicalReportHandler implements IReportHandler {
     this.withCauseChain = options.withCauseChain
     this.linkDisplayText = options.linkDisplayText
     this.colorizer = options.colorizer
+    this.highlighter = options.highlighter
   }
 
-  public static default(colorizer: IColorizer = new NoopColorizer()) {
+  public static default(colorizer: IColorizer, highlighter: IHighlighter) {
     return new GraphicalReportHandler({
       links: "text",
       // termwidth: 200,
@@ -47,12 +52,14 @@ export class GraphicalReportHandler implements IReportHandler {
       linkDisplayText: "(link)",
       // showRelatedAsNested: false,
       colorizer,
+      highlighter,
     })
   }
 
   public static themed(
     theme: ThemeCharacters,
-    colorizer: IColorizer = new NoopColorizer(),
+    colorizer: IColorizer,
+    highlighter: IHighlighter,
   ) {
     return new GraphicalReportHandler({
       links: "text",
@@ -67,6 +74,7 @@ export class GraphicalReportHandler implements IReportHandler {
       linkDisplayText: "(link)",
       // showRelatedAsNested: false,
       colorizer,
+      highlighter,
     })
   }
 
@@ -91,6 +99,7 @@ export class GraphicalReportHandler implements IReportHandler {
       const src: SourceCode | undefined = diagnostic.sourceCode ?? parentSrc
       yield* self.renderHeader(queue, diagnostic, false)
       yield* self.renderCauses(queue, diagnostic, src)
+      yield* self.renderSnippets(queue, diagnostic, src)
       // renderFooter
       if (diagnostic.help !== undefined) {
         const initialIdent = self.colorizer.help("help: ")
@@ -197,6 +206,200 @@ export class GraphicalReportHandler implements IReportHandler {
         yield* Queue.offer(queue, "")
       }
     })
+  }
+
+  private renderSnippets(
+    queue: Queue.Queue<string, Cause.Done>,
+    diagnostic: Diagnostic,
+    source?: SourceCode,
+  ) {
+    const self = this
+    return Effect.gen(function* () {
+      if (source === undefined) return
+      const labels = diagnostic.labels
+      if (labels === undefined || labels.length === 0) return
+
+      const sorted = [...labels].sort((a, b) => a.offset - b.offset)
+      const contexts: Array<LabeledSpan> = []
+
+      for (const label of sorted) {
+        const span = label.span
+        const ctxStart = span.offset
+        const ctxEnd = span.offset + span.length
+
+        const last = contexts[contexts.length - 1]
+        if (last !== undefined) {
+          const lastEnd = last.offset + last.len
+          if (ctxStart <= lastEnd) {
+            const newStart = Math.min(last.offset, ctxStart)
+            const newEnd = Math.max(lastEnd, ctxEnd)
+            const merged = LabeledSpan.from(
+              last.label ?? label.label,
+              newStart,
+              newEnd - newStart,
+            )
+            contexts[contexts.length - 1] = merged
+            continue
+          }
+        }
+
+        contexts.push(label)
+      }
+
+      for (const context of contexts) {
+        yield* self.renderContext(queue, source, context, sorted, diagnostic)
+      }
+    })
+  }
+
+  private renderContext(
+    queue: Queue.Queue<string, Cause.Done>,
+    source: SourceCode,
+    context: LabeledSpan,
+    labels: Array<LabeledSpan>,
+    _diagnostic: Diagnostic,
+  ) {
+    const self = this
+    return Effect.gen(function* () {
+      const contents = yield* Effect.match({
+        onFailure: () => undefined,
+        onSuccess: (span: SpanContents) => span,
+      })(source.readSpan(context.span, 1, 1))
+
+      if (contents === undefined) return
+
+      const text = new TextDecoder().decode(contents.data)
+      const lines = self.decodeLines(text, contents)
+      if (lines.length === 0) return
+
+      const lastLine = lines[lines.length - 1]!
+      const linumWidth = lastLine.lineNumber.toString().length
+      const headerLeft = " ".repeat(linumWidth + 2)
+      const sourceName = contents.name ?? "source"
+      const headerLabel = `${sourceName}:${contents.line + 1}:${
+        contents.column + 1
+      }`
+      const header = `${headerLeft}${self.theme.ltop}${self.theme.hbar}[${self.colorizer.link(
+        headerLabel,
+      )}]`
+      yield* Queue.offer(queue, header)
+
+      const widthPrefix = (line: number) =>
+        `${self.colorizer.lineNumber(String(line).padStart(linumWidth, " "))} ${self.theme.vbar} `
+
+      const contextStart = contents.span.offset
+      const contextEnd = contextStart + contents.span.length
+      const labelsInContext = labels.filter((label) => {
+        const start = label.offset
+        const end = label.offset + label.len
+        return start >= contextStart && end <= contextEnd
+      })
+
+      for (const line of lines) {
+        const expanded = self.expandTabs(line.text)
+        const highlighted = yield* self.highlighter.highlight(
+          expanded,
+          contents.language,
+        )
+        const prefix = widthPrefix(line.lineNumber)
+        yield* Queue.offer(queue, `${prefix}${highlighted}`)
+
+        const lineLabels = labelsInContext.filter((label) => {
+          const start = label.offset
+          const end = label.offset + label.len
+          return start < line.end && end > line.start
+        })
+
+        if (lineLabels.length === 0) continue
+
+        const underline = self.buildUnderline(expanded, line, lineLabels)
+        yield* Queue.offer(queue, `${prefix}${underline}`)
+      }
+
+      const footer = `${" ".repeat(linumWidth + 2)}${self.theme.lbot}${self.theme.hbar.repeat(
+        3,
+      )}`
+      yield* Queue.offer(queue, footer)
+      yield* Queue.offer(queue, "")
+    })
+  }
+
+  private buildUnderline(
+    expanded: string,
+    line: { start: number; end: number },
+    labels: Array<LabeledSpan>,
+  ) {
+    const underline = Array.from({ length: expanded.length }, () => " ")
+    if (underline.length === 0) return ""
+    if (underline.length === 0) return ""
+    let labelText: string | undefined
+
+    for (const label of labels) {
+      const start = Math.max(0, label.offset - line.start)
+      const end = Math.min(
+        expanded.length,
+        label.offset + label.len - line.start,
+      )
+      if (label.len === 0) {
+        const pos = Math.min(underline.length - 1, start)
+        underline[pos] = this.theme.uarrow
+      } else {
+        for (let i = start; i < Math.max(end, start + 1); i++) {
+          underline[i] = this.theme.underline
+        }
+      }
+      if (labelText === undefined) {
+        labelText = label.label
+      }
+    }
+
+    const rendered = underline.join("")
+    return labelText === undefined ? rendered : `${rendered} ${labelText}`
+  }
+
+  private decodeLines(text: string, contents: SpanContents) {
+    const result: Array<{
+      lineNumber: number
+      text: string
+      start: number
+      end: number
+    }> = []
+    let offset = contents.span.offset
+    const baseLine = contents.line
+
+    const parts = text.split("\n")
+    for (let i = 0; i < parts.length; i++) {
+      const lineText = parts[i] ?? ""
+      const start = offset
+      const end = offset + lineText.length
+      result.push({
+        lineNumber: baseLine + i + 1,
+        text: lineText,
+        start,
+        end,
+      })
+      offset = end + 1
+    }
+
+    return result
+  }
+
+  private expandTabs(value: string) {
+    if (value.indexOf("\t") === -1) return value
+    const tabWidth = 4
+    let out = ""
+    let col = 0
+    for (const char of value) {
+      if (char === "\t") {
+        const spaces = tabWidth - (col % tabWidth)
+        out += " ".repeat(spaces)
+        col += spaces
+      } else {
+        out += char
+        col += 1
+      }
+    }
+    return out
   }
 
   private collectCauses(diagnostic?: Diagnostic | null): Array<Diagnostic> {
